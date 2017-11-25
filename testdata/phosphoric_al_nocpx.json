@@ -1,0 +1,70 @@
+{
+	"constituents": [
+		{
+			"type": "N",
+			"role": "B",
+			"name": "Phosphoric acid",
+			"chargeLow": -3,
+			"chargeHigh": 0,
+			"concentrationBGE": 35.0,
+			"concentrationSample": 30.0,
+			"pKas": [ 12.67, 7.21, 2.16 ],
+			"mobilities": [ 71.5, 61.4, 34.6, 0.0 ],
+			"complexForms": [
+				{
+					"nucleusCharge": -3,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": -2,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": -1,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [ 
+					]
+				}
+			]
+		},
+		{
+			"type": "N",
+			"role": "B",
+			"name": "Al",
+			"chargeLow": 0,
+			"chargeHigh": 3,
+			"concentrationBGE": 10.0,
+			"concentrationSample": 8.0,
+			"pKas": [ 7.0, 6.0, 4.9 ],
+			"mobilities": [ 0.0, 21.1, 42.1, 63.2 ],
+			"complexForms": [
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": 1,
+					"ligandGroups": [ 
+					]
+				},
+				{
+					"nucleusCharge": 2,
+					"ligandGroups": [ 
+					]
+				},
+				{
+					"nucleusCharge": 3,
+					"ligandGroups": [ 
+					]
+				}
+			]
+		}
+	]
+}

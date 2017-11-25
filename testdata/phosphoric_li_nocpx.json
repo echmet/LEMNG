@@ -1,0 +1,56 @@
+{
+	"constituents": [
+		{
+			"type": "N",
+			"name": "Phosphoric acid",
+			"chargeLow": -3,
+			"chargeHigh": 0,
+			"concentration": 35.0,
+			"pKas": [ 12.67, 7.21, 2.16 ],
+			"mobilities": [ 71.5, 61.4, 34.6, 0.0 ],
+			"complexForms": [
+				{
+					"nucleusCharge": -3,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": -2,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": -1,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [ 
+					]
+				}
+			]
+		},
+		{
+			"type": "N",
+			"name": "Li",
+			"chargeLow": 0,
+			"chargeHigh": 1,
+			"concentration": 10.0,
+			"pKas": [ 13.8 ],
+			"mobilities": [ 0.0, 40.1 ],
+			"complexForms": [
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": 1,
+					"ligandGroups": [ 
+					]
+				}
+			]
+		}
+	]
+}

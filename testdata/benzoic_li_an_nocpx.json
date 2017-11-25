@@ -1,0 +1,74 @@
+{
+	"constituents": [
+		{
+			"type": "N",
+			"role": "B",
+			"name": "Benzoic acid",
+			"chargeLow": -1,
+			"chargeHigh": 0,
+			"concentrationBGE": 35.0,
+			"concentrationSample": 30.0,
+			"pKas": [ 4.203 ],
+			"mobilities": [ 33.6, 0.0 ],
+			"complexForms": [
+				{
+					"nucleusCharge": -1,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [ 
+					]
+				}
+			]
+		},
+		{
+			"type": "N",
+			"role": "B",
+			"name": "Li",
+			"chargeLow": 0,
+			"chargeHigh": 1,
+			"concentrationBGE": 10.0,
+			"concentrationSample": 8.0,
+			"pKas": [ 13.8 ],
+			"mobilities": [ 0.0, 40.1 ],
+			"complexForms": [
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": 1,
+					"ligandGroups": [ 
+					]
+				}
+			]
+		},
+		{
+			"type": "N",
+			"role": "A",
+			"name": "K",
+			"chargeLow": 0,
+			"chargeHigh": 1,
+			"concentrationBGE": 0.0,
+			"concentrationSample": 2.0,
+			"pKas": [ 13.0 ],
+			"mobilities": [ 0.0, 76.2 ],
+			"complexForms": [
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": 1,
+					"ligandGroups": [ 
+					]
+				}
+			]
+		}
+
+	]
+}

@@ -1,0 +1,27 @@
+{
+	"constituents": [
+		{
+			"type": "N",
+			"role": "B",
+			"name": "Benzoic acid",
+			"chargeLow": -1,
+			"chargeHigh": 0,
+			"concentrationBGE": 35.0,
+			"concentrationSample": 3.5,
+			"pKas": [ 4.203 ],
+			"mobilities": [ 33.6, 0.0 ],
+			"complexForms": [
+				{
+					"nucleusCharge": -1,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [ 
+					]
+				}
+			]
+		}
+	]
+}
