@@ -76,3 +76,13 @@ target_link_libraries(LEMNG
                       PRIVATE CAES
                       PRIVATE IonProps
                       PRIVATE ${LEMNG_THREADING_LIBS})
+
+if (WIN32)
+    install(TARGETS LEMNG
+            RUNTIME DESTINATION lib
+            PUBLIC_HEADER DESTINATION include/ECHMET/LEMNG)
+else ()
+    install(TARGETS LEMNG
+            LIBRARY DESTINATION lib
+            PUBLIC_HEADER DESTINATION include/ECHMET/LEMNG)
+endif ()
