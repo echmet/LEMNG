@@ -1,4 +1,4 @@
 #! /bin/sh
-ECL_BIN="/home/madcat/Devel/ECHMET/ECHMETCoreLibs_varReal/bin/lib"
+source ./ref_tool_glob.sh
 
-LD_LIBRARY_PATH=../build:${ECL_BIN} valgrind --leak-check=full ./ref_tool ${1} ${2} ${3} ${4} ${5} ${6}
+LD_LIBRARY_PATH=${LEMNG_BIN}:${ECL_BIN} valgrind --leak-check=full ./ref_tool ${1} ${2} ${3} ${4} ${5} ${6}
