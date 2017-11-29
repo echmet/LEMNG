@@ -109,7 +109,7 @@
 			"chargeHigh": 0,
 			"concentrationBGE": 0.0,
 			"concentrationSample": 4.0,
-			"pKas": [ 0 ],
+			"pKas": [ ],
 			"mobilities": [ 0 ]
 		}
 	]
