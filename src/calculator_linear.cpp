@@ -190,6 +190,9 @@ LinearResults calculateLinear(const CalculatorSystemPack &systemPack, const Delt
 
 	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_LIN_PROGRESS, const char *>("Solving eigenzones' compositions");
 
+	if (MFin.rows() < 1)
+		return LinearResults{{}, QLQRPack{EMMatrixC{0,0}, EMMatrixC{0,0}}, std::move(M1), std::move(M2), true};
+
 
 	/* Calculate eigenmobilites and zone compositions.
 	 * Eigenmobilities are the eigenvalues of the MFin matrix.
