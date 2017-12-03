@@ -283,6 +283,8 @@ RetCode ECHMET_CC plotElectrophoregram(EFGPairVec *&electrophoregram,
 		return RetCode::E_INVALID_ARGUMENT;
 	if (injectionZoneLength <= 0.0)
 		return RetCode::E_INVALID_ARGUMENT;
+	if (EOFMobility < 0.0)
+		return RetCode::E_INVALID_ARGUMENT;
 
 	const double E = drivingVoltage / totalLength;	/* Electric field intensity */
 	const double EOFVelocity = EOFMobility * E * 1.0e-9;
