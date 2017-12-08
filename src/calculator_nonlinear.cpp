@@ -701,7 +701,8 @@ EigenzoneDispersionVec calculateNonlinear(const CalculatorSystemPack &systemPack
 
 } // namespace Calculator
 } // namespace LEMNG
-} // namespace ECHMET
+
+#ifndef ECHMET_TRACER_DISABLE_TRACING
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_NONLIN_PROGRESS, "Nonlinear calculations progress reports")
 ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_PROGRESS, const char *stage)
@@ -779,3 +780,7 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_DIFF_MATRIX, const ECHMET::LEMNG::C
 
 	return ss.str();
 }
+
+#endif // ECHMET_TRACER_DISABLE_TRACING
+
+} // namespace ECHMET

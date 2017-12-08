@@ -209,7 +209,6 @@ EMMatrix makeMatrixM2(const CalculatorSystemPack &systemPack, const DeltaPackVec
 
 } // namespace Calculator
 } // namespace LEMNG
-} // namespace ECHMET
 
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 
@@ -382,3 +381,4 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_DM2_OUTPUT, const ECHMET::LEMNG::Ca
 
 #endif // ECHMET_TRACER_DISABLE_TRACING
 
+} // namespace ECHMET

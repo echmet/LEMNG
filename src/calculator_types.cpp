@@ -311,7 +311,6 @@ SolutionProperties & SolutionProperties::operator=(SolutionProperties &&other) n
 
 } // namespace Calculator
 } // namespace LEMNG
-} // namespace ECHMET
 
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 
@@ -322,3 +321,5 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_OBJECT_CONSTRUCTION, const std::string &ms
 }
 
 #endif // ECHMET_TRACER_DISABLE_TRACING
+
+} // namespace ECHMET

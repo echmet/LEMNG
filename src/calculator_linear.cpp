@@ -254,7 +254,6 @@ LinearResults calculateLinear(const CalculatorSystemPack &systemPack, const Delt
 
 } // namespace Calculator
 } // namespace LEMNG
-} // namespace ECHMET
 
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 
@@ -287,3 +286,4 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_LIN_ZONE_TAINTED, const int &zoneNum, cons
 
 #endif // ECHMET_TRACER_DISABLE_TRACING
 
+} // namespace ECHMET

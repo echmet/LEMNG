@@ -155,13 +155,15 @@ void _ECHMET_TRACE(Args && ...) {} /* Do nothing */
  * @param TracerClass Tracer class
  */
 #define ECHMET_MAKE_TRACER(TracerClass) \
-	template <> \
-	std::unique_ptr<::ECHMET::Tracer<::TracerClass>> ECHMET::Tracer<::TracerClass>::s_instance{nullptr}; \
-	template <> \
-	::ECHMET::Tracer<::TracerClass> & ECHMET::TRACER_INSTANCE<::TracerClass>() \
-	{ \
-		return ::ECHMET::Tracer<::TracerClass>::instance(); \
-	}
+	namespace ECHMET { \
+		template <> \
+		std::unique_ptr<Tracer<::TracerClass>> Tracer<::TracerClass>::s_instance{nullptr}; \
+		template <> \
+		Tracer<::TracerClass> & TRACER_INSTANCE<::TracerClass>() \
+		{ \
+			return Tracer<::TracerClass>::instance(); \
+		} \
+	} // namespace ECHMET
 
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 /*!

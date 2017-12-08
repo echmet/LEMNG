@@ -436,7 +436,6 @@ void ECHMET_CC releaseCZESystem(const CZESystem *czeSystem) noexcept
 CZESystem::~CZESystem() noexcept {}
 
 } // namespace LEMNG
-} // namespace ECHMET
 
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 
@@ -466,4 +465,4 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, EVAL_PROGRESS_ERR, const char *where, const cha
 
 #endif // ECHMET_TRACER_DISABLE_TRACING
 
-
+} // namespace ECHMET

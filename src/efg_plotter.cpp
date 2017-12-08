@@ -325,7 +325,6 @@ RetCode ECHMET_CC plotElectrophoregram(EFGPairVec *&electrophoregram,
 }
 
 } // namespace LEMNG
-} // namespace ECHMET
 
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 
@@ -374,3 +373,5 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, EFGPLOT_INPUT_PARAMS, const double voltage, con
 }
 
 #endif // ECHMET_TRACER_DISABLE_TRACING
+
+} // namespace ECHMET

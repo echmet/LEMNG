@@ -125,7 +125,7 @@ static std::string TRACEPOINT_LOGGER(Args...);
  */
 #define ECHMET_MAKE_TRACEPOINT(TracerClass, TPID, description) \
 	template <> \
-	::ECHMET::Tracepoint<::TracerClass> ECHMET::TRACEPOINT_INFO<::TracerClass, ::TracerClass::TPID>() { return ::ECHMET::Tracepoint<::TracerClass>{::TracerClass::TPID, description}; }
+	Tracepoint<TracerClass> TRACEPOINT_INFO<TracerClass, TracerClass::TPID>() { return Tracepoint<TracerClass>{TracerClass::TPID, description}; }
 
 /*!
  * \def MAKE_LOGGER(TracerClass, TPID, Args...)
@@ -137,7 +137,7 @@ static std::string TRACEPOINT_LOGGER(Args...);
  */
 #define ECHMET_MAKE_LOGGER(TracerClass, TPID, ...) \
 	template <> \
-	std::string ECHMET::TRACEPOINT_LOGGER<::TracerClass, ::TracerClass::TPID>(__VA_ARGS__)
+	std::string TRACEPOINT_LOGGER<::TracerClass, ::TracerClass::TPID>(__VA_ARGS__)
 
 #ifndef _ECHMET_TRACER_IMPL_SECTION
 	#ifndef ECHMET_TRACER_DISABLE_TRACING
@@ -150,38 +150,41 @@ static std::string TRACEPOINT_LOGGER(Args...);
 	 * @param last ID of the last tracepoint
 	 */
 	#define ECHMET_MAKE_TRACEPOINT_IDS(TracerClass, first, last) \
-		template <> \
-		constexpr TracerClass ECHMET::FIRST_TRACEPOINT_ID<::TracerClass>() { return ::TracerClass::first; } \
-		template <> \
-		constexpr TracerClass ECHMET::LAST_TRACEPOINT_ID<::TracerClass>() { return ::TracerClass::last; } \
-		template <> \
-		void ECHMET::TRACEPOINT_INFO_BUILD<::TracerClass, ::TracerClass::last>(std::vector<std::tuple<TPIDInt, std::string>> &tracepointInfoVec) \
-		{ \
-			(void)tracepointInfoVec; \
-			return; /* No-op for the last dummy tracepoint */ \
-		} \
-		template <> \
-		void ECHMET::TOGGLE_ALL_TRACEPOINTS<::TracerClass, ::TracerClass::last>(const bool state, std::map<TracerClass, bool> &enabledTracepoints) \
-		{ \
-			enabledTracepoints[TracerClass::last] = state; \
-		} \
-		template <> \
-		bool ECHMET::IS_TPID_VALID<::TracerClass, ::TracerClass>(const ::TracerClass &) { return true; }
+		namespace ECHMET { \
+			template <> \
+			constexpr ::TracerClass FIRST_TRACEPOINT_ID<::TracerClass>() { return ::TracerClass::first; } \
+			template <> \
+			constexpr ::TracerClass LAST_TRACEPOINT_ID<::TracerClass>() { return ::TracerClass::last; } \
+			template <> \
+			void TRACEPOINT_INFO_BUILD<::TracerClass, ::TracerClass::last>(std::vector<std::tuple<TPIDInt, std::string>> &tracepointInfoVec) \
+			{ \
+				(void)tracepointInfoVec; \
+				return; /* No-op for the last dummy tracepoint */ \
+			} \
+			template <> \
+			void TOGGLE_ALL_TRACEPOINTS<::TracerClass, ::TracerClass::last>(const bool state, std::map<TracerClass, bool> &enabledTracepoints) \
+			{ \
+				enabledTracepoints[TracerClass::last] = state; \
+			} \
+			template <> \
+			bool IS_TPID_VALID<::TracerClass, ::TracerClass>(const ::TracerClass &) { return true; } \
+		} // namespace ECHMET
 	#else
 	#define ECHMET_MAKE_TRACEPOINT_IDS(TracerClass, first, last)
-
-	template <>
-	constexpr ECHMET::__DUMMY_TRACER_CLASS ECHMET::FIRST_TRACEPOINT_ID<ECHMET::__DUMMY_TRACER_CLASS>() { return ECHMET::__DUMMY_TRACER_CLASS::NONE; }
-	template <>
-	void ECHMET::TRACEPOINT_INFO_BUILD<ECHMET::__DUMMY_TRACER_CLASS, ECHMET::__DUMMY_TRACER_CLASS::NONE>(std::vector<std::tuple<TPIDInt, std::string>> &)
-	{
-		return;
-	}
-	template <>
-	void ECHMET::TOGGLE_ALL_TRACEPOINTS<ECHMET::__DUMMY_TRACER_CLASS, ECHMET::__DUMMY_TRACER_CLASS::NONE>(const bool, std::map<ECHMET::__DUMMY_TRACER_CLASS, bool> &)
-	{
-		return;
-	}
+	namespace ECHMET {
+		template <>
+		constexpr __DUMMY_TRACER_CLASS FIRST_TRACEPOINT_ID<__DUMMY_TRACER_CLASS>() { return __DUMMY_TRACER_CLASS::NONE; }
+		template <>
+		void TRACEPOINT_INFO_BUILD<_DUMMY_TRACER_CLASS, __DUMMY_TRACER_CLASS::NONE>(std::vector<std::tuple<TPIDInt, std::string>> &)
+		{
+			return;
+		}
+		template <>
+		void TOGGLE_ALL_TRACEPOINTS<__DUMMY_TRACER_CLASS, __DUMMY_TRACER_CLASS::NONE>(const bool, std::map<__DUMMY_TRACER_CLASS, bool> &)
+		{
+			return;
+		}
+	} // namespace ECHMET
 	#endif // TRACER_DISABLE_TRACING
 #else
 
