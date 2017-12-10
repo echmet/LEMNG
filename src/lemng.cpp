@@ -29,6 +29,17 @@ ECHMET_MAKE_TRACER(ECHMET::__DUMMY_TRACER_CLASS)
 namespace ECHMET {
 namespace LEMNG {
 
+class ConcentrationTooLowException : public std::runtime_error {
+public:
+	using std::runtime_error::runtime_error;
+};
+
+class CannotApplyConcentrationException : public std::runtime_error {
+public:
+	CannotApplyConcentrationException() : std::runtime_error{""}
+	{}
+};
+
 CZESystemImpl::CZESystemImpl() :
 	m_chemicalSystemBGE{std::unique_ptr<SysComp::ChemicalSystem, decltype(&chemicalSystemDeleter)>{new SysComp::ChemicalSystem, &chemicalSystemDeleter}},
 	m_chemicalSystemFull{std::unique_ptr<SysComp::ChemicalSystem, decltype(&chemicalSystemDeleter)>{new SysComp::ChemicalSystem, &chemicalSystemDeleter}},
@@ -77,16 +88,22 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 	auto applyConcentrationMapping = [](RealVecPtr &acVec, const InAnalyticalConcentrationsMap *acMap, const ChemicalSystemPtr &chemSystem) {
 		InAnalyticalConcentrationsMap::Iterator *it = acMap->begin();
 		if (it == nullptr)
-			throw std::runtime_error{""};
+			throw CannotApplyConcentrationException{};
 
 		 while (it->hasNext()) {
 			const char *name = it->key();
 			const double cAc = it->value();
 			size_t idx;
 
+			if (cAc < Calculator::ANALYTE_CONCENTRATION * 10.0) {
+				it->destroy();
+				throw ConcentrationTooLowException{name};
+			}
+
+
 			if (chemSystem->analyticalConcentrationsByName->at(idx, name) != ::ECHMET::RetCode::OK) {
 				it->destroy();
-				throw std::runtime_error{""};
+				throw CannotApplyConcentrationException{};
 			}
 
 			(*acVec.get())[idx] = cAc;
@@ -108,7 +125,7 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 		 */
 		InAnalyticalConcentrationsMap::Iterator *it = acSample->begin();
 		if (it == nullptr)
-			throw std::runtime_error{""};
+			throw CannotApplyConcentrationException{};
 
 		while (it->hasNext()) {
 			const char *name = it->key();
@@ -116,7 +133,7 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 
 			if (m_chemicalSystemFull->analyticalConcentrationsByName->at(idx, name) != ::ECHMET::RetCode::OK) {
 				it->destroy();
-				throw std::runtime_error{""};
+				throw CannotApplyConcentrationException{};
 			}
 
 			if (isAnalyte(name)) {
@@ -125,9 +142,13 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 				double cAc;
 				if (acBGE->at(cAc, name) != ::ECHMET::RetCode::OK) {
 					it->destroy();
-					throw std::runtime_error{""};
+					throw CannotApplyConcentrationException{};
 				}
 
+				if (cAc < Calculator::ANALYTE_CONCENTRATION * 10.0) {
+					it->destroy();
+					throw ConcentrationTooLowException{name};
+				}
 
 				(*acVec.get())[idx] = cAc;
 			}
@@ -157,11 +178,16 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 		applyConcentrationMapping(analConcsBGE, acBGE, m_chemicalSystemBGE);
 		applyConcentrationMapping(analConcsFull, acSample, m_chemicalSystemFull);
 		applyConcentrationMappingBGELike(analConcsBGELike);
-	} catch (std::runtime_error &) {
+	} catch (CannotApplyConcentrationException ex) {
 		m_lastErrorString = "Cannot process input analytical concentrations";
 		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_INIT_ERR, const char*, const char*>("Cannot process input analytical concentrations", "Malformed input data");
 
 		return RetCode::E_INTERNAL_ERROR;
+	} catch (ConcentrationTooLowException &ex) {
+		m_lastErrorString = "Concentration of " + std::string{ex.what()} + " is too low for the numerical solver";
+		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_INIT_ERR, const char*, const char*>("Cannot process input analytical concentrations", "Concentration too low");
+
+		return RetCode::E_CONCENTRATION_TOO_LOW;
 	}
 
 	/* Prepare output results */
