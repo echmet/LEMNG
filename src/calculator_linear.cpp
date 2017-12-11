@@ -201,8 +201,10 @@ LinearResults calculateLinear(const CalculatorSystemPack &systemPack, const Delt
 	try {
 		EMSolverC ces{MFin};
 		EMVectorC eigenmobs = ces.eigenvalues();
-		if (isComplex(eigenmobs))
+		if (isComplex(eigenmobs)) {
+			_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_COMPLEX_EIGENMOBS, const EMVectorC &>(eigenmobs);
 			throw CalculationException{"Detected complex eigenmobilities", RetCode::E_COMPLEX_EIGENMOBILITIES};
+		}
 
 		const QLQRPack QLQR = calculateQLQR(ces);
 		const std::vector<EMMatrixC> PMatrices = calculatePMatrices(QLQR.QL(), QLQR.QR());
@@ -280,6 +282,19 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_LIN_ZONE_TAINTED, const int &zoneNum, cons
 	std::ostringstream ss{};
 
 	ss << "Zone " << zoneNum << " is tainted, concentration of " << offendingConstituent << " was computed as " << calculatedConc << " (mmol/dm3), clapming to zero";
+
+	return ss.str();
+}
+
+ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_COMPLEX_EIGENMOBS, "Complex eigenmobilities")
+ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_COMPLEX_EIGENMOBS, const LEMNG::Calculator::EMVectorC &mobilities)
+{
+	std::ostringstream ss{};
+
+	for (int idx = 0; idx < mobilities.rows(); idx++) {
+		const auto &cu = mobilities(idx);
+		ss << "Real: " << cu.real() << "; " << cu.imag() << "\n";
+	}
 
 	return ss.str();
 }
