@@ -274,7 +274,8 @@ bool isComplex<EMMatrixC>(const EMMatrixC &I)
 	for (int row = 0; row < I.rows(); row++) {
 		for (int col = 0; col < I.cols(); col++) {
 			const std::complex<double> &n = I(row, col);
-			if (n.imag() != 0.0)
+			const double r = n.real();
+			if (std::abs(n.imag()) > 0.01 * std::abs(r))
 				return true;
 		}
 	}
@@ -287,7 +288,8 @@ bool isComplex<EMVectorC>(const EMVectorC &I)
 {
 	for (int col = 0; col < I.cols(); col++) {
 		const std::complex<double> &n = I(col);
-		if (n.imag() != 0.0)
+		const double r = n.real();
+		if (std::abs(n.imag()) > 0.01 * std::abs(r))
 			return true;
 	}
 
