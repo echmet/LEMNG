@@ -291,9 +291,9 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_COMPLEX_EIGENMOBS, const LEMNG::Calculator
 {
 	std::ostringstream ss{};
 
-	for (int idx = 0; idx < mobilities.rows(); idx++) {
+	for (int idx = 0; idx < mobilities.cols(); idx++) {
 		const auto &cu = mobilities(idx);
-		ss << "Real: " << cu.real() << "; " << cu.imag() << "\n";
+		ss << "Real: " << cu.real() << "; Imag: " << cu.imag() << "\n";
 	}
 
 	return ss.str();
