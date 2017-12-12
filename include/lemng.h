@@ -278,6 +278,14 @@ ECHMET_API RetCode ECHMET_CC makeCZESystem(SysComp::InConstituentVec *BGE, SysCo
 					   CZESystem *&czeSystem) ECHMET_NOEXCEPT;
 
 /*!
+ * Returns the minimum analytical concentrations of a constituent
+ * that is considered safe for use by the numerical solver.
+ *
+ * @return Minimum safe concentration
+ */
+ECHMET_API double ECHMET_CC minimumSafeConcentration() ECHMET_NOEXCEPT;
+
+/*!
  * Plots expected electrophoregrams for given results.
  *
  * @param[out] electrophoregram Generated electrophoregram.

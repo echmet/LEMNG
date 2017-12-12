@@ -95,7 +95,7 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 			const double cAc = it->value();
 			size_t idx;
 
-			if (cAc < Calculator::ANALYTE_CONCENTRATION * 10.0) {
+			if (cAc < minimumSafeConcentration()) {
 				it->destroy();
 				throw ConcentrationTooLowException{name};
 			}
@@ -145,7 +145,7 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 					throw CannotApplyConcentrationException{};
 				}
 
-				if (cAc < Calculator::ANALYTE_CONCENTRATION * 10.0) {
+				if (cAc < minimumSafeConcentration()) {
 					it->destroy();
 					throw ConcentrationTooLowException{name};
 				}
@@ -450,6 +450,11 @@ RetCode ECHMET_CC makeCZESystem(SysComp::InConstituentVec *BGE, SysComp::InConst
 	}
 
 	return RetCode::OK;
+}
+
+double ECHMET_CC minimumSafeConcentration() noexcept
+{
+	return Calculator::ANALYTE_CONCENTRATION * 10.0;
 }
 
 void ECHMET_CC releaseCZESystem(const CZESystem *czeSystem) noexcept
