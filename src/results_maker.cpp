@@ -251,6 +251,7 @@ void fillResults(const ChemicalSystemPtr &chemSystemBGE, const ChemicalSystemPtr
 
 	/* Fill out BGE properties */
 	fillSolutionProperties(chemSystemBGE, BGEProperties, correctForIonicStrength, r.BGEProperties);
+	r.isBGEValid = true;
 
 	/* Fill out all eigenzones */
 	for (size_t idx = 0; idx < linResults.eigenzones.size(); idx++) {
@@ -262,6 +263,11 @@ void fillResults(const ChemicalSystemPtr &chemSystemBGE, const ChemicalSystemPtr
 	}
 }
 
+void fillResultsPartial(const ChemicalSystemPtr &chemSystemBGE, const Calculator::SolutionProperties &BGEProperties, const bool correctForIonicStrength, Results &r)
+{
+	fillSolutionProperties(chemSystemBGE, BGEProperties, correctForIonicStrength, r.BGEProperties);
+	r.isBGEValid = true;
+}
 
 Results prepareResults(const ChemicalSystemPtr &chemSystemBGE, const ChemicalSystemPtr &chemSystemFull)
 {

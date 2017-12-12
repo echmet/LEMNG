@@ -146,6 +146,7 @@ class Results {
 public:
 	RSolutionProperties BGEProperties;	/* Properties of the plain background electrolyte. */
 	REigenzoneVec *eigenzones;		/* Description of all eigenzones present in the system. */
+	bool isBGEValid;			/*!< Set to true of the BGE composition was successfully solved. */
 };
 IS_POD(Results)
 typedef MutSKMap<double> InAnalyticalConcentrationsMap;

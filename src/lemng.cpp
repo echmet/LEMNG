@@ -217,10 +217,10 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 	try {
 		Calculator::prepareModelData(m_systemPack, deltaPacks, analConcsBGELike, analConcsFull, correctForIonicStrength);
 	} catch (std::bad_alloc &) {
-		releaseResults(results);
+		fillResultsPartial(m_chemicalSystemBGE, BGEProps, correctForIonicStrength, results);
 		return RetCode::E_NO_MEMORY;
 	} catch (Calculator::CalculationException &ex) {
-		releaseResults(results);
+		fillResultsPartial(m_chemicalSystemBGE, BGEProps, correctForIonicStrength, results);
 		m_lastErrorString = ex.what();
 		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_PROGRESS_ERR, const char*, const char*>("Cannot prepare model data", ex.what());
 
@@ -236,12 +236,12 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 		/* There was a TODO for a case where not all zones were valid. Be prepared to
 		 * revisit this in case we need to handle this somehow in the future. */
 	} catch (std::bad_alloc &) {
-		releaseResults(results);
+		fillResultsPartial(m_chemicalSystemBGE, BGEProps, correctForIonicStrength, results);
 		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_PROGRESS_ERR, const char*, const char*>("Cannot evaluate linear model", "Insufficient memory");
 
 		return RetCode::E_NO_MEMORY;
 	} catch (Calculator::CalculationException &ex) {
-		releaseResults(results);
+		fillResultsPartial(m_chemicalSystemBGE, BGEProps, correctForIonicStrength, results);
 		m_lastErrorString = ex.what();
 		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_PROGRESS_ERR, const char*, const char*>("Cannot evaluate linear model", ex.what());
 
