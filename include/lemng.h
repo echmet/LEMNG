@@ -120,8 +120,6 @@ public:
 	double bufferCapacity;		/*!< Buffering capacity of the solution - currently unimplemented. */
 	double ionicStrength;		/*!< Ionic strength of the solution. */
 	RConstituentMap *composition;	/*!< Chemical composition of the solution. */
-	bool isValid;			/*!< Set to true of the properties were calculated
-					     using valid block of data. */
 };
 IS_POD(RSolutionProperties)
 
