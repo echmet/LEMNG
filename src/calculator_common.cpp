@@ -77,6 +77,10 @@ void buildSystemPackVectors(CalculatorConstituentVec &ccVec, CalculatorIonicForm
 			if (iF->totalCharge == 0)
 				continue;
 
+			/* Skip ionic forms from a ligand as they will be processed from the respective nuclei */
+			if (ctuent->ctype == SysComp::ConstituentType::LIGAND && iF->ligand != nullptr)
+				continue;
+
 			/* We need to build a list of indices of all ligands that are present
 			 * in a given ionic form. This is necessary to have a reasonably efficient
 			 * function to calculate Kroenecker delta in makeMatrixM1().
