@@ -221,6 +221,7 @@ int launch(int argc, char **argv)
 		czeSystem->toggleAllTracepoints(false);
 		czeSystem->toggleTracepoint(14, true);
 		czeSystem->toggleTracepoint(15, true);
+		czeSystem->toggleTracepoint(16, true);
 		czeSystem->toggleTracepoint(tpVec->back().id, true);
 		printTracepointInfo(czeSystem);
 

@@ -77,10 +77,6 @@ void buildSystemPackVectors(CalculatorConstituentVec &ccVec, CalculatorIonicForm
 			if (iF->totalCharge == 0)
 				continue;
 
-			/* Skip ionic forms from a ligand as they will be processed from the respective nuclei */
-			if (ctuent->ctype == SysComp::ConstituentType::LIGAND && iF->ligand != nullptr)
-				continue;
-
 			/* We need to build a list of indices of all ligands that are present
 			 * in a given ionic form. This is necessary to have a reasonably efficient
 			 * function to calculate Kroenecker delta in makeMatrixM1().
@@ -631,33 +627,24 @@ void solveChemicalSystem(const ChemicalSystemPtr chemSystem, const RealVecPtr &c
 
 std::vector<const SysComp::Constituent *> sysCompToLEMNGOrdering(const ChemicalSystemPtr &chemSystem, const std::function<bool (const std::string &)> &isAnalyte)
 {
-	/*
-	 * This reorders the constituents from the order they came in into
-	 * "background first, analytes next, water last" order.
-	 * Such ordering is introduced in a series of articles describing
-	 * the original linear theory of electromigration:
-	 *
-	 * Štědrý M, Jaroš M, Gaš, B, JOURNAL OF CHROMATOGRAPHY A 2002, Volume: 960, Pages: 187-198
-	 * Štědrý M, Jaroš M, Včeláková K, Gaš B, ELECTROPHORESIS 2003, Volume: 24, Pages: 536-547 (DOI: 10.1002/elps.200390061)
-	 * Štědrý M, Jaroš M, Hruška V, Gaš G, ELECTROPHORESIS 2004, Volume: 25, Pages: 3071–3079 (DOI: 10.1002/elps.200405981)
-	 * Jaroš M, Hruška V, Štědrý M, Zusková I, Gaš B, ELECTROPHORESIS 2004, Volume: 25, Pages: 3080-3085 (DOI: 10.1002/elps.200405982)
-	 */
+	/* The order of constituents has to be arranged in "Nuclei first->ligand last"
+	 * order for the matrix generators to work properly */
 	std::vector<const SysComp::Constituent *> all{};
-	std::vector<const SysComp::Constituent *> analytes{};
+	std::vector<const SysComp::Constituent *> ligands{};
 
 	all.reserve(chemSystem->constituents->size());
-	analytes.reserve(chemSystem->constituents->size());
+	ligands.reserve(chemSystem->constituents->size());
 
 	for (size_t idx = 0; idx < chemSystem->constituents->size(); idx++) {
 		const SysComp::Constituent *c = chemSystem->constituents->at(idx);
 
-		if (isAnalyte(c->name->c_str()))
-			analytes.emplace_back(c);
+		if (c->ctype == SysComp::ConstituentType::LIGAND)
+			ligands.emplace_back(c);
 		else
 			all.emplace_back(c);
 	}
 
-	std::copy(analytes.cbegin(), analytes.cend(), std::back_inserter(all));
+	std::copy(ligands.cbegin(), ligands.cend(), std::back_inserter(all));
 
 	return all;
 }
