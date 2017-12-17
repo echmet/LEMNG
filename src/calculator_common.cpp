@@ -110,6 +110,7 @@ void buildSystemPackVectors(CalculatorConstituentVec &ccVec, CalculatorIonicForm
 
 			containedConstituentsList.emplace_back(idx); /* Ionic form always contains at least the nucleus. */
 
+
 			/* This is a slightly less obvious part, focus now!
 			 * The ifVec contains all *ionic forms* that are present
 			 * in the system. Each ionic form has to be contained only once
@@ -121,13 +122,18 @@ void buildSystemPackVectors(CalculatorConstituentVec &ccVec, CalculatorIonicForm
 			 */
 
 			CalculatorIonicForm *locIF = findInIfVec(iF->name->c_str());
+			const bool treatAsAnalyte = locIF != nullptr ? locIF->isAnalyte : iFisAnalyte; /* Re-use the "is analyte" state
+													  if the form was added previously.
+													  Beacause of the N->L ordering the
+													  state of already added form must be
+													  correct */
 			if (locIF == nullptr) {
 				try {
 					locIF = new CalculatorIonicForm{std::string{iF->name->c_str()}, iF->totalCharge,
 									iF,
 									iF->ionicConcentrationIndex,
 									ifVec.size(), /* This ionic form will be placed at this index in the global ifVec. */
-									std::move(containedConstituentsList), iFisAnalyte};
+									std::move(containedConstituentsList), treatAsAnalyte};
 					ifVec.emplace_back(locIF);
 				} catch (std::bad_alloc &) {
 					for (auto &&item : locIfVec)
