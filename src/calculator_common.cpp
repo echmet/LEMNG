@@ -116,7 +116,8 @@ void buildSystemPackVectors(CalculatorConstituentVec &ccVec, CalculatorIonicForm
 			 * in this vector. This seems logical, right?
 			 * However, each CalculatorConstituent contains its own vector
 			 * of ionic forms that contain the said constituent.
-			 * If a
+			 * If a given ionic form is already present in the glogal vector,
+			 * we only append it to the local iFs vector.
 			 */
 
 			CalculatorIonicForm *locIF = findInIfVec(iF->name->c_str());
@@ -625,7 +626,7 @@ void solveChemicalSystem(const ChemicalSystemPtr chemSystem, const RealVecPtr &c
 	return solveChemicalSystem(chemSystem.get(), concentrations, calcProps.get(), correctForIonicStrength);
 }
 
-std::vector<const SysComp::Constituent *> sysCompToLEMNGOrdering(const ChemicalSystemPtr &chemSystem, const std::function<bool (const std::string &)> &isAnalyte)
+std::vector<const SysComp::Constituent *> sysCompToLEMNGOrdering(const ChemicalSystemPtr &chemSystem)
 {
 	/* The order of constituents has to be arranged in "Nuclei first->ligand last"
 	 * order for the matrix generators to work properly */

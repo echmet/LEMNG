@@ -201,10 +201,9 @@ LinearResults calculateLinear(const CalculatorSystemPack &systemPack, const Delt
 	try {
 		EMSolverC ces{MFin};
 		EMVectorC eigenmobs = ces.eigenvalues();
-		if (isComplex(eigenmobs)) {
-			_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_COMPLEX_EIGENMOBS, const EMVectorC &>(eigenmobs);
+		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_EIGENMOBS, const EMVectorC &>(eigenmobs);
+		if (isComplex(eigenmobs))
 			throw CalculationException{"Detected complex eigenmobilities", RetCode::E_COMPLEX_EIGENMOBILITIES};
-		}
 
 		const QLQRPack QLQR = calculateQLQR(ces);
 		const std::vector<EMMatrixC> PMatrices = calculatePMatrices(QLQR.QL(), QLQR.QR());
@@ -286,8 +285,8 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_LIN_ZONE_TAINTED, const int &zoneNum, cons
 	return ss.str();
 }
 
-ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_COMPLEX_EIGENMOBS, "Complex eigenmobilities")
-ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_COMPLEX_EIGENMOBS, const LEMNG::Calculator::EMVectorC &mobilities)
+ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_EIGENMOBS, "Complex eigenmobilities")
+ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_EIGENMOBS, const LEMNG::Calculator::EMVectorC &mobilities)
 {
 	std::ostringstream ss{};
 
