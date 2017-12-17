@@ -302,7 +302,7 @@ CalculatorSystemPack makeSystemPack(const ChemicalSystemPtr &chemSystem, const C
 {
 	CalculatorConstituentVec ccVec{};
 	CalculatorIonicFormVec ifVec{};
-	const auto orderedConstituents = sysCompToLEMNGOrdering(chemSystem, isAnalyte);
+	const auto orderedConstituents = sysCompToLEMNGOrdering(chemSystem);
 
 	ccVec.reserve(orderedConstituents.size());
 	ifVec.reserve(chemSystem->ionicForms->size());

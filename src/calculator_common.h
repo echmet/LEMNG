@@ -39,7 +39,7 @@ CalculatorSystemPack makeSystemPack(const ChemicalSystemPtr &chemSystem, const C
 void prepareModelData(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks, const RealVecPtr &analConcsBGELike, const RealVecPtr &analConcsSample, const bool correctForIonicStrength);
 void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const bool correctForIonicStrength);
 void solveChemicalSystem(const ChemicalSystemPtr &chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const bool correctForIonicStrength);
-std::vector<const SysComp::Constituent *> sysCompToLEMNGOrdering(const ChemicalSystemPtr &chemSystem, const std::function<bool (const std::string &)> &isAnalyte);
+std::vector<const SysComp::Constituent *> sysCompToLEMNGOrdering(const ChemicalSystemPtr &chemSystem);
 
 #ifdef ECHMET_LEMNG_SENSITIVE_NUMDERS	/*!< Use much finer delta and lower analytes concentrations to calculate numerical derivatives. This comes with some additional memory and performance overhead */
 static const ECHMETReal DELTA_H = 1.0e-33;
