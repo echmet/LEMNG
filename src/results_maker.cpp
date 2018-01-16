@@ -200,7 +200,7 @@ REigenzoneVecWrapper prepareEigenzones(const ChemicalSystemPtr &chemSystem)
 	return eigenzones;
 }
 
-void fillSolutionProperties(const ChemicalSystemPtr &chemSystem, const Calculator::SolutionProperties &props, const bool correctForIonicStrength, RSolutionProperties &rProps)
+void fillSolutionProperties(const ChemicalSystemPtr &chemSystem, const Calculator::SolutionProperties &props, const NonidealityCorrections corrections, RSolutionProperties &rProps)
 {
 	auto H3OConcentration = [](const std::vector<double> &icVec) {
 		return icVec.at(0);
@@ -225,18 +225,19 @@ void fillSolutionProperties(const ChemicalSystemPtr &chemSystem, const Calculato
 		}
 	};
 
+	const bool correctForIS = corrections & NonidealityCorrections::CORR_DEBYE_HUCKEL;
 	const ECHMETReal cH = H3OConcentration(props.ionicConcentrations);
 	rProps.bufferCapacity = props.bufferCapacity;
 	rProps.conductivity = props.conductivity;
 	rProps.ionicStrength = props.ionicStrength;
-	rProps.pH = IonProps::calculatepH_direct(cH, (correctForIonicStrength ? props.ionicStrength : 0.0));
+	rProps.pH = IonProps::calculatepH_direct(cH, (correctForIS ? props.ionicStrength : 0.0));
 	mapComposition(chemSystem, props.analyticalConcentrations, props.ionicConcentrations, rProps.composition);
 }
 
-void fillResults(const ChemicalSystemPtr &chemSystemBGE, const ChemicalSystemPtr &chemSystemFull, const Calculator::SolutionProperties &BGEProperties, const Calculator::LinearResults &linResults, const Calculator::EigenzoneDispersionVec &ezDisps, const bool correctForIonicStrength, Results &r)
+void fillResults(const ChemicalSystemPtr &chemSystemBGE, const ChemicalSystemPtr &chemSystemFull, const Calculator::SolutionProperties &BGEProperties, const Calculator::LinearResults &linResults, const Calculator::EigenzoneDispersionVec &ezDisps, const NonidealityCorrections corrections, Results &r)
 {
-	auto fillEigenzone = [correctForIonicStrength](const ChemicalSystemPtr &chemSystem, const Calculator::Eigenzone &ez, const Calculator::EigenzoneDispersion &disp, REigenzone &rEz) {
-		fillSolutionProperties(chemSystem, ez.solutionProperties, correctForIonicStrength, rEz.solutionProperties);
+	auto fillEigenzone = [corrections](const ChemicalSystemPtr &chemSystem, const Calculator::Eigenzone &ez, const Calculator::EigenzoneDispersion &disp, REigenzone &rEz) {
+		fillSolutionProperties(chemSystem, ez.solutionProperties, corrections, rEz.solutionProperties);
 
 		rEz.mobility = ez.zoneMobility;
 		rEz.a2t = disp.a2t;
@@ -250,7 +251,7 @@ void fillResults(const ChemicalSystemPtr &chemSystemBGE, const ChemicalSystemPtr
 	};
 
 	/* Fill out BGE properties */
-	fillSolutionProperties(chemSystemBGE, BGEProperties, correctForIonicStrength, r.BGEProperties);
+	fillSolutionProperties(chemSystemBGE, BGEProperties, corrections, r.BGEProperties);
 	r.isBGEValid = true;
 
 	/* Fill out all eigenzones */
@@ -263,9 +264,9 @@ void fillResults(const ChemicalSystemPtr &chemSystemBGE, const ChemicalSystemPtr
 	}
 }
 
-void fillResultsPartial(const ChemicalSystemPtr &chemSystemBGE, const Calculator::SolutionProperties &BGEProperties, const bool correctForIonicStrength, Results &r)
+void fillResultsPartial(const ChemicalSystemPtr &chemSystemBGE, const Calculator::SolutionProperties &BGEProperties, const NonidealityCorrections corrections, Results &r)
 {
-	fillSolutionProperties(chemSystemBGE, BGEProperties, correctForIonicStrength, r.BGEProperties);
+	fillSolutionProperties(chemSystemBGE, BGEProperties, corrections, r.BGEProperties);
 	r.isBGEValid = true;
 }
 

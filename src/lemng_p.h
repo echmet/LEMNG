@@ -16,7 +16,7 @@ public:
 	explicit CZESystemImpl(const SysComp::ChemicalSystem &chemicalSystemBGE, const SysComp::CalculatedProperties &calcPropsBGE, const SysComp::ChemicalSystem &chemicalSystemFull, const SysComp::CalculatedProperties& calcPropsFull, IsAnalyteMap &&iaMap);
 	virtual ~CZESystemImpl() noexcept override;
 	virtual RetCode ECHMET_CC evaluate(const InAnalyticalConcentrationsMap *acBGE, const InAnalyticalConcentrationsMap *acFull,
-					   const bool correctForIonicStrength, Results &results) noexcept override;
+					   const NonidealityCorrections corrections, Results &results) noexcept override;
 	virtual const char * ECHMET_CC lastErrorString() const noexcept override;
 	virtual RetCode ECHMET_CC makeAnalyticalConcentrationsMaps(InAnalyticalConcentrationsMap *&acMapBGE, InAnalyticalConcentrationsMap *&acMapFull) const noexcept override;
 	virtual void ECHMET_CC toggleAllTracepoints(const bool state) noexcept override;

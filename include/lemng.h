@@ -192,7 +192,7 @@ public:
 	 *                                            and cannot be solved by linear theory of electromigration.
 	 */
 	virtual RetCode ECHMET_CC evaluate(const InAnalyticalConcentrationsMap *acBGE, const InAnalyticalConcentrationsMap *acFull,
-					   const bool correctForIonicStrength, Results &results) ECHMET_NOEXCEPT = 0;
+					   const NonidealityCorrections corrections, Results &results) ECHMET_NOEXCEPT = 0;
 
 	/*!
 	 * Returns human-readable description of the last error that occured

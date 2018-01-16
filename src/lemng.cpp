@@ -83,7 +83,7 @@ CZESystemImpl::~CZESystemImpl() noexcept
 }
 
 RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *acBGE, const InAnalyticalConcentrationsMap *acSample,
-					  const bool correctForIonicStrength, Results &results) noexcept
+					  const NonidealityCorrections corrections, Results &results) noexcept
 {
 	auto applyConcentrationMapping = [](RealVecPtr &acVec, const InAnalyticalConcentrationsMap *acMap, const ChemicalSystemPtr &chemSystem) {
 		InAnalyticalConcentrationsMap::Iterator *it = acMap->begin();
@@ -202,7 +202,7 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 
 	Calculator::SolutionProperties BGEProps;
 	try {
-		BGEProps = Calculator::calculateSolutionProperties(m_chemicalSystemBGE, analConcsBGE, m_calcPropsBGE, correctForIonicStrength, true);
+		BGEProps = Calculator::calculateSolutionProperties(m_chemicalSystemBGE, analConcsBGE, m_calcPropsBGE, corrections, true);
 	} catch (Calculator::CalculationException &ex) {
 		releaseResults(results);
 		m_lastErrorString = std::string{"Unable to calculate BGE properties: "} + ex.what();
@@ -215,12 +215,12 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 
 	/* Precalculate what is used in many places of the linear model */
 	try {
-		Calculator::prepareModelData(m_systemPack, deltaPacks, analConcsBGELike, analConcsFull, correctForIonicStrength);
+		Calculator::prepareModelData(m_systemPack, deltaPacks, analConcsBGELike, analConcsFull, corrections);
 	} catch (std::bad_alloc &) {
-		fillResultsPartial(m_chemicalSystemBGE, BGEProps, correctForIonicStrength, results);
+		fillResultsPartial(m_chemicalSystemBGE, BGEProps, corrections, results);
 		return RetCode::E_NO_MEMORY;
 	} catch (Calculator::CalculationException &ex) {
-		fillResultsPartial(m_chemicalSystemBGE, BGEProps, correctForIonicStrength, results);
+		fillResultsPartial(m_chemicalSystemBGE, BGEProps, corrections, results);
 		m_lastErrorString = ex.what();
 		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_PROGRESS_ERR, const char*, const char*>("Cannot prepare model data", ex.what());
 
@@ -229,19 +229,19 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 
 	/* Solve the linear model and first nonlinearity term */
 	try {
-		Calculator::LinearResults linResults = Calculator::calculateLinear(m_systemPack, deltaPacks, correctForIonicStrength);
-		Calculator::EigenzoneDispersionVec ezDisps = Calculator::calculateNonlinear(m_systemPack, analConcsBGELike, deltaPacks, linResults.M1, linResults.M2, linResults.QLQR, correctForIonicStrength);
+		Calculator::LinearResults linResults = Calculator::calculateLinear(m_systemPack, deltaPacks, corrections);
+		Calculator::EigenzoneDispersionVec ezDisps = Calculator::calculateNonlinear(m_systemPack, analConcsBGELike, deltaPacks, linResults.M1, linResults.M2, linResults.QLQR, corrections);
 
-		fillResults(m_chemicalSystemBGE, m_chemicalSystemFull, BGEProps, linResults, ezDisps, correctForIonicStrength, results);
+		fillResults(m_chemicalSystemBGE, m_chemicalSystemFull, BGEProps, linResults, ezDisps, corrections, results);
 		/* There was a TODO for a case where not all zones were valid. Be prepared to
 		 * revisit this in case we need to handle this somehow in the future. */
 	} catch (std::bad_alloc &) {
-		fillResultsPartial(m_chemicalSystemBGE, BGEProps, correctForIonicStrength, results);
+		fillResultsPartial(m_chemicalSystemBGE, BGEProps, corrections, results);
 		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_PROGRESS_ERR, const char*, const char*>("Cannot evaluate linear model", "Insufficient memory");
 
 		return RetCode::E_NO_MEMORY;
 	} catch (Calculator::CalculationException &ex) {
-		fillResultsPartial(m_chemicalSystemBGE, BGEProps, correctForIonicStrength, results);
+		fillResultsPartial(m_chemicalSystemBGE, BGEProps, corrections, results);
 		m_lastErrorString = ex.what();
 		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_PROGRESS_ERR, const char*, const char*>("Cannot evaluate linear model", ex.what());
 

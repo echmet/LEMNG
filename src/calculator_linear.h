@@ -37,7 +37,7 @@ public:
 	const bool allZonesValid;
 };
 
-LinearResults calculateLinear(const CalculatorSystemPack &systemPack, const DeltaPackVec &deltaPacks, const bool correctForIonicStrength);
+LinearResults calculateLinear(const CalculatorSystemPack &systemPack, const DeltaPackVec &deltaPacks, const NonidealityCorrections corrections);
 
 } // namespace Calculator
 } // namespace LEMNG

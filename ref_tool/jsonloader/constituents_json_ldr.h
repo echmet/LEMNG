@@ -59,6 +59,7 @@ struct constituent {
 	double concentrationSample;
 	double *pKas;
 	double *mobilities;
+	double viscosityCoefficient;
 
 	size_t complexFormsCount;
 	complex_form_t *complexForms;

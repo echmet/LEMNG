@@ -20,7 +20,7 @@ typedef std::vector<EigenzoneDispersion> EigenzoneDispersionVec;
 
 EigenzoneDispersionVec calculateNonlinear(const CalculatorSystemPack &systemPack, const RealVecPtr &analyticalConcentrations, const DeltaPackVec &deltaPacks,
 					  const EMMatrix &M1, const EMMatrix &M2, const QLQRPack &QLQR,
-					  const bool correctForIonicStrength);
+					  const NonidealityCorrections corrections);
 
 } // namespace Calculator
 } // namespace LEMNG

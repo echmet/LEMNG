@@ -169,7 +169,7 @@ std::vector<std::tuple<std::vector<double>, bool, bool>> calculateEigenzoneCompo
 	return ezPackVec;
 }
 
-LinearResults calculateLinear(const CalculatorSystemPack &systemPack, const DeltaPackVec &deltaPacks, const bool correctForIonicStrength)
+LinearResults calculateLinear(const CalculatorSystemPack &systemPack, const DeltaPackVec &deltaPacks, const NonidealityCorrections corrections)
 {
 	/* Calculate the mobility matrix. */
 	EMMatrix M1{};
@@ -232,7 +232,7 @@ LinearResults calculateLinear(const CalculatorSystemPack &systemPack, const Delt
 			}
 
 			try {
-				SolutionProperties zoneProps = calculateSolutionProperties(systemPack.chemSystemRaw, zoneConcsVec, zoneCalcProps.get(), correctForIonicStrength);
+				SolutionProperties zoneProps = calculateSolutionProperties(systemPack.chemSystemRaw, zoneConcsVec, zoneCalcProps.get(), corrections);
 				eigenzones.emplace_back(zoneMobility, std::move(ez), std::move(zoneProps), tainted, isAnalyzeZone);
 			} catch (CalculationException &) {
 				std::vector<double> dummyCC;

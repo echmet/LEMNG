@@ -142,7 +142,7 @@ EMMatrixVec calculateM1Derivatives(const CalculatorSystemPack &systemPack, const
 	return M1Derivatives;
 }
 
-EMMatrixVec calculateM2Derivatives(const CalculatorSystemPack &systemPack, const RealVecPtr &analyticalConcentrations, const bool correctForIonicStrength)
+EMMatrixVec calculateM2Derivatives(const CalculatorSystemPack &systemPack, const RealVecPtr &analyticalConcentrations, const NonidealityCorrections corrections)
 {
 	const size_t NCO = systemPack.constituents.size();
 	EMMatrixVec M2Derivatives{};
@@ -154,7 +154,7 @@ EMMatrixVec calculateM2Derivatives(const CalculatorSystemPack &systemPack, const
 	CAES::Solver *solver = nullptr;
 	::ECHMET::RealVec *derivatives = nullptr;
 
-	::ECHMET::RetCode tRet = CAES::prepareDerivatorContext(derivatives, solver, chemSystemRaw, correctForIonicStrength);
+	::ECHMET::RetCode tRet = CAES::prepareDerivatorContext(derivatives, solver, chemSystemRaw, corrections);
 	if (tRet != ::ECHMET::RetCode::OK)
 		throw CalculationException{std::string{"Cannot make derivator context: "} + std::string{errorToString(tRet)}, coreLibsErrorToNativeError(tRet)};
 
@@ -683,12 +683,12 @@ EMMatrix makeConcentrationDeltas(const CalculatorSystemPack &systemPack)
 
 EigenzoneDispersionVec calculateNonlinear(const CalculatorSystemPack &systemPack, const RealVecPtr &analyticalConcentrations, const DeltaPackVec &deltaPacks,
 					  const EMMatrix &M1, const EMMatrix &M2, const QLQRPack &QLQR,
-					  const bool correctForIonicStrength)
+					  const NonidealityCorrections corrections)
 {
 	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_PROGRESS, const char*>("Starting");
 
 	const EMMatrixVec M1Derivatives = calculateM1Derivatives(systemPack, deltaPacks);
-	const EMMatrixVec M2Derivatives = calculateM2Derivatives(systemPack, analyticalConcentrations, correctForIonicStrength);
+	const EMMatrixVec M2Derivatives = calculateM2Derivatives(systemPack, analyticalConcentrations, corrections);
 
 	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_PROGRESS, const char*>("Individual matrix derivatives solved");
 

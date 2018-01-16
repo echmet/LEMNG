@@ -8,6 +8,7 @@
 			"chargeHigh": 0,
 			"concentrationBGE": 25.0,
 			"concentrationSample": 20.0,
+			"viscosityCoefficient": 0.0,
 			"pKas": [ 4.203 ],
 			"mobilities": [ 33.6, 0.0 ],
 			"complexForms": [
@@ -31,6 +32,7 @@
 			"chargeHigh": 1,
 			"concentrationBGE": 0.0,
 			"concentrationSample": 3.0,
+			"viscosityCoefficient": 0.0,
 			"pKas": [ 9.262, 2.13 ],
 			"mobilities": [ 26.9, 0.0, 27.4 ],
 			"complexForms": [
@@ -59,6 +61,7 @@
 			"chargeHigh": 1,
 			"concentrationBGE": 5.0,
 			"concentrationSample": 2.0,
+			"viscosityCoefficient": 0.0,
 			"pKas": [ 13.7 ],
 			"mobilities": [ 0.0, 51.9 ],
 			"complexForms": [
@@ -82,6 +85,7 @@
 			"chargeHigh": 1,
 			"concentrationBGE": 5.0,
 			"concentrationSample": 2.0,
+			"viscosityCoefficient": 0.0,
 			"pKas": [ 13.0 ],
 			"mobilities": [ 0.0, 80.6 ],
 			"complexForms": [
@@ -105,6 +109,7 @@
 			"chargeHigh": 2,
 			"concentrationBGE": 0.0,
 			"concentrationSample": 2.0,
+			"viscosityCoefficient": 0.0,
 			"pKas": [ 9.9, 7.8 ],
 			"mobilities": [ 0.0, 36.0, 72.0 ],
 			"complexForms": [
@@ -133,6 +138,7 @@
 			"chargeHigh": 3,
 			"concentrationBGE": 0.0,
 			"concentrationSample": 2.0,
+			"viscosityCoefficient": 0.0,
 			"pKas": [ 8.0, 7.0, 6.0 ],
 			"mobilities": [ 0.0, 24.1, 48.2, 72.3 ],
 			"complexForms": [
@@ -166,6 +172,7 @@
 			"chargeHigh": 0,
 			"concentrationBGE": 30.0,
 			"concentrationSample": 28.0,
+			"viscosityCoefficient": 0.0,
 			"pKas": [ 4.384, 3.019 ],
 			"mobilities": [ 61.2, 31.0, 0.0 ],
 			"complexForms": [

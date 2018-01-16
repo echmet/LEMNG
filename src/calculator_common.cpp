@@ -192,7 +192,7 @@ void buildSystemPackVectors(CalculatorConstituentVec &ccVec, CalculatorIonicForm
 	}
 }
 
-void calcIonicProperties(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const bool correctForIonicStrength)
+void calcIonicProperties(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections)
 {
 	::ECHMET::RetCode tRet;
 	IonProps::ComputationContext *ctx = IonProps::makeComputationContext(*chemSystem, concentrations.get(), *calcProps);
@@ -200,12 +200,10 @@ void calcIonicProperties(const SysComp::ChemicalSystem *chemSystem, const RealVe
 	if (ctx == nullptr)
 		throw CalculationException{"Cannot create IonProps computation context", RetCode::E_NO_MEMORY};
 
-	if (correctForIonicStrength) {
-		tRet = IonProps::correctMobilities(ctx);
-		if (tRet != ::ECHMET::RetCode::OK) {
-			ctx->destroy();
-			throw CalculationException{"Cannot correct ionic mobilities for ionic strength: " + std::string(errorToString(tRet)), coreLibsErrorToNativeError(tRet)};
-		}
+	tRet = IonProps::correctMobilities(ctx, corrections);
+	if (tRet != ::ECHMET::RetCode::OK) {
+		ctx->destroy();
+		throw CalculationException{"Cannot correct ionic mobilities for ionic strength: " + std::string(errorToString(tRet)), coreLibsErrorToNativeError(tRet)};
 	}
 	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_COMMON_CALC_SOLPROPS_ION_MOBS, const SysComp::IonicFormVec*, const SysComp::CalculatedProperties*>(chemSystem->ionicForms, calcProps);
 
@@ -222,22 +220,22 @@ void calcIonicProperties(const SysComp::ChemicalSystem *chemSystem, const RealVe
 	ctx->destroy();
 }
 
-double calculateSolutionBufferCapacity(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, const SysComp::CalculatedProperties *calcProps, const bool correctForIonicStrength)
+double calculateSolutionBufferCapacity(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, const SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections)
 {
 	::ECHMET::RetCode tRet;
 	double bufferCapacity;
 
-	tRet = ::ECHMET::CAES::calculateBufferCapacity(bufferCapacity, *chemSystem, *calcProps, concentrations.get(), correctForIonicStrength);
+	tRet = ::ECHMET::CAES::calculateBufferCapacity(bufferCapacity, corrections, *chemSystem, *calcProps, concentrations.get());
 	if (tRet != ::ECHMET::RetCode::OK)
 		return -1.0;
 	return bufferCapacity;
 }
 
-SolutionProperties calculateSolutionProperties(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const bool correctForIonicStrength,
+SolutionProperties calculateSolutionProperties(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections,
 					       const bool calcBufferCapacity)
 {
 	ECHMET_TRACE(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_PROGRESS, ECHMET_S("Solving equilibrium"));
-	solveChemicalSystem(chemSystem, concentrations, calcProps, correctForIonicStrength);
+	solveChemicalSystem(chemSystem, concentrations, calcProps, corrections);
 
 	auto analyticalConcentrations = [&concentrations]() {
 		std::vector<double> anC{};
@@ -259,7 +257,7 @@ SolutionProperties calculateSolutionProperties(const SysComp::ChemicalSystem *ch
 
 	const double bufferCapacity = [&]() {
 		if (calcBufferCapacity)
-			return calculateSolutionBufferCapacity(chemSystem, concentrations, calcProps, correctForIonicStrength);
+			return calculateSolutionBufferCapacity(chemSystem, concentrations, calcProps, corrections);
 		return -1.0;
 	}();
 
@@ -270,9 +268,9 @@ SolutionProperties calculateSolutionProperties(const SysComp::ChemicalSystem *ch
 				  std::move(ionicConcentrations)};
 }
 
-SolutionProperties calculateSolutionProperties(const ChemicalSystemPtr &chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const bool correctForIonicStrength, const bool calcBufferCapacity)
+SolutionProperties calculateSolutionProperties(const ChemicalSystemPtr &chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const NonidealityCorrections corrections, const bool calcBufferCapacity)
 {
-	return calculateSolutionProperties(chemSystem.get(), concentrations, calcProps.get(), correctForIonicStrength, calcBufferCapacity);
+	return calculateSolutionProperties(chemSystem.get(), concentrations, calcProps.get(), corrections, calcBufferCapacity);
 }
 
 template <>
@@ -404,7 +402,7 @@ RealVecPtr makeAnalyticalConcentrationsForDerivator(const CalculatorSystemPack &
 }
 #endif // ECHMET_LEMNG_SENSITIVE_NUMDERS
 
-void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks, const RealVecPtr &analyticalConcentrations, const bool correctForIonicStrength)
+void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks, const RealVecPtr &analyticalConcentrations, const NonidealityCorrections corrections)
 {
 	static const ECHMETReal H = DELTA_H;
 
@@ -425,7 +423,7 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 
 	deltaPacks.reserve(NCO);
 
-	::ECHMET::RetCode tRet = CAES::prepareDerivatorContext(derivatives, solver, chemSystemRaw, correctForIonicStrength);
+	::ECHMET::RetCode tRet = CAES::prepareDerivatorContext(derivatives, solver, chemSystemRaw, corrections);
 	if (tRet != ::ECHMET::RetCode::OK)
 		throw CalculationException{std::string{"Cannot make derivator context: "} + std::string{errorToString(tRet)}, coreLibsErrorToNativeError(tRet)};
 
@@ -443,7 +441,7 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 		}
 
 		::ECHMET::RetCode tRet = CAES::calculateFirstConcentrationDerivatives_prepared(_derivatives, conductivityDerivative,
-											       solver, H,
+											       solver, H, corrections,
 											       chemSystemRaw, analyticalConcentrationsForDiffs.get(),
 											       perturbedConstituent);
 		if (tRet != ::ECHMET::RetCode::OK) {
@@ -504,7 +502,7 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 		EMVector deltas{NIF};
 
 		tRet = CAES::calculateFirstConcentrationDerivatives_prepared(derivatives, conductivityDerivative,
-									     solver, H,
+									     solver, H, corrections,
 									     chemSystemRaw, analyticalConcentrationsForDiffs.get(),
 									     perturbedConstituent);
 		if (tRet != ::ECHMET::RetCode::OK) {
@@ -539,7 +537,7 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 	derivatives->destroy();
 }
 
-void prepareModelData(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks, const RealVecPtr &analConcsBGELike, const RealVecPtr &analConcsSample, const bool correctForIonicStrength)
+void prepareModelData(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks, const RealVecPtr &analConcsBGELike, const RealVecPtr &analConcsSample, const NonidealityCorrections corrections)
 {
 	/* Step 1 - Identify the target and its flaws, there are always flaws... oops, not this "step one"...
 	 *
@@ -570,32 +568,29 @@ void prepareModelData(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks
 	 *
 	 * Solve the almost-like-BGE system to get ionic concentrations and corrected ionic mobilities.
 	 */
-	solveChemicalSystem(systemPack.chemSystemRaw, analConcsBGELike, systemPack.calcPropsRaw, correctForIonicStrength);
+	solveChemicalSystem(systemPack.chemSystemRaw, analConcsBGELike, systemPack.calcPropsRaw, corrections);
 
 	/* Step 2 - Bind the now known properties of the present ionic forms to the SystemPack.
 	 */
 	bindSystemPack(systemPack, analConcsBGELike, analConcsSample);
 
 	/* Step 3 - Precalculate concentration derivatives */
-	precalculateConcentrationDeltas(systemPack, deltaPacks, analConcsBGELike, correctForIonicStrength);
+	precalculateConcentrationDeltas(systemPack, deltaPacks, analConcsBGELike, corrections);
 }
 
-void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const bool correctForIonicStrength)
+void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections)
 {
 	::ECHMET::RetCode tRet;
 	CAES::SolverContext *solverCtx;
 	CAES::Solver *solver;
 	CAES::Solver::Options opts = CAES::Solver::defaultOptions() | CAES::Solver::Options::DISABLE_THREAD_SAFETY;
 
-	if (correctForIonicStrength)
-		opts |= CAES::Solver::IONIC_STRENGTH_CORRECTION;
-
 	tRet = CAES::createSolverContext(solverCtx, *chemSystem);
 	if (tRet != ::ECHMET::RetCode::OK) {
 		throw CalculationException{"Failed to create solver context: " + std::string{errorToString(tRet)}, coreLibsErrorToNativeError(tRet)};
 	}
 
-	solver = CAES::createSolver(solverCtx, opts);
+	solver = CAES::createSolver(solverCtx, corrections, opts);
 	if (solver == nullptr) {
 		solverCtx->destroy();
 		throw CalculationException{"Failed to create solver", RetCode::E_NO_MEMORY};
@@ -624,12 +619,12 @@ void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVe
 	solverCtx->destroy();
 
 	/* Calculate ionic properties */
-	calcIonicProperties(chemSystem, concentrations, calcProps, correctForIonicStrength);
+	calcIonicProperties(chemSystem, concentrations, calcProps, corrections);
 }
 
-void solveChemicalSystem(const ChemicalSystemPtr chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const bool correctForIonicStrength)
+void solveChemicalSystem(const ChemicalSystemPtr chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const NonidealityCorrections corrections)
 {
-	return solveChemicalSystem(chemSystem.get(), concentrations, calcProps.get(), correctForIonicStrength);
+	return solveChemicalSystem(chemSystem.get(), concentrations, calcProps.get(), corrections);
 }
 
 std::vector<const SysComp::Constituent *> sysCompToLEMNGOrdering(const ChemicalSystemPtr &chemSystem)

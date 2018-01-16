@@ -73,6 +73,7 @@ static void print_all_constituents(const constituent_t *allCts, const size_t len
 		printf("concentration in BGE = %f\n", ctuent->concentrationBGE);
 		printf("concentration in Sample = %f\n", ctuent->concentrationSample);
 		printf("pKa = ");
+		printf("viscosity coefficient = %f\n", ctuent->viscosityCoefficient);
 		print_double_array(ctuent->pKas, ctuent->chargeHigh - ctuent->chargeLow, "", "%lf");
 		printf("mobilities = ");
 		print_double_array(ctuent->mobilities, ctuent->chargeHigh - ctuent->chargeLow + 1, "", "%lg");
@@ -118,7 +119,8 @@ static void init_constituent(constituent_t *ctuent,
 			     const char *ctype, const char *crole, const char *name,
 			     const int chargeLow, const int chargeHigh,
 			     const double concentrationBGE, const double concentrationSample,
-			     double *pKas, double *mobilities)
+			     double *const pKas, double *const mobilities,
+			     const double viscosityCoefficient)
 {
 	ctuent->chargeLow = chargeLow;
 	ctuent->chargeHigh = chargeHigh;
@@ -126,6 +128,7 @@ static void init_constituent(constituent_t *ctuent,
 	ctuent->concentrationSample = concentrationSample;
 	ctuent->pKas = pKas;
 	ctuent->mobilities = mobilities;
+	ctuent->viscosityCoefficient = viscosityCoefficient;
 
 	ctuent->name = calloc(strlen(name) + 1, sizeof(char));
 	strcpy(ctuent->name, name);
@@ -455,10 +458,12 @@ static size_t parse_cts_array(const json_t *array, constituent_t *allCts, size_t
 		json_t *jChargeHigh;
 		json_t *jConcentrationBGE;
 		json_t *jConcentrationSample;
+		json_t *jViscosityCoefficient;
 		json_t *jPKaArray;
 		json_t *jMobilities;
 		double concentrationBGE;
 		double concentrationSample;
+		double viscosityCoefficient;
 		double *pKas;
 		double *mobilities;
 		constituent_t *ctuent = &allCts[ctr];
@@ -564,6 +569,19 @@ static size_t parse_cts_array(const json_t *array, constituent_t *allCts, size_t
 		}
 		concentrationSample = json_number_value(jConcentrationSample);
 
+		jViscosityCoefficient = json_object_get(item, "viscosityCoefficient");
+		if (jConcentrationSample == NULL) {
+			fprintf(stderr, "No key \"viscosityCoefficient\" in constituent element\n");
+			*err = JLDR_E_BAD_INPUT;
+			return ctr;
+		}
+		if (is_json_number(jViscosityCoefficient) == 0) {
+			fprintf(stderr, "Item \"viscosityCoefficient\" is not a real number\n");
+			*err = JLDR_E_BAD_INPUT;
+			return ctr;
+		}
+		viscosityCoefficient = json_number_value(jViscosityCoefficient);
+
 		jPKaArray = json_object_get(item, "pKas");
 		if (jPKaArray == NULL) {
 			fprintf(stderr, "No key \"pKas\" in the constituent element\n");
@@ -616,7 +634,7 @@ static size_t parse_cts_array(const json_t *array, constituent_t *allCts, size_t
 			return ctr;
 		}
 
-		init_constituent(ctuent, typeId, roleId, name, chargeLow, chargeHigh, concentrationBGE, concentrationSample, pKas, mobilities);
+		init_constituent(ctuent, typeId, roleId, name, chargeLow, chargeHigh, concentrationBGE, concentrationSample, pKas, mobilities, viscosityCoefficient);
 
 		if (ctuent->ctype == NUCLEUS) {
 			if (parse_complex_forms(item, ctuent) <= 0) {

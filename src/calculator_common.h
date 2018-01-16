@@ -27,8 +27,8 @@ private:
     const std::string m_message;
 };
 
-SolutionProperties calculateSolutionProperties(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const bool correctForIonicStrength, const bool calcBufferCapacity = false);
-SolutionProperties calculateSolutionProperties(const ChemicalSystemPtr &chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const bool correctForIonicStrength, const bool calcBufferCapacity = false);
+SolutionProperties calculateSolutionProperties(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections, const bool calcBufferCapacity = false);
+SolutionProperties calculateSolutionProperties(const ChemicalSystemPtr &chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const NonidealityCorrections corrections, const bool calcBufferCapacity = false);
 
 template <typename T>
 bool isComplex(const T &I);
@@ -36,9 +36,9 @@ bool isComplex(const T &I);
 RealVecPtr makeAnalyticalConcentrationsForDerivator(const CalculatorSystemPack &systemPack);
 CalculatorSystemPack makeSystemPack(const ChemicalSystemPtr &chemSystem, const CalculatedPropertiesPtr &calcProps,
 				    const std::function<bool (const std::string &)> &isAnalyte);
-void prepareModelData(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks, const RealVecPtr &analConcsBGELike, const RealVecPtr &analConcsSample, const bool correctForIonicStrength);
-void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const bool correctForIonicStrength);
-void solveChemicalSystem(const ChemicalSystemPtr &chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const bool correctForIonicStrength);
+void prepareModelData(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks, const RealVecPtr &analConcsBGELike, const RealVecPtr &analConcsSample, const NonidealityCorrections corrections);
+void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections);
+void solveChemicalSystem(const ChemicalSystemPtr &chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const NonidealityCorrections corrections);
 std::vector<const SysComp::Constituent *> sysCompToLEMNGOrdering(const ChemicalSystemPtr &chemSystem);
 
 #ifdef ECHMET_LEMNG_SENSITIVE_NUMDERS	/*!< Use much finer delta and lower analytes concentrations to calculate numerical derivatives. This comes with some additional memory and performance overhead */

@@ -169,7 +169,9 @@ void applyConcentrations(ECHMET::LEMNG::InAnalyticalConcentrationsMap *acMap, co
 int launch(int argc, char **argv)
 {
 	const char *inputDataFile;
-	bool correctForIS;
+	bool correctForDH;
+	bool correctForOF;
+	bool correctForVS;
 	double drivingVoltage;
 	double totalLength;
 	double effectiveLength;
@@ -178,19 +180,21 @@ int launch(int argc, char **argv)
 	ECHMET::LEMNG::RetCode ltRet;
 	ECHMET::LEMNG::CZESystem *czeSystem = NULL;
 
-	if (argc < 7) {
-		std::cout << "Usage: inputFile IS_CORRECTION(number) DrivingVoltage(kV) TotalLength(cm) EffectiveLength(cm) uEOF(U)\n";
+	if (argc < 9) {
+		std::cout << "Usage: inputFile DH_CORRECTION(number) OF_CORRECTION(number) VS_CORRECTION(number), DrivingVoltage(kV) TotalLength(cm) EffectiveLength(cm) uEOF(U)\n";
 		return EXIT_FAILURE;
 	}
 
 	inputDataFile = argv[1];
 
 	try {
-		correctForIS = std::atoi(argv[2]) >= 1;
-		drivingVoltage = strtod(argv[3], NULL) * 1000.0;
-		totalLength = strtod(argv[4], NULL) / 100.0;
-		effectiveLength = strtod(argv[5], NULL) / 100.0;
-		uEOF = strtod(argv[6], NULL);
+		correctForDH = std::atoi(argv[2]) >= 1;
+		correctForOF = std::atoi(argv[3]) >= 1;
+		correctForVS = std::atoi(argv[4]) >= 1;
+		drivingVoltage = strtod(argv[5], NULL) * 1000.0;
+		totalLength = strtod(argv[6], NULL) / 100.0;
+		effectiveLength = strtod(argv[7], NULL) / 100.0;
+		uEOF = strtod(argv[8], NULL);
 	} catch (...) { /* THIS DOES NOT WORK WITH PRE-C++11 CONVERSION FUNCS. */
 		std::cerr << "ERROR: Invalid input parameters\n";
 
@@ -241,8 +245,16 @@ int launch(int argc, char **argv)
 	applyConcentrations(acBGEMap, inputDesc.BGEConcentrations);
 	applyConcentrations(acFullMap, inputDesc.SampleConcentrations);
 
+	ECHMET::NonidealityCorrections corrections;
+	if (correctForDH)
+		corrections |= ECHMET::CORR_DEBYE_HUCKEL;
+	if (correctForOF)
+		corrections |= ECHMET::CORR_ONSAGER_FUOSS;
+	if (correctForVS)
+		corrections |= ECHMET::CORR_VISCOSITY;
+
 	ECHMET::LEMNG::Results results;
-	ECHMET::LEMNG::RetCode tRet = czeSystem->evaluate(acBGEMap, acFullMap, correctForIS, results);
+	ECHMET::LEMNG::RetCode tRet = czeSystem->evaluate(acBGEMap, acFullMap, corrections, results);
 
 	if (tRet != ECHMET::LEMNG::OK)
 		std::cout << "Failed to solve the system: " << czeSystem->lastErrorString() << "\n";

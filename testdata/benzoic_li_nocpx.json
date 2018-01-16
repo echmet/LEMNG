@@ -8,6 +8,7 @@
 			"chargeHigh": 0,
 			"concentrationBGE": 35.0,
 			"concentrationSample": 31.5,
+			"viscosityCoefficient": 0.0,
 			"pKas": [ 4.203 ],
 			"mobilities": [ 33.6, 0.0 ],
 			"complexForms": [
@@ -31,6 +32,7 @@
 			"chargeHigh": 1,
 			"concentrationBGE": 10.0,
 			"concentrationSample": 9.0,
+			"viscosityCoefficient": 0.0,
 			"pKas": [ 13.8 ],
 			"mobilities": [ 0.0, 40.1 ],
 			"complexForms": [
