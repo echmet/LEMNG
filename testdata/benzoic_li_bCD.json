@@ -76,9 +76,9 @@
 			"name": "b-CD",
 			"chargeLow": 0,
 			"chargeHigh": 0,
-			"concentrationBGE": 20.0,
-			"concentrationSample": 20.0,
-			"viscosityCoefficient": 0.0,
+			"concentrationBGE": 10.0,
+			"concentrationSample": 10.0,
+			"viscosityCoefficient": 0.003,
 			"pKas": [ ],
 			"mobilities": [ 0.0 ]
 		}
