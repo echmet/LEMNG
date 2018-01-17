@@ -18,7 +18,7 @@ namespace LEMNG {
 /*!
  * Possible return codes from public API calls.
  */
-ECHMET_ST_ENUM(RetCode, int32_t) {
+ECHMET_ST_ENUM(RetCode) {
 	OK = 0,
 	E_NO_MEMORY = 0x1,			/*!< Insufficient memory to complete operation. */
 	E_INVALID_ARGUMENT = 0x2,		/*!< Argument passed to a function was invalid. */
@@ -43,14 +43,14 @@ ECHMET_ST_ENUM(RetCode, int32_t) {
 /*!
  * Possible types of eigenzone
  */
-ECHMET_ST_ENUM(EigenzoneType, int32_t) {
+ECHMET_ST_ENUM(EigenzoneType) {
 	INVALID = 0x0,	/*!< Should not be returned. */
 	ANALYTE = 0x1,	/*!< Zone corresponds to an analyte. */
 	SYSTEM = 0x2	/*!< Zone does not correspond to any analyte - a system zone. */
 	ENUM_FORCE_INT32_SIZE(LEMNGEigenzoneType)
 };
 
-ECHMET_ST_ENUM(EFGResponseType, int32_t) {
+ECHMET_ST_ENUM(EFGResponseType) {
 	RESP_CONDUCTIVITY = 0x0,	/*!< Plot conductivity response */
 	RESP_CONCENTRATION = 0x1,	/*!< Plot concentration of a given constituent */
 	RESP_PH = 0x2			/*!< Plot pH response */

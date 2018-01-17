@@ -225,7 +225,7 @@ void fillSolutionProperties(const ChemicalSystemPtr &chemSystem, const Calculato
 		}
 	};
 
-	const bool correctForIS = corrections & NonidealityCorrections::CORR_DEBYE_HUCKEL;
+	const bool correctForIS = nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL);
 	const ECHMETReal cH = H3OConcentration(props.ionicConcentrations);
 	rProps.bufferCapacity = props.bufferCapacity;
 	rProps.conductivity = props.conductivity;
