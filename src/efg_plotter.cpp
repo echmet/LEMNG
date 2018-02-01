@@ -277,7 +277,7 @@ RetCode ECHMET_CC plotElectrophoregram(EFGPairVec *&electrophoregram,
 
 	if (totalLength <= 0)
 		return RetCode::E_INVALID_CAPILLARY;
-	if (totalLength < effectiveLength)
+	if (totalLength < effectiveLength || effectiveLength <= 0)
 		return RetCode::E_INVALID_DETECTOR_POSITION;
 	if (respType == EFGResponseType::RESP_CONCENTRATION && constituentName == nullptr)
 		return RetCode::E_INVALID_ARGUMENT;
