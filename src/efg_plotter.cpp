@@ -154,11 +154,11 @@ double calculateHVLR(const double t, const double x, const double d, const doubl
 			return E + log(std::erfc(b));
 	};
 
-	static const auto accum = [](double tPlus, double tMinus) {
+	static const auto accum = [](double tPlus, double tMinus, const auto &op) {
 		if (tPlus > tMinus)
 			std::swap(tPlus, tMinus);
 
-		return tMinus + log(ONE + std::exp(tPlus - tMinus));
+		return tMinus + log(op(ONE, std::exp(tPlus - tMinus)));
 	};
 
 	const double den = std::sqrt(FOUR * d * t);
@@ -190,7 +190,7 @@ double calculateHVLR(const double t, const double x, const double d, const doubl
 			const double lnErfc_aPlus = EME(ZERO, aPlus);
 			const double lnErfc_aMinus = EME(ZERO, aMinus);
 
-			return accum(lnErfc_aPlus, lnErfc_aMinus);
+			return accum(lnErfc_aPlus, lnErfc_aMinus, std::minus<double>{});
 		} else
 			return log(std::erfc(aMinus) - std::erfc(aPlus));
 	}();
@@ -203,11 +203,11 @@ double calculateHVLR(const double t, const double x, const double d, const doubl
 	const double EMinusErfc = EME(EMinus, bMinus);
 	const double EPlusErfc = EME(EPlus, bPlus);
 
-	const double lnQ = accum(EPlusErfc, EMinusErfc);
+	const double lnQ = accum(EMinusErfc, EPlusErfc, std::plus<double>{});
 
 	const double F = lnQ - lnRV;
 
-	if (F < log(std::numeric_limits<double>::max())	- 2)
+	if (F < log(std::numeric_limits<double>::max()) - 2)
 		return ONE / (ONE + std::exp(F));
 
 	return ZERO;
