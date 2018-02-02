@@ -50,6 +50,8 @@ EigenzoneDispersionVec calculateEigenzoneDispersion(const QLQRPack &QLQR, const 
 	/* Diffusive parameters */
 	const EMMatrixC LDiffR = QL * diffMatrix * QR;
 
+	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_DIFF_PARAMS_MATRIX, const EMMatrixC&>(LDiffR);
+
 	for (size_t idx = 0; idx < NCO; idx++) {
 		/* Get diffusive parameter of the eigenzone */
 		const double a2t = [&NCO, &LDiffR](int idx) {
@@ -777,6 +779,17 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_DIFF_MATRIX, const ECHMET::LEMNG::C
 
 	ss << "-- Diffusion matrix --\n"
 	   << "---\n\n" << diffMatrix << "\n\n---";
+
+	return ss.str();
+}
+
+ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_NONLIN_DIFF_PARAMS_MATRIX, "Diffusive parameters matrix")
+ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_DIFF_PARAMS_MATRIX, const ECHMET::LEMNG::Calculator::EMMatrixC &dpMatrix)
+{
+	std::ostringstream ss{};
+
+	ss << "-- Diffusive parameters matrix --\n"
+	   << "---\n\n" << dpMatrix << "\n\n---";
 
 	return ss.str();
 }
