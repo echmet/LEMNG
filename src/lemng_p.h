@@ -12,8 +12,8 @@ class CZESystemImpl : public CZESystem {
 public:
 	explicit CZESystemImpl();
 	explicit CZESystemImpl(CZESystemImpl &&other) noexcept;
-	explicit CZESystemImpl(const SysComp::ChemicalSystem &chemicalSystemBGE, const SysComp::CalculatedProperties &calcPropsBGE, const SysComp::ChemicalSystem &chemicalSystemFull, const SysComp::CalculatedProperties &calcPropsFull, const IsAnalyteMap &iaMap);
-	explicit CZESystemImpl(const SysComp::ChemicalSystem &chemicalSystemBGE, const SysComp::CalculatedProperties &calcPropsBGE, const SysComp::ChemicalSystem &chemicalSystemFull, const SysComp::CalculatedProperties& calcPropsFull, IsAnalyteMap &&iaMap);
+	explicit CZESystemImpl(const SysComp::ChemicalSystem &chemicalSystemBGE, const SysComp::CalculatedProperties &calcPropsBGE, const SysComp::CalculatedProperties &calcPropsBGELike, const SysComp::ChemicalSystem &chemicalSystemFull, const SysComp::CalculatedProperties &calcPropsFull, const IsAnalyteMap &iaMap);
+	explicit CZESystemImpl(const SysComp::ChemicalSystem &chemicalSystemBGE, const SysComp::CalculatedProperties &calcPropsBGE, const SysComp::CalculatedProperties &calcPropsBGELike, const SysComp::ChemicalSystem &chemicalSystemFull, const SysComp::CalculatedProperties& calcPropsFull, IsAnalyteMap &&iaMap);
 	virtual ~CZESystemImpl() noexcept override;
 	virtual RetCode ECHMET_CC evaluate(const InAnalyticalConcentrationsMap *acBGE, const InAnalyticalConcentrationsMap *acFull,
 					   const NonidealityCorrections corrections, Results &results) noexcept override;
@@ -29,11 +29,12 @@ public:
 
 private:
 	bool isAnalyte(const std::string &name);
-	void setupInternal(const SysComp::ChemicalSystem &chemicalSystemBGE, const SysComp::CalculatedProperties &calcPropsBGE, const SysComp::ChemicalSystem &chemicalSystemFull, const SysComp::CalculatedProperties &calcPropsFull);
+	void setupInternal(const SysComp::ChemicalSystem &chemicalSystemBGE, const SysComp::CalculatedProperties &calcPropsBGE, const SysComp::CalculatedProperties &calcPropsBGELike, const SysComp::ChemicalSystem &chemicalSystemFull, const SysComp::CalculatedProperties &calcPropsFull);
 
 	ChemicalSystemPtr m_chemicalSystemBGE;
 	ChemicalSystemPtr m_chemicalSystemFull;
 	CalculatedPropertiesPtr m_calcPropsBGE;
+	CalculatedPropertiesPtr m_calcPropsBGELike;
 	CalculatedPropertiesPtr m_calcPropsFull;
 	Calculator::CalculatorSystemPack m_systemPack;
 

@@ -70,6 +70,29 @@ IS_POD(TracepointInfo)
 typedef Vec<TracepointInfo> TracepointInfoVec;
 
 /*!
+ * Description of a dissociation ratio for a given ionic form
+ */
+class RDissociationRatio {
+public:
+	FixedString *name;	/*!< Name of the ionic compound */
+	double fraction;	/*!< Molar fraction of the ionic form */
+};
+IS_POD(RDissociationRatio)
+typedef Vec<RDissociationRatio> RDissociationRatioVec;
+
+/*!
+ * Description of molar fractions of all ionic forms of a dissociated component
+ */
+class RDissociatedConstituent {
+public:
+	FixedString *name;		/*!< Name of the constituent */
+	double effectiveMobility;	/*!< Effective mobility of the constituent */
+	RDissociationRatioVec *ratios;	/*!< Dissociation descriptors of all ionic form of the constituent */
+};
+IS_POD(RDissociatedConstituent)
+typedef Vec<RDissociatedConstituent> RDissociatedConstituentVec;
+
+/*!
  * Description of an ion contained in a chemical compound.
  */
 class RIon {
@@ -144,9 +167,11 @@ typedef Vec<REigenzone> REigenzoneVec;
  */
 class Results {
 public:
-	RSolutionProperties BGEProperties;	/* Properties of the plain background electrolyte. */
-	REigenzoneVec *eigenzones;		/* Description of all eigenzones present in the system. */
-	bool isBGEValid;			/*!< Set to true of the BGE composition was successfully solved. */
+	RSolutionProperties BGEProperties;			/*!< Properties of the plain background electrolyte. */
+	REigenzoneVec *eigenzones;				/*!< Description of all eigenzones present in the system. */
+	RDissociatedConstituentVec *analytesDissociation;	/*!< Description of dissociation degrees of all analytes. */
+	bool isBGEValid;					/*!< Set to true if the BGE composition was successfully solved. */
+	bool isAnalytesDissociationValid;			/*!< Set to true if analytes dissociation was successfully solved. */
 };
 IS_POD(Results)
 typedef MutSKMap<double> InAnalyticalConcentrationsMap;

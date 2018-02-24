@@ -254,12 +254,13 @@ SolutionProperties::SolutionProperties() :
 }
 
 SolutionProperties::SolutionProperties(const double bufferCapacity, const double conductivity, const double ionicStrength,
-				       std::vector<double> &&analyticalConcentrations, std::vector<double> &&ionicConcentrations) noexcept :
+				       std::vector<double> &&analyticalConcentrations, std::vector<double> &&ionicConcentrations, std::vector<double> &&effectiveMobilities) noexcept :
 	bufferCapacity{bufferCapacity},
 	conductivity{conductivity},
 	ionicStrength{ionicStrength},
 	analyticalConcentrations(analyticalConcentrations),
-	ionicConcentrations(ionicConcentrations)
+	ionicConcentrations(ionicConcentrations),
+	effectiveMobilities(effectiveMobilities)
 {
 }
 
@@ -268,7 +269,8 @@ SolutionProperties::SolutionProperties(const SolutionProperties &other) :
 	conductivity{other.conductivity},
 	ionicStrength{other.ionicStrength},
 	analyticalConcentrations(other.analyticalConcentrations),
-	ionicConcentrations(other.ionicConcentrations)
+	ionicConcentrations(other.ionicConcentrations),
+	effectiveMobilities(other.effectiveMobilities)
 {
 	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_OBJECT_CONSTRUCTION, const std::string&>(ECHMET_S("SolutionProperties copy c-tor"));
 }
@@ -278,7 +280,8 @@ SolutionProperties::SolutionProperties(SolutionProperties &&other) noexcept :
 	conductivity{other.conductivity},
 	ionicStrength{other.ionicStrength},
 	analyticalConcentrations(std::move(other.analyticalConcentrations)),
-	ionicConcentrations(std::move(other.ionicConcentrations))
+	ionicConcentrations(std::move(other.ionicConcentrations)),
+	effectiveMobilities(std::move(other.effectiveMobilities))
 {
 	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_OBJECT_CONSTRUCTION, const std::string&>(ECHMET_S("SolutionProperties move c-tor"));
 }
@@ -290,6 +293,7 @@ SolutionProperties & SolutionProperties::operator=(const SolutionProperties &oth
 	const_cast<double&>(ionicStrength) = other.ionicStrength;
 	const_cast<std::vector<double>&>(analyticalConcentrations) = other.analyticalConcentrations;
 	const_cast<std::vector<double>&>(ionicConcentrations) = other.ionicConcentrations;
+	const_cast<std::vector<double>&>(effectiveMobilities) = other.effectiveMobilities;
 
 	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_OBJECT_CONSTRUCTION, const std::string&>(ECHMET_S("SolutionProperties copy assignment"));
 
@@ -303,6 +307,7 @@ SolutionProperties & SolutionProperties::operator=(SolutionProperties &&other) n
 	const_cast<double&>(ionicStrength) = other.ionicStrength;
 	const_cast<std::vector<double>&>(analyticalConcentrations) = std::move(other.analyticalConcentrations);
 	const_cast<std::vector<double>&>(ionicConcentrations) = std::move(other.ionicConcentrations);
+	const_cast<std::vector<double>&>(effectiveMobilities) = std::move(other.effectiveMobilities);
 
 	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_OBJECT_CONSTRUCTION, const std::string&>(ECHMET_S("SolutionProperties move assignment"));
 

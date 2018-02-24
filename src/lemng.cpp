@@ -44,6 +44,7 @@ CZESystemImpl::CZESystemImpl() :
 	m_chemicalSystemBGE{std::unique_ptr<SysComp::ChemicalSystem, decltype(&chemicalSystemDeleter)>{new SysComp::ChemicalSystem, &chemicalSystemDeleter}},
 	m_chemicalSystemFull{std::unique_ptr<SysComp::ChemicalSystem, decltype(&chemicalSystemDeleter)>{new SysComp::ChemicalSystem, &chemicalSystemDeleter}},
 	m_calcPropsBGE{std::unique_ptr<SysComp::CalculatedProperties, decltype(&calculatedPropertiesDeleter)>{new SysComp::CalculatedProperties, &calculatedPropertiesDeleter}},
+	m_calcPropsBGELike{std::unique_ptr<SysComp::CalculatedProperties, decltype(&calculatedPropertiesDeleter)>{new SysComp::CalculatedProperties, &calculatedPropertiesDeleter}},
 	m_calcPropsFull{std::unique_ptr<SysComp::CalculatedProperties, decltype(&calculatedPropertiesDeleter)>{new SysComp::CalculatedProperties, &calculatedPropertiesDeleter}}
 {
 }
@@ -52,30 +53,33 @@ CZESystemImpl::CZESystemImpl(CZESystemImpl &&other) noexcept :
 	m_chemicalSystemBGE{std::move(other.m_chemicalSystemBGE)},
 	m_chemicalSystemFull{std::move(other.m_chemicalSystemFull)},
 	m_calcPropsBGE{std::move(other.m_calcPropsBGE)},
+	m_calcPropsBGELike{std::move(other.m_calcPropsBGELike)},
 	m_calcPropsFull{std::move(other.m_calcPropsFull)},
 	m_systemPack{std::move(other.m_systemPack)},
 	m_isAnalyteMap{std::move(other.m_isAnalyteMap)}
 {
 }
 
-CZESystemImpl::CZESystemImpl(const SysComp::ChemicalSystem &chemicalSystemBGE, const SysComp::CalculatedProperties &calcPropsBGE, const SysComp::ChemicalSystem &chemicalSystemFull, const SysComp::CalculatedProperties &calcPropsFull, const IsAnalyteMap &iaMap) :
+CZESystemImpl::CZESystemImpl(const SysComp::ChemicalSystem &chemicalSystemBGE, const SysComp::CalculatedProperties &calcPropsBGE, const SysComp::CalculatedProperties &calcPropsBGELike, const SysComp::ChemicalSystem &chemicalSystemFull, const SysComp::CalculatedProperties &calcPropsFull, const IsAnalyteMap &iaMap) :
 	m_chemicalSystemBGE{std::unique_ptr<SysComp::ChemicalSystem, decltype(&chemicalSystemDeleter)>{new SysComp::ChemicalSystem, &chemicalSystemDeleter}},
 	m_chemicalSystemFull{std::unique_ptr<SysComp::ChemicalSystem, decltype(&chemicalSystemDeleter)>{new SysComp::ChemicalSystem, &chemicalSystemDeleter}},
 	m_calcPropsBGE{std::unique_ptr<SysComp::CalculatedProperties, decltype(&calculatedPropertiesDeleter)>{new SysComp::CalculatedProperties, &calculatedPropertiesDeleter}},
+	m_calcPropsBGELike{std::unique_ptr<SysComp::CalculatedProperties, decltype(&calculatedPropertiesDeleter)>{new SysComp::CalculatedProperties, &calculatedPropertiesDeleter}},
 	m_calcPropsFull{std::unique_ptr<SysComp::CalculatedProperties, decltype(&calculatedPropertiesDeleter)>{new SysComp::CalculatedProperties, &calculatedPropertiesDeleter}},
 	m_isAnalyteMap{iaMap}
 {
-	setupInternal(chemicalSystemBGE, calcPropsBGE, chemicalSystemFull, calcPropsFull);
+	setupInternal(chemicalSystemBGE, calcPropsBGE, calcPropsBGELike, chemicalSystemFull, calcPropsFull);
 }
 
-CZESystemImpl::CZESystemImpl(const SysComp::ChemicalSystem &chemicalSystemBGE, const SysComp::CalculatedProperties &calcPropsBGE, const SysComp::ChemicalSystem &chemicalSystemFull, const SysComp::CalculatedProperties &calcPropsFull, IsAnalyteMap &&iaMap) :
+CZESystemImpl::CZESystemImpl(const SysComp::ChemicalSystem &chemicalSystemBGE, const SysComp::CalculatedProperties &calcPropsBGE, const SysComp::CalculatedProperties &calcPropsBGELike, const SysComp::ChemicalSystem &chemicalSystemFull, const SysComp::CalculatedProperties &calcPropsFull, IsAnalyteMap &&iaMap) :
 	m_chemicalSystemBGE{std::unique_ptr<SysComp::ChemicalSystem, decltype(&chemicalSystemDeleter)>{new SysComp::ChemicalSystem, &chemicalSystemDeleter}},
 	m_chemicalSystemFull{std::unique_ptr<SysComp::ChemicalSystem, decltype(&chemicalSystemDeleter)>{new SysComp::ChemicalSystem, &chemicalSystemDeleter}},
 	m_calcPropsBGE{std::unique_ptr<SysComp::CalculatedProperties, decltype(&calculatedPropertiesDeleter)>{new SysComp::CalculatedProperties, &calculatedPropertiesDeleter}},
+	m_calcPropsBGELike{std::unique_ptr<SysComp::CalculatedProperties, decltype(&calculatedPropertiesDeleter)>{new SysComp::CalculatedProperties, &calculatedPropertiesDeleter}},
 	m_calcPropsFull{std::unique_ptr<SysComp::CalculatedProperties, decltype(&calculatedPropertiesDeleter)>{new SysComp::CalculatedProperties, &calculatedPropertiesDeleter}},
 	m_isAnalyteMap{iaMap}
 {
-	setupInternal(chemicalSystemBGE, calcPropsBGE, chemicalSystemFull, calcPropsFull);
+	setupInternal(chemicalSystemBGE, calcPropsBGE, calcPropsBGELike, chemicalSystemFull, calcPropsFull);
 }
 
 CZESystemImpl::~CZESystemImpl() noexcept
@@ -178,21 +182,23 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 		applyConcentrationMapping(analConcsBGE, acBGE, m_chemicalSystemBGE);
 		applyConcentrationMapping(analConcsFull, acSample, m_chemicalSystemFull);
 		applyConcentrationMappingBGELike(analConcsBGELike);
-	} catch (CannotApplyConcentrationException ex) {
+	} catch (const CannotApplyConcentrationException &ex) {
 		m_lastErrorString = "Cannot process input analytical concentrations";
 		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_INIT_ERR, const char*, const char*>("Cannot process input analytical concentrations", "Malformed input data");
 
 		return RetCode::E_INTERNAL_ERROR;
-	} catch (ConcentrationTooLowException &ex) {
+	} catch (const ConcentrationTooLowException &ex) {
 		m_lastErrorString = "Concentration of " + std::string{ex.what()} + " is too low for the numerical solver";
 		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_INIT_ERR, const char*, const char*>("Cannot process input analytical concentrations", "Concentration too low");
 
 		return RetCode::E_CONCENTRATION_TOO_LOW;
 	}
 
+	auto isAnalyteFunc = [this](const std::string &s){ return this->isAnalyte(s); };
+
 	/* Prepare output results */
 	try {
-		results = prepareResults(m_chemicalSystemBGE, m_chemicalSystemFull);
+		results = prepareResults(m_chemicalSystemBGE, m_chemicalSystemFull, isAnalyteFunc);
 	} catch (std::bad_alloc &) {
 		m_lastErrorString = "Insufficient memory to prepare results";
 		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_INIT_ERR, const char*, const char*>("Cannot prepare Results data structures", "Insufficient memory");
@@ -203,7 +209,7 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 	Calculator::SolutionProperties BGEProps;
 	try {
 		BGEProps = Calculator::calculateSolutionProperties(m_chemicalSystemBGE, analConcsBGE, m_calcPropsBGE, corrections, true);
-	} catch (Calculator::CalculationException &ex) {
+	} catch (const Calculator::CalculationException &ex) {
 		releaseResults(results);
 		m_lastErrorString = std::string{"Unable to calculate BGE properties: "} + ex.what();
 		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_PROGRESS_ERR, const char*, const char*>("Unable to calculate BGE properties", ex.what());
@@ -213,14 +219,27 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 
 	m_systemPack.conductivity = BGEProps.conductivity;
 
+	Calculator::SolutionProperties BGELikeProps;
+	try {
+		BGELikeProps = Calculator::calculateSolutionProperties(m_chemicalSystemFull, analConcsBGELike, m_calcPropsBGELike, corrections, true);
+	} catch (const Calculator::CalculationException &ex) {
+		fillResultsBGE(m_chemicalSystemBGE, BGEProps, corrections, results);
+		m_lastErrorString = ex.what();
+		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_PROGRESS_ERR, const char*, const char*>("Unable to calculate analytes dissociation", ex.what());
+
+		return ex.errorCode();
+	}
+
 	/* Precalculate what is used in many places of the linear model */
 	try {
 		Calculator::prepareModelData(m_systemPack, deltaPacks, analConcsBGELike, analConcsFull, corrections);
 	} catch (std::bad_alloc &) {
-		fillResultsPartial(m_chemicalSystemBGE, BGEProps, corrections, results);
+		fillResultsBGE(m_chemicalSystemBGE, BGEProps, corrections, results);
+		fillResultsAnalytesDissociation(m_chemicalSystemFull, BGELikeProps, results);
 		return RetCode::E_NO_MEMORY;
 	} catch (Calculator::CalculationException &ex) {
-		fillResultsPartial(m_chemicalSystemBGE, BGEProps, corrections, results);
+		fillResultsBGE(m_chemicalSystemBGE, BGEProps, corrections, results);
+		fillResultsAnalytesDissociation(m_chemicalSystemFull, BGELikeProps, results);
 		m_lastErrorString = ex.what();
 		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_PROGRESS_ERR, const char*, const char*>("Cannot prepare model data", ex.what());
 
@@ -232,16 +251,18 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 		Calculator::LinearResults linResults = Calculator::calculateLinear(m_systemPack, deltaPacks, corrections);
 		Calculator::EigenzoneDispersionVec ezDisps = Calculator::calculateNonlinear(m_systemPack, analConcsBGELike, deltaPacks, linResults.M1, linResults.M2, linResults.QLQR, corrections);
 
-		fillResults(m_chemicalSystemBGE, m_chemicalSystemFull, BGEProps, linResults, ezDisps, corrections, results);
+		fillResults(m_chemicalSystemBGE, m_chemicalSystemFull, BGEProps, BGELikeProps, linResults, ezDisps, corrections, results);
 		/* There was a TODO for a case where not all zones were valid. Be prepared to
 		 * revisit this in case we need to handle this somehow in the future. */
 	} catch (std::bad_alloc &) {
-		fillResultsPartial(m_chemicalSystemBGE, BGEProps, corrections, results);
+		fillResultsBGE(m_chemicalSystemBGE, BGEProps, corrections, results);
+		fillResultsAnalytesDissociation(m_chemicalSystemFull, BGELikeProps, results);
 		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_PROGRESS_ERR, const char*, const char*>("Cannot evaluate linear model", "Insufficient memory");
 
 		return RetCode::E_NO_MEMORY;
 	} catch (Calculator::CalculationException &ex) {
-		fillResultsPartial(m_chemicalSystemBGE, BGEProps, corrections, results);
+		fillResultsBGE(m_chemicalSystemBGE, BGEProps, corrections, results);
+		fillResultsAnalytesDissociation(m_chemicalSystemFull, BGELikeProps, results);
 		m_lastErrorString = ex.what();
 		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_PROGRESS_ERR, const char*, const char*>("Cannot evaluate linear model", ex.what());
 
@@ -266,6 +287,7 @@ CZESystemImpl * CZESystemImpl::make(const SysComp::InConstituentVec *inCtuentVec
 	SysComp::ChemicalSystem chemSystemBGE{};
 	SysComp::ChemicalSystem chemSystemFull{};
 	SysComp::CalculatedProperties calcPropsBGE{};
+	SysComp::CalculatedProperties calcPropsBGELike{};
 	SysComp::CalculatedProperties calcPropsFull{};
 
 	::ECHMET::RetCode tRet = SysComp::makeComposition(chemSystemBGE, calcPropsBGE, inCtuentVecBGE);
@@ -278,10 +300,17 @@ CZESystemImpl * CZESystemImpl::make(const SysComp::InConstituentVec *inCtuentVec
 		throw SysCompException{"Cannot make full system composition", tRet};
 	}
 
+	tRet = SysComp::initializeCalculatedProperties(calcPropsBGELike, chemSystemFull);
+	if (tRet != ::ECHMET::RetCode::OK) {
+		SysComp::releaseChemicalSystem(chemSystemBGE);
+		SysComp::releaseChemicalSystem(chemSystemFull);
+		throw SysCompException{"Cannot initialize BGELike properties", tRet};
+	}
+
 	try {
 		IsAnalyteMap iaMap = makeIsAnalyteMap(inCtuentVecBGE, inCtuentVecSample);
 
-		return new CZESystemImpl(chemSystemBGE, calcPropsBGE, chemSystemFull, calcPropsFull, std::move(iaMap));
+		return new CZESystemImpl(chemSystemBGE, calcPropsBGE, calcPropsBGELike, chemSystemFull, calcPropsFull, std::move(iaMap));
 	} catch (std::bad_alloc &up) {
 		SysComp::releaseChemicalSystem(chemSystemBGE);
 		SysComp::releaseChemicalSystem(chemSystemFull);
@@ -383,7 +412,7 @@ RetCode ECHMET_CC CZESystemImpl::makeAnalyticalConcentrationsMaps(InAnalyticalCo
 	}
 }
 
-void CZESystemImpl::setupInternal(const SysComp::ChemicalSystem &chemicalSystemBGE, const SysComp::CalculatedProperties &calcPropsBGE, const SysComp::ChemicalSystem &chemicalSystemFull, const SysComp::CalculatedProperties &calcPropsFull)
+void CZESystemImpl::setupInternal(const SysComp::ChemicalSystem &chemicalSystemBGE, const SysComp::CalculatedProperties &calcPropsBGE, const SysComp::CalculatedProperties &calcPropsBGELike, const SysComp::ChemicalSystem &chemicalSystemFull, const SysComp::CalculatedProperties &calcPropsFull)
 {
 	m_chemicalSystemBGE->constituents = chemicalSystemBGE.constituents;
 	m_chemicalSystemBGE->ionicForms = chemicalSystemBGE.ionicForms;
@@ -397,6 +426,12 @@ void CZESystemImpl::setupInternal(const SysComp::ChemicalSystem &chemicalSystemB
 	m_calcPropsBGE->effectiveMobilities = calcPropsBGE.effectiveMobilities;
 	m_calcPropsBGE->ionicStrength = 0;
 	m_calcPropsBGE->conductivity = 0;
+
+	m_calcPropsBGELike->ionicConcentrations = calcPropsBGELike.ionicConcentrations;
+	m_calcPropsBGELike->ionicMobilities = calcPropsBGELike.ionicMobilities;
+	m_calcPropsBGELike->effectiveMobilities = calcPropsBGELike.effectiveMobilities;
+	m_calcPropsBGELike->ionicStrength = 0;
+	m_calcPropsBGELike->conductivity = 0;
 
 	m_chemicalSystemFull->constituents = chemicalSystemFull.constituents;
 	m_chemicalSystemFull->ionicForms = chemicalSystemFull.ionicForms;

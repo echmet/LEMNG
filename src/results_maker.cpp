@@ -46,6 +46,18 @@ void teardownRConstituentMap(SKMapImpl<RConstituent> *map)
 	map->destroy();
 }
 
+void releaseRDissociationRatioVec(RDissociationRatioVec *vec)
+{
+	VecImpl<RDissociationRatio, false> *vecImpl = dynamic_cast<VecImpl<RDissociationRatio, false> *>(vec);
+	if (vecImpl == nullptr)
+		throw std::runtime_error{"Failed cast to VecImpl<RDissociationRatio, false> *"};
+
+	for (auto &&r : vecImpl->STL())
+		r.name->destroy();
+
+	vec->destroy();
+}
+
 void releaseRSolutionProperties(RSolutionProperties &props)
 {
 	SKMapImpl<RConstituent> *compositionImpl = dynamic_cast<SKMapImpl<RConstituent> *>(props.composition);
@@ -79,10 +91,21 @@ void teardownREigenzoneVec(VecImpl<REigenzone, false> *vec)
 	vec->destroy();
 }
 
+void teardownRDissociatedConstituentVec(VecImpl<RDissociatedConstituent, false> *vec)
+{
+	for (auto &&dc : vec->STL()) {
+		dc.name->destroy();
+		releaseRDissociationRatioVec(dc.ratios);
+	}
+
+	vec->destroy();
+}
+
 typedef std::unique_ptr<SKMapImpl<RConstituent>, decltype(&teardownRConstituentMap)> RConstituentMapWrapper;
 typedef std::unique_ptr<VecImpl<REigenzone, false>, decltype(&teardownREigenzoneVec)> REigenzoneVecWrapper;
 typedef std::unique_ptr<SKMapImpl<RForm>, decltype(&teardownRFormMap)> RFormMapWrapper;
 typedef std::unique_ptr<VecImpl<RIon, false>, decltype(&teardownRIonVec)> RIonVecWrapper;
+typedef std::unique_ptr<VecImpl<RDissociatedConstituent, false>, decltype(&teardownRDissociatedConstituentVec)> RDissociatedConstituentVecWrapper;
 
 template <typename T>
 void zeroize(typename std::enable_if<!std::is_pointer<T>::value, T>::type *t)
@@ -178,6 +201,69 @@ RConstituentMapWrapper prepareComposition(const ChemicalSystemPtr &chemSystem)
 	return compMap;
 }
 
+RDissociatedConstituent makeDissociatedConstituent(const SysComp::Constituent *ctuent)
+{
+	RDissociatedConstituent dissocC;
+
+	zeroize<RDissociatedConstituent>(&dissocC);
+
+	dissocC.name = createFixedString(ctuent->name->c_str());
+	if (dissocC.name == nullptr)
+		throw std::bad_alloc{};
+	dissocC.ratios = new VecImpl<RDissociationRatio, false>{};
+	if (dissocC.ratios == nullptr) {
+		dissocC.name->destroy();
+		throw std::bad_alloc{};
+	}
+	dissocC.effectiveMobility = 0.0;
+
+	for (size_t idx = 0; idx < ctuent->ionicForms->size(); idx++) {
+		const SysComp::IonicForm *iF = ctuent->ionicForms->at(idx);
+		RDissociationRatio ratio;
+
+		zeroize<RDissociationRatio>(&ratio);
+
+		ratio.name = createFixedString(iF->name->c_str());
+		if (ratio.name == nullptr) {
+			releaseRDissociationRatioVec(dissocC.ratios);
+			dissocC.name->destroy();
+			throw std::bad_alloc{};
+		}
+		ratio.fraction = 0.0;
+
+		if (dissocC.ratios->push_back(ratio) != ::ECHMET::RetCode::OK) {
+			ratio.name->destroy();
+			releaseRDissociationRatioVec(dissocC.ratios);
+			dissocC.name->destroy();
+			throw std::bad_alloc{};
+		}
+	}
+
+	return dissocC;
+}
+
+RDissociatedConstituentVecWrapper prepareDissociation(const ChemicalSystemPtr &chemSystem, const std::function<bool (const std::string &)> &isAnalyte)
+{
+	RDissociatedConstituentVecWrapper dissociation{new VecImpl<RDissociatedConstituent, false>, teardownRDissociatedConstituentVec};
+
+	const auto constituents = chemSystem->constituents;
+	for (size_t idx = 0; idx < constituents->size(); idx++) {
+		const SysComp::Constituent *ctuent = constituents->at(idx);
+		if (!isAnalyte(std::string{ctuent->name->c_str()}))
+			continue;
+
+		try {
+			const RDissociatedConstituent dissocC = makeDissociatedConstituent(ctuent);
+			if (dissociation->push_back(dissocC) != ::ECHMET::RetCode::OK)
+				throw std::bad_alloc{};
+		} catch (const std::bad_alloc &) {
+			throw;
+		}
+	}
+
+	return dissociation;
+}
+
 REigenzoneVecWrapper prepareEigenzones(const ChemicalSystemPtr &chemSystem)
 {
 	REigenzoneVecWrapper eigenzones{new VecImpl<REigenzone, false>{}, teardownREigenzoneVec};
@@ -198,6 +284,32 @@ REigenzoneVecWrapper prepareEigenzones(const ChemicalSystemPtr &chemSystem)
 	}
 
 	return eigenzones;
+}
+
+void fillAnalytesDissociation(const ChemicalSystemPtr &chemSystem, const Calculator::SolutionProperties &props, RDissociatedConstituentVec *rVec)
+{
+	const auto &anConcs = props.analyticalConcentrations;
+	const auto &icConcs = props.ionicConcentrations;
+	const auto &efMobs = props.effectiveMobilities;
+
+	for (size_t idx = 0; idx < rVec->size(); idx++) {
+		RDissociatedConstituent &dC = (*rVec)[idx];
+
+		const size_t anCIdx = (*chemSystem->analyticalConcentrationsByName)[dC.name->c_str()];
+		const size_t efMobIdx = (*chemSystem->effectiveMobilitiesByName)[dC.name->c_str()];
+		const double anC = anConcs.at(anCIdx);
+
+		dC.effectiveMobility = efMobs.at(efMobIdx);
+
+		for (size_t jdx = 0; jdx < dC.ratios->size(); jdx++) {
+			RDissociationRatio &ratio = (*dC.ratios)[jdx];
+
+			const size_t iFCIdx = (*chemSystem->ionicConcentrationsByName)[ratio.name->c_str()];
+			const double iFC = icConcs.at(iFCIdx);
+
+			ratio.fraction = iFC / anC;
+		}
+	}
 }
 
 void fillSolutionProperties(const ChemicalSystemPtr &chemSystem, const Calculator::SolutionProperties &props, const NonidealityCorrections corrections, RSolutionProperties &rProps)
@@ -234,7 +346,7 @@ void fillSolutionProperties(const ChemicalSystemPtr &chemSystem, const Calculato
 	mapComposition(chemSystem, props.analyticalConcentrations, props.ionicConcentrations, rProps.composition);
 }
 
-void fillResults(const ChemicalSystemPtr &chemSystemBGE, const ChemicalSystemPtr &chemSystemFull, const Calculator::SolutionProperties &BGEProperties, const Calculator::LinearResults &linResults, const Calculator::EigenzoneDispersionVec &ezDisps, const NonidealityCorrections corrections, Results &r)
+void fillResults(const ChemicalSystemPtr &chemSystemBGE, const ChemicalSystemPtr &chemSystemFull, const Calculator::SolutionProperties &BGEProperties, const Calculator::SolutionProperties &BGELikeProperties, const Calculator::LinearResults &linResults, const Calculator::EigenzoneDispersionVec &ezDisps, const NonidealityCorrections corrections, Results &r)
 {
 	auto fillEigenzone = [corrections](const ChemicalSystemPtr &chemSystem, const Calculator::Eigenzone &ez, const Calculator::EigenzoneDispersion &disp, REigenzone &rEz) {
 		fillSolutionProperties(chemSystem, ez.solutionProperties, corrections, rEz.solutionProperties);
@@ -251,8 +363,8 @@ void fillResults(const ChemicalSystemPtr &chemSystemBGE, const ChemicalSystemPtr
 	};
 
 	/* Fill out BGE properties */
-	fillSolutionProperties(chemSystemBGE, BGEProperties, corrections, r.BGEProperties);
-	r.isBGEValid = true;
+	fillResultsBGE(chemSystemBGE, BGEProperties, corrections, r);
+	fillResultsAnalytesDissociation(chemSystemFull, BGELikeProperties, r);
 
 	/* Fill out all eigenzones */
 	for (size_t idx = 0; idx < linResults.eigenzones.size(); idx++) {
@@ -264,22 +376,30 @@ void fillResults(const ChemicalSystemPtr &chemSystemBGE, const ChemicalSystemPtr
 	}
 }
 
-void fillResultsPartial(const ChemicalSystemPtr &chemSystemBGE, const Calculator::SolutionProperties &BGEProperties, const NonidealityCorrections corrections, Results &r)
+void fillResultsBGE(const ChemicalSystemPtr &chemSystemBGE, const Calculator::SolutionProperties &BGEProperties, const NonidealityCorrections corrections, Results &r)
 {
 	fillSolutionProperties(chemSystemBGE, BGEProperties, corrections, r.BGEProperties);
 	r.isBGEValid = true;
 }
 
-Results prepareResults(const ChemicalSystemPtr &chemSystemBGE, const ChemicalSystemPtr &chemSystemFull)
+void fillResultsAnalytesDissociation(const ChemicalSystemPtr &chemSystemFull, const Calculator::SolutionProperties &BGELikeProperties, Results &r)
+{
+	fillAnalytesDissociation(chemSystemFull, BGELikeProperties, r.analytesDissociation);
+	r.isAnalytesDissociationValid = true;
+}
+
+Results prepareResults(const ChemicalSystemPtr &chemSystemBGE, const ChemicalSystemPtr &chemSystemFull, IsAnalyteFunc &isAnalyte)
 {
 	Results r;
 	zeroize<Results>(&r);
 
 	RConstituentMapWrapper BGEPropertiesWrapped = prepareComposition(chemSystemBGE);
 	REigenzoneVecWrapper eigenzones = prepareEigenzones(chemSystemFull);
+	RDissociatedConstituentVecWrapper analytesDissociation = prepareDissociation(chemSystemFull, isAnalyte);
 
 	r.BGEProperties.composition = BGEPropertiesWrapped.release();
 	r.eigenzones = eigenzones.release();
+	r.analytesDissociation = analytesDissociation.release();
 
 	return r;
 }
@@ -289,10 +409,12 @@ void ECHMET_CC releaseResults(Results &r) noexcept
 	releaseRSolutionProperties(r.BGEProperties);
 
 	VecImpl<REigenzone, false> *eigenzonesImpl = dynamic_cast<VecImpl<REigenzone, false> *>(r.eigenzones);
-	if (eigenzonesImpl == nullptr)
-		return;
+	if (eigenzonesImpl != nullptr)
+		teardownREigenzoneVec(eigenzonesImpl);
 
-	teardownREigenzoneVec(eigenzonesImpl);
+	VecImpl<RDissociatedConstituent, false> *analytesDissociationImpl = dynamic_cast<VecImpl<RDissociatedConstituent, false> *>(r.analytesDissociation);
+	if (analytesDissociationImpl != nullptr)
+		teardownRDissociatedConstituentVec(analytesDissociationImpl);
 }
 
 } // namespace LEMNG

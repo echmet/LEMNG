@@ -1,6 +1,7 @@
 #ifndef LEMNG_BASE_TYPES_H
 #define LEMNG_BASE_TYPES_H
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <stdexcept>
@@ -14,6 +15,8 @@
 
 namespace ECHMET {
 namespace LEMNG {
+
+typedef const std::function<bool (const std::string &)> IsAnalyteFunc;
 
 void chemicalSystemDeleter(SysComp::ChemicalSystem *p);
 void calculatedPropertiesDeleter(SysComp::CalculatedProperties *p);

@@ -146,7 +146,7 @@ class SolutionProperties {
 public:
 	SolutionProperties();
 	SolutionProperties(const double bufferCapacity, const double conductivity, const double ionicStrength,
-			   std::vector<double> &&analyticalConcentration, std::vector<double> &&ionicConcentrations) noexcept;
+			   std::vector<double> &&analyticalConcentration, std::vector<double> &&ionicConcentrations, std::vector<double> &&effectiveMobilities) noexcept;
 	SolutionProperties(const SolutionProperties &other);
 	SolutionProperties(SolutionProperties &&other) noexcept;
 
@@ -157,7 +157,8 @@ public:
 	const double conductivity;
 	const double ionicStrength;
 	const std::vector<double> analyticalConcentrations; /* SysComp ordering */
-	const std::vector<double> ionicConcentrations; /* SysComp ordering */
+	const std::vector<double> ionicConcentrations;	    /* SysComp ordering */
+	const std::vector<double> effectiveMobilities;	    /* SysComp ordering */
 };
 
 } // namespace Calculator

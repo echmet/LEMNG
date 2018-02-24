@@ -234,26 +234,21 @@ double calculateSolutionBufferCapacity(const SysComp::ChemicalSystem *chemSystem
 SolutionProperties calculateSolutionProperties(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections,
 					       const bool calcBufferCapacity)
 {
+	auto sysCompToLEMNGVec = [](const auto &inVec) {
+		std::vector<double> outVec{};
+		outVec.reserve(inVec->size());
+		for (size_t idx = 0; idx < inVec->size(); idx++)
+			outVec.emplace_back(inVec->at(idx));
+
+		return outVec;
+	};
+
 	ECHMET_TRACE(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_PROGRESS, ECHMET_S("Solving equilibrium"));
 	solveChemicalSystem(chemSystem, concentrations, calcProps, corrections);
 
-	auto analyticalConcentrations = [&concentrations]() {
-		std::vector<double> anC{};
-		anC.reserve(concentrations->size());
-		for (size_t idx = 0; idx < concentrations->size(); idx++)
-			anC.emplace_back(concentrations->at(idx));
-
-		return anC;
-	}();
-
-	auto ionicConcentrations = [calcProps]() {
-		std::vector<double> iC{};
-		iC.reserve(calcProps->ionicConcentrations->size());
-		for (size_t idx = 0; idx < calcProps->ionicConcentrations->size(); idx++)
-			iC.emplace_back(calcProps->ionicConcentrations->at(idx));
-
-		return iC;
-	}();
+	auto analyticalConcentrations = sysCompToLEMNGVec(concentrations);
+	auto ionicConcentrations = sysCompToLEMNGVec(calcProps->ionicConcentrations);
+	auto effectiveMobilities = sysCompToLEMNGVec(calcProps->effectiveMobilities);
 
 	const double bufferCapacity = [&]() {
 		if (calcBufferCapacity)
@@ -265,7 +260,8 @@ SolutionProperties calculateSolutionProperties(const SysComp::ChemicalSystem *ch
 				  calcProps->conductivity,
 				  calcProps->ionicStrength,
 				  std::move(analyticalConcentrations),
-				  std::move(ionicConcentrations)};
+				  std::move(ionicConcentrations),
+				  std::move(effectiveMobilities)};
 }
 
 SolutionProperties calculateSolutionProperties(const ChemicalSystemPtr &chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const NonidealityCorrections corrections, const bool calcBufferCapacity)
