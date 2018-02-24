@@ -67,8 +67,8 @@ link_directories("${ECHMET_CORE_LIBS_DIR}/lib")
 add_library(LEMNG SHARED ${libIonProps_SRCS})
 
 set_target_properties(LEMNG
-                      PROPERTIES VERSION 0.1
-                                 SOVERSION 0.1
+                      PROPERTIES VERSION 0.2
+                                 SOVERSION 0.2
                       PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/lemng.h")
 target_link_libraries(LEMNG
                       PRIVATE ECHMETShared
