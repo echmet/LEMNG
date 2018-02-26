@@ -220,19 +220,9 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 	m_systemPack.conductivity = BGEProps.conductivity;
 
 	Calculator::SolutionProperties BGELikeProps;
-	try {
-		BGELikeProps = Calculator::calculateSolutionProperties(m_chemicalSystemFull, analConcsBGELike, m_calcPropsBGELike, corrections, true);
-	} catch (const Calculator::CalculationException &ex) {
-		fillResultsBGE(m_chemicalSystemBGE, BGEProps, corrections, results);
-		m_lastErrorString = ex.what();
-		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_PROGRESS_ERR, const char*, const char*>("Unable to calculate analytes dissociation", ex.what());
-
-		return ex.errorCode();
-	}
-
 	/* Precalculate what is used in many places of the linear model */
 	try {
-		Calculator::prepareModelData(m_systemPack, deltaPacks, analConcsBGELike, analConcsFull, corrections);
+		Calculator::prepareModelData(m_systemPack, deltaPacks, analConcsBGELike, analConcsFull, BGELikeProps, corrections);
 	} catch (std::bad_alloc &) {
 		fillResultsBGE(m_chemicalSystemBGE, BGEProps, corrections, results);
 		fillResultsAnalytesDissociation(m_chemicalSystemFull, BGELikeProps, results);

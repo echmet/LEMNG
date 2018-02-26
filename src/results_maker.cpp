@@ -385,7 +385,6 @@ void fillResultsBGE(const ChemicalSystemPtr &chemSystemBGE, const Calculator::So
 void fillResultsAnalytesDissociation(const ChemicalSystemPtr &chemSystemFull, const Calculator::SolutionProperties &BGELikeProperties, Results &r)
 {
 	fillAnalytesDissociation(chemSystemFull, BGELikeProperties, r.analytesDissociation);
-	r.isAnalytesDissociationValid = true;
 }
 
 Results prepareResults(const ChemicalSystemPtr &chemSystemBGE, const ChemicalSystemPtr &chemSystemFull, IsAnalyteFunc &isAnalyte)

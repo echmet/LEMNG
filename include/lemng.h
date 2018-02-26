@@ -171,7 +171,6 @@ public:
 	REigenzoneVec *eigenzones;				/*!< Description of all eigenzones present in the system. */
 	RDissociatedConstituentVec *analytesDissociation;	/*!< Description of dissociation degrees of all analytes. */
 	bool isBGEValid;					/*!< Set to true if the BGE composition was successfully solved. */
-	bool isAnalytesDissociationValid;			/*!< Set to true if analytes dissociation was successfully solved. */
 };
 IS_POD(Results)
 typedef MutSKMap<double> InAnalyticalConcentrationsMap;

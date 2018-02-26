@@ -533,7 +533,7 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 	derivatives->destroy();
 }
 
-void prepareModelData(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks, const RealVecPtr &analConcsBGELike, const RealVecPtr &analConcsSample, const NonidealityCorrections corrections)
+void prepareModelData(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks, const RealVecPtr &analConcsBGELike, const RealVecPtr &analConcsSample, Calculator::SolutionProperties &BGELikeProps, const NonidealityCorrections corrections)
 {
 	/* Step 1 - Identify the target and its flaws, there are always flaws... oops, not this "step one"...
 	 *
@@ -564,7 +564,7 @@ void prepareModelData(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks
 	 *
 	 * Solve the almost-like-BGE system to get ionic concentrations and corrected ionic mobilities.
 	 */
-	solveChemicalSystem(systemPack.chemSystemRaw, analConcsBGELike, systemPack.calcPropsRaw, corrections);
+	BGELikeProps = calculateSolutionProperties(systemPack.chemSystemRaw, analConcsBGELike, systemPack.calcPropsRaw, corrections, false);
 
 	/* Step 2 - Bind the now known properties of the present ionic forms to the SystemPack.
 	 */
