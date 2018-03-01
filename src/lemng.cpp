@@ -158,7 +158,8 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 		it->destroy();
 	};
 
-	Calculator::DeltaPackVec deltaPacks{};
+	Calculator::DeltaPackVec deltaPacks{};				/* LEMNG ordering */
+	Calculator::ConcentrationDeltasVec concentrationDeltasVec{};	/* SysComp ordering */
 	/* Initialize vectors of concentrations */
 	RealVecPtr analConcsBGE{nullptr, echmetRealVecDeleter};
 	RealVecPtr analConcsBGELike{nullptr, echmetRealVecDeleter};
@@ -218,7 +219,7 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 	Calculator::SolutionProperties BGELikeProps;
 	/* Precalculate what is used in many places of the linear model */
 	try {
-		Calculator::prepareModelData(m_systemPack, deltaPacks, analConcsBGELike, analConcsFull, BGELikeProps, corrections);
+		Calculator::prepareModelData(m_systemPack, deltaPacks, concentrationDeltasVec, analConcsBGELike, analConcsFull, BGELikeProps, corrections);
 	} catch (std::bad_alloc &) {
 		fillResultsBGE(m_chemicalSystemBGE, BGEProps, corrections, results);
 		fillResultsAnalytesDissociation(m_chemicalSystemFull, BGELikeProps, results);
@@ -235,7 +236,8 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 	/* Solve the linear model and first nonlinearity term */
 	try {
 		Calculator::LinearResults linResults = Calculator::calculateLinear(m_systemPack, deltaPacks, corrections);
-		Calculator::EigenzoneDispersionVec ezDisps = Calculator::calculateNonlinear(m_systemPack, analConcsBGELike, deltaPacks, linResults.M1, linResults.M2, linResults.QLQR, corrections);
+		Calculator::EigenzoneDispersionVec ezDisps = Calculator::calculateNonlinear(m_systemPack, analConcsBGELike, deltaPacks, concentrationDeltasVec,
+											    linResults.M1, linResults.M2, linResults.QLQR, corrections);
 
 		fillResults(m_chemicalSystemBGE, m_chemicalSystemFull, BGEProps, BGELikeProps, linResults, ezDisps, corrections, results);
 		/* There was a TODO for a case where not all zones were valid. Be prepared to

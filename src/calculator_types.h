@@ -19,10 +19,12 @@ namespace SysComp {
 namespace LEMNG {
 namespace Calculator {
 
+typedef std::vector<double> ERVector;
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> EMMatrix;
 typedef Eigen::Matrix<double, 1, Eigen::Dynamic>  EMVector;
 typedef Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic>  EMMatrixC;
 typedef Eigen::Matrix<std::complex<double>, 1, Eigen::Dynamic>  EMVectorC;
+typedef std::vector<ERVector> ConcentrationDeltasVec;	/* Uses SysComp ordering */
 
 typedef std::vector<const SysComp::Constituent *> InternalConstituentVec;
 

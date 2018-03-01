@@ -225,13 +225,11 @@ EMMatrixVec calculateM2Derivatives(const CalculatorSystemPack &systemPack, const
 	return M2Derivatives;
 }
 
-EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealVecPtr &analyticalConcentrations)
+EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealVecPtr &analyticalConcentrations, const ConcentrationDeltasVec &concentrationDeltasVec)
 {
 	/* WARNING - This piece of code is a terrible read. */
-	typedef std::vector<double> ERVec;
-	typedef std::vector<ERVec> ERVecVec;
+	typedef std::vector<ERVector> ERVecVec;
 
-	const SysComp::ChemicalSystem &chemSystemRaw = *systemPack.chemSystemRaw;
 	const SysComp::CalculatedProperties &calcPropsRaw = *systemPack.calcPropsRaw;
 	const size_t NCO = systemPack.constituents.size();
 	const double kappa = 1.0e9 * systemPack.conductivity / PhChConsts::F;
@@ -248,11 +246,6 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealV
 	ERVecVec diffCoeffs;
 	ERVecVec dissocDegrees;
 	ERVecVec dDissocDegreesDX;
-	CAES::DDSContext *ddsCtx = nullptr;
-
-	::ECHMET::RetCode tRet = CAES::calculateDissocDegreesDerivatives(ddsCtx, chemSystemRaw, analyticalConcentrations.get(), calcPropsRaw);
-	if (tRet != ::ECHMET::RetCode::OK)
-		throw CalculationException{"Cannot calculate dissociation degrees derivatives", coreLibsErrorToNativeError(tRet)};
 
 	diffCoeffs.reserve(NCO);
 	dissocDegrees.reserve(NCO);
@@ -260,22 +253,16 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealV
 
 	/* A note to your future self - DO NOT try to figure this out. */
 	for (size_t idx = 0; idx < NCO; idx++) {
-		/* Mind the BGE -> Analyte ordering in the SystemPack.
-		 * This appears in many places in this function. */
 		const SysComp::Constituent *c = systemPack.constituents.at(idx).internalConstituent;
 		const size_t IFCount = c->ionicForms->size();
-		ERVec diffCoeffsForCtuent;
-		ERVec dissocDegreesForCtuent;
-		ERVec dDissocDegreesDXForCtuent;
+		const ERVector &concentrationDeltas = concentrationDeltasVec.at(idx);
+		ERVector diffCoeffsForCtuent;
+		ERVector dissocDegreesForCtuent;
+		ERVector dDissocDegreesDXForCtuent;
 
-		try {
-			diffCoeffsForCtuent.reserve(IFCount);
-			dissocDegreesForCtuent.reserve(IFCount);
-			dDissocDegreesDXForCtuent.reserve(IFCount);
-		} catch (std::bad_alloc &) {
-			ddsCtx->destroy();
-			throw;
-		}
+		diffCoeffsForCtuent.reserve(IFCount);
+		dissocDegreesForCtuent.reserve(IFCount);
+		dDissocDegreesDXForCtuent.reserve(IFCount);
 
 		for (size_t ifIdx = 0; ifIdx < IFCount; ifIdx++) {
 			const SysComp::IonicForm *iF = c->ionicForms->at(ifIdx);
@@ -360,58 +347,40 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealV
 
 			_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_NERNST_EINST_INPUT, const double&, const int32_t&>( mobility, iF->totalCharge);
 
-			try {
-				diffCoeffsForCtuent.emplace_back(calcDiffCoeff(mobility, iF->totalCharge));
+			const double anC = analyticalConcentrations->at(c->analyticalConcentrationIndex);
+			const double ionicC = calcPropsRaw.ionicConcentrations->at(iF->ionicConcentrationIndex);
+			const double dissocDegree = ionicC / anC;
 
-				const double ionicC = calcPropsRaw.ionicConcentrations->at(iF->ionicConcentrationIndex);
-				const double anC = analyticalConcentrations->at(c->analyticalConcentrationIndex);
+			diffCoeffsForCtuent.emplace_back(calcDiffCoeff(mobility, iF->totalCharge));
+			dissocDegreesForCtuent.emplace_back(dissocDegree);
 
-				dissocDegreesForCtuent.emplace_back(ionicC / anC);
-			} catch (std::bad_alloc &) {
-				ddsCtx->destroy();
-				throw;
-			}
+			/* The diffusion model expects the "equilibrium communication" expressed
+			 * as derivatives of degrees of dissociation whereas CAES provides
+			 * derivatives of concentrations.
+			 * Here we convert concentration derivatives to derivatives of
+			 * degrees of dissociation. */
+                        const double cDer = concentrationDeltas.at(iF->ionicConcentrationIndex);
+			const double dCHdCX = concentrationDeltas.at(0);
+			const double dDissocDegreeDX = (cDer - dissocDegree) / (dCHdCX * anC);
 
-			double dissocDegreeDerivative;
-			ECHMET::RetCode tRet = ddsCtx->findDissocDegreeDerivative(dissocDegreeDerivative, iF->name);
-			if (tRet != ECHMET::RetCode::OK) {
-				ddsCtx->destroy();
-				throw CalculationException{"No dissociation degree derivative available", RetCode::E_INTERNAL_ERROR};
-			}
-
-			try {
-				dDissocDegreesDXForCtuent.emplace_back(dissocDegreeDerivative);
-			} catch (std::bad_alloc &) {
-				ddsCtx->destroy();
-				throw;
-			}
+			dDissocDegreesDXForCtuent.emplace_back(dDissocDegreeDX);
 		}
 
-		try {
-			diffCoeffs.emplace_back(diffCoeffsForCtuent);
-			dissocDegrees.emplace_back(dissocDegreesForCtuent);
-			dDissocDegreesDX.emplace_back(dDissocDegreesDXForCtuent);
-		} catch (std::bad_alloc &) {
-			ddsCtx->destroy();
-			throw;
-		}
+		diffCoeffs.emplace_back(diffCoeffsForCtuent);
+		dissocDegrees.emplace_back(dissocDegreesForCtuent);
+		dDissocDegreesDX.emplace_back(dDissocDegreesDXForCtuent);
 	}
 
 	/* Precalculate terms that are used commonly in the final calculation */
-	const auto calcTermA = [&diffCoeffs, &dissocDegrees, &ddsCtx]() {
+	const auto calcTermA = [&diffCoeffs, &dissocDegrees]() {
 		assert(diffCoeffs.size() == dissocDegrees.size());
 
-		ERVec termA;
-		try {
-			termA.reserve(diffCoeffs.size());
-		} catch (std::bad_alloc &) {
-			ddsCtx->destroy();
-			throw;
-		}
+		ERVector termA;
+		termA.reserve(diffCoeffs.size());
 
 		for (size_t idx = 0; idx < diffCoeffs.size(); idx++) {
-			const ERVec &diffCoeffsForCtuent = diffCoeffs.at(idx);
-			const ERVec &dissocDegreesForCtuent = dissocDegrees.at(idx);
+			const ERVector &diffCoeffsForCtuent = diffCoeffs.at(idx);
+			const ERVector &dissocDegreesForCtuent = dissocDegrees.at(idx);
 			double t = 0.0;
 
 			assert(diffCoeffsForCtuent.size() == dissocDegreesForCtuent.size());
@@ -423,32 +392,22 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealV
 				t += diff * dissoc;
 			}
 
-			try {
-				termA.emplace_back(t);
-			} catch (std::bad_alloc &) {
-				ddsCtx->destroy();
-				throw;
-			}
+			termA.emplace_back(t);
 		}
 
 		return termA;
 
 	};
-	const auto calcTermAz = [&systemPack, NCO, &diffCoeffs, &dissocDegrees, &ddsCtx]() {
+	const auto calcTermAz = [&systemPack, NCO, &diffCoeffs, &dissocDegrees]() {
 		assert(diffCoeffs.size() == dissocDegrees.size());
 		assert(diffCoeffs.size() == NCO);
 
-		ERVec termAz;
-		try {
-			termAz.reserve(NCO);
-		} catch (std::bad_alloc &) {
-			ddsCtx->destroy();
-			throw;
-		}
+		ERVector termAz;
+		termAz.reserve(NCO);
 
 		for (size_t idx = 0; idx < NCO; idx++) {
-			const ERVec &diffCoeffsForCtuent = diffCoeffs.at(idx);
-			const ERVec &dissocDegreesForCtuent = dissocDegrees.at(idx);
+			const ERVector &diffCoeffsForCtuent = diffCoeffs.at(idx);
+			const ERVector &dissocDegreesForCtuent = dissocDegrees.at(idx);
 			const SysComp::Constituent *c = systemPack.constituents.at(idx).internalConstituent;
 			double t = 0.0;
 
@@ -463,23 +422,18 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealV
 				t += diff * dissoc * iF->totalCharge;
 			}
 
-			try {
-				termAz.emplace_back(t);
-			} catch (std::bad_alloc &) {
-				ddsCtx->destroy();
-				throw;
-			}
+			termAz.emplace_back(t);
 		}
 
 		return termAz;
 
 	};
-	const auto calcTermB = [&systemPack, &calcPropsRaw, NCO, &dissocDegrees, &ddsCtx]() {
-		ERVec termB;
+	const auto calcTermB = [&systemPack, &calcPropsRaw, NCO, &dissocDegrees]() {
+		ERVector termB;
 		termB.reserve(NCO);
 
 		for (size_t idx = 0; idx < NCO; idx++) {
-			const ERVec &dissocDegreesForCtuent = dissocDegrees.at(idx);
+			const ERVector &dissocDegreesForCtuent = dissocDegrees.at(idx);
 			const SysComp::Constituent *c = systemPack.constituents.at(idx).internalConstituent;
 			assert(dissocDegreesForCtuent.size() == c->ionicForms->size());
 
@@ -492,25 +446,20 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealV
 				t += cxsgn(iF->totalCharge) * mobility * dissocDegreesForCtuent.at(ifIdx);
 			}
 
-			try {
-				termB.emplace_back(t);
-			} catch (std::bad_alloc &) {
-				ddsCtx->destroy();
-				throw;
-			}
+			termB.emplace_back(t);
 		}
 
 		return termB;
 	};
-	const auto calcTermC = [&systemPack, &calcPropsRaw, NCO, &diffCoeffs, &dDissocDegreesDX, &kappa, &analyticalConcentrations, &ddsCtx](const ERVec &termB) {
+	const auto calcTermC = [&systemPack, &calcPropsRaw, NCO, &diffCoeffs, &dDissocDegreesDX, &kappa, &analyticalConcentrations](const ERVector &termB) {
 		const double diffCoeffH3O = calcDiffCoeff(PhChConsts::mobilityH3O, 1);
 		const double diffCoeffOH = calcDiffCoeff(PhChConsts::mobilityOH, -1);
 		double sum = 0.0;
 
 		/* Calculate the sum */
 		for (size_t idx = 0; idx < NCO; idx++) {
-			const ERVec &diffCoeffsForCtuent = diffCoeffs.at(idx);
-			const ERVec &dDissocDegreesDXForCtuent = dDissocDegreesDX.at(idx);
+			const ERVector &diffCoeffsForCtuent = diffCoeffs.at(idx);
+			const ERVector &dDissocDegreesDXForCtuent = dDissocDegreesDX.at(idx);
 			const SysComp::Constituent *c = systemPack.constituents.at(idx).internalConstituent;
 
 			assert(dDissocDegreesDXForCtuent.size() == diffCoeffsForCtuent.size());
@@ -540,18 +489,13 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealV
 		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_DIFFCOEFF_TERM_C_V, const double&>(v);
 
 		/* Calculate internal term */
-		ERVec termInternal;		/* Zi3 in PeakMaster 5.3 */
-		try {
-			termInternal.reserve(NCO);
-		} catch (std::bad_alloc &) {
-			ddsCtx->destroy();
-			throw;
-		}
+		ERVector termInternal;		/* Zi3 in PeakMaster 5.3 */
+		termInternal.reserve(NCO);
 
 		for (size_t idx = 0; idx < NCO; idx++) {
 			const SysComp::Constituent *c = systemPack.constituents.at(idx).internalConstituent;
-			const ERVec &diffCoeffsForCtuent = diffCoeffs.at(idx);
-			const ERVec &dDissocDegreesDXForCtuent = dDissocDegreesDX.at(idx);
+			const ERVector &diffCoeffsForCtuent = diffCoeffs.at(idx);
+			const ERVector &dDissocDegreesDXForCtuent = dDissocDegreesDX.at(idx);
 			double t = 0;
 
 			for (size_t ifIdx = 0; ifIdx < c->ionicForms->size(); ifIdx++) {
@@ -559,45 +503,30 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealV
 				t += diffCoeffsForCtuent.at(ifIdx) * dDissocDegreesDXForCtuent.at(ifIdx);
 			}
 
-			try {
-				termInternal.emplace_back(t);
-			} catch (std::bad_alloc &) {
-				ddsCtx->destroy();
-				throw;
-			}
+			termInternal.emplace_back(t);
 		}
 
 		/* Now finally calculate the termC */
-		ERVec termC;
-		try {
-			termC.reserve(NCO);
-		} catch (std::bad_alloc &) {
-			ddsCtx->destroy();
-			throw;
-		}
+		ERVector termC;
+		termC.reserve(NCO);
 
 		for (size_t idx = 0; idx < NCO; idx++) {
 			const SysComp::Constituent *c = systemPack.constituents.at(idx).internalConstituent;
 			const double anC = analyticalConcentrations->at(c->analyticalConcentrationIndex);
 
 			const double t = anC * (termInternal.at(idx) - (termB.at(idx) / kappa) * v);
-			try {
-				termC.emplace_back(t);
-			} catch (std::bad_alloc &) {
-				ddsCtx->destroy();
-				throw;
-			}
+			termC.emplace_back(t);
 		}
 
 		return termC;
 	};
-	const auto calcTermD = [&systemPack, &calcPropsRaw, NCO, &dissocDegrees, &dDissocDegreesDX, &analyticalConcentrations, &ddsCtx]() {
+	const auto calcTermD = [&systemPack, &calcPropsRaw, NCO, &dissocDegrees, &dDissocDegreesDX, &analyticalConcentrations]() {
 		double sum = 0.0;
 
 		/* Calculate the sum */
 		for (size_t idx = 0; idx < NCO; idx++) {
 			const SysComp::Constituent *c = systemPack.constituents.at(idx).internalConstituent;
-			const ERVec &dDissocDegreesDXForCtuent = dDissocDegreesDX.at(idx);
+			const ERVector &dDissocDegreesDXForCtuent = dDissocDegreesDX.at(idx);
 
 			for (size_t ifIdx = 0; ifIdx < c->ionicForms->size(); ifIdx++) {
 				const SysComp::IonicForm *iF = c->ionicForms->at(ifIdx);
@@ -610,19 +539,14 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealV
 		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_DIFFCOEFF_TERM_D_SUM, const double&>(sum);
 
 		/* Calculate termD */
-		ERVec termD;
-		try {
-			termD.reserve(NCO);
-		} catch (std::bad_alloc &) {
-			ddsCtx->destroy();
-			throw;
-		}
+		ERVector termD;
+		termD.reserve(NCO);
 
 		const double denominator = 1 + ((PhChConsts::KW_298 * 1.0e6) / std::pow(calcPropsRaw.ionicConcentrations->at(0), 2)) + sum;
 
 		for (size_t idx = 0; idx < NCO; idx++) {
 			const SysComp::Constituent *c = systemPack.constituents.at(idx).internalConstituent;
-			const ERVec &dissocDegreesForCtuent = dissocDegrees.at(idx);
+			const ERVector &dissocDegreesForCtuent = dissocDegrees.at(idx);
 			double t = 0.0;
 
 			for (size_t ifIdx = 0; ifIdx < c->ionicForms->size(); ifIdx++) {
@@ -631,12 +555,7 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealV
 				t += -iF->totalCharge * dissocDegreesForCtuent.at(ifIdx) / denominator;
 			}
 
-			try {
-				termD.emplace_back(t);
-			} catch (std::bad_alloc &) {
-				ddsCtx->destroy();
-				throw;
-			}
+			termD.emplace_back(t);
 		}
 
 		return termD;
@@ -644,11 +563,11 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealV
 
 	/* You should want to kill yourself already right about now but we are not done yet... */
 
-	const ERVec termA = calcTermA();		/* Zi1 in PeakMaster 5.3 */
-	const ERVec termAz = calcTermAz();		/* Zk1 in PeakMaster 5.3 */
-	const ERVec termB = calcTermB();		/* Zi2 in PeakMaster 5.3 */
-	const ERVec termC = calcTermC(termB);		/* Zi4 in PeakMaster 5.3 */
-	const ERVec termD = calcTermD();		/* Zk3 in PeakMaster 5.3 */
+	const ERVector termA = calcTermA();		/* Zi1 in PeakMaster 5.3 */
+	const ERVector termAz = calcTermAz();		/* Zk1 in PeakMaster 5.3 */
+	const ERVector termB = calcTermB();		/* Zi2 in PeakMaster 5.3 */
+	const ERVector termC = calcTermC(termB);	/* Zi4 in PeakMaster 5.3 */
+	const ERVector termD = calcTermD();		/* Zk3 in PeakMaster 5.3 */
 
 	/* Calculate the diffusion matrix */
 	for (size_t row = 0; row < NCO; row++) {
@@ -656,13 +575,10 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealV
 
 		diffMatrix(row, row) = termA.at(row);
 
-		for (size_t col = 0; col < NCO; col++) {
-			const double anC = analyticalConcentrations->at(c->analyticalConcentrationIndex);
+		const double anC = analyticalConcentrations->at(c->analyticalConcentrationIndex);
+		for (size_t col = 0; col < NCO; col++)
 			diffMatrix(row, col) += -(anC / kappa) * termB.at(row) * termAz.at(col) + termC.at(row) * termD.at(col);
-		}
 	}
-
-	ddsCtx->destroy();
 
 	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_DIFF_MATRIX, const EMMatrix&>(diffMatrix);
 
@@ -683,7 +599,8 @@ EMMatrix makeConcentrationDeltas(const CalculatorSystemPack &systemPack)
 	return deltaCVec;
 }
 
-EigenzoneDispersionVec calculateNonlinear(const CalculatorSystemPack &systemPack, const RealVecPtr &analyticalConcentrations, const DeltaPackVec &deltaPacks,
+EigenzoneDispersionVec calculateNonlinear(const CalculatorSystemPack &systemPack, const RealVecPtr &analyticalConcentrations,
+					  const DeltaPackVec &deltaPacks, const ConcentrationDeltasVec &concentrationDeltasVec,
 					  const EMMatrix &M1, const EMMatrix &M2, const QLQRPack &QLQR,
 					  const NonidealityCorrections corrections)
 {
@@ -694,7 +611,7 @@ EigenzoneDispersionVec calculateNonlinear(const CalculatorSystemPack &systemPack
 
 	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_PROGRESS, const char*>("Individual matrix derivatives solved");
 
-	const EMMatrix diffMatrix = makeDiffusionMatrix(systemPack, analyticalConcentrations);
+	const EMMatrix diffMatrix = makeDiffusionMatrix(systemPack, analyticalConcentrations, concentrationDeltasVec);
 	const EMMatrixVec MDerivatives = calculateMDerivatives(M1, M2, M1Derivatives, M2Derivatives);
 	const EMMatrix deltaCVec = makeConcentrationDeltas(systemPack);
 

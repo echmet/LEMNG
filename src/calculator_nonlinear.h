@@ -18,7 +18,8 @@ public:
 };
 typedef std::vector<EigenzoneDispersion> EigenzoneDispersionVec;
 
-EigenzoneDispersionVec calculateNonlinear(const CalculatorSystemPack &systemPack, const RealVecPtr &analyticalConcentrations, const DeltaPackVec &deltaPacks,
+EigenzoneDispersionVec calculateNonlinear(const CalculatorSystemPack &systemPack, const RealVecPtr &analyticalConcentrations,
+					  const DeltaPackVec &deltaPacks, const ConcentrationDeltasVec &concentrationDeltasVec,
 					  const EMMatrix &M1, const EMMatrix &M2, const QLQRPack &QLQR,
 					  const NonidealityCorrections corrections);
 

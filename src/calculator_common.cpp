@@ -398,7 +398,7 @@ RealVecPtr makeAnalyticalConcentrationsForDerivator(const CalculatorSystemPack &
 }
 #endif // ECHMET_LEMNG_SENSITIVE_NUMDERS
 
-void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks, const RealVecPtr &analyticalConcentrations, const NonidealityCorrections corrections)
+void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks, ConcentrationDeltasVec &concentrationDeltasVec, const RealVecPtr &analyticalConcentrations, const NonidealityCorrections corrections)
 {
 	static const ECHMETReal H = DELTA_H;
 
@@ -418,15 +418,20 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 	RealVec *derivatives = nullptr;
 
 	deltaPacks.reserve(NCO);
+	concentrationDeltasVec.reserve(NCO);
 
 	::ECHMET::RetCode tRet = CAES::prepareDerivatorContext(derivatives, solver, chemSystemRaw, corrections);
 	if (tRet != ::ECHMET::RetCode::OK)
 		throw CalculationException{std::string{"Cannot make derivator context: "} + std::string{errorToString(tRet)}, coreLibsErrorToNativeError(tRet)};
 
+	const size_t ND = derivatives->size();
+
 #if ECHMET_LEMNG_PARALLEL_NUM_OPS
-	auto worker = [&](const SysComp::Constituent *perturbedConstituent) -> DeltaPack {
-		const size_t ND = derivatives->size();
-		EMVector deltas{NIF};
+	typedef std::tuple<DeltaPack, ERVector> WorkerResult;
+
+	auto worker = [&](const SysComp::Constituent *perturbedConstituent) -> WorkerResult {
+		EMVector deltas(NIF);
+		ERVector fullDeltas(ND);
 		ECHMETReal conductivityDerivative;
 		RealVec *_derivatives = ::ECHMET::createRealVec(ND);
 		if (_derivatives == nullptr)
@@ -451,16 +456,19 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 
 			deltas(iFIdx) = ECHMETRealToDouble(_derivatives->at(iF->internalIonicFormConcentrationIdx));
 		}
-
 		deltas(H3O_idx) = ECHMETRealToDouble(_derivatives->at(0));
 		deltas(OH_idx) = ECHMETRealToDouble(_derivatives->at(1));
 
+		/* Use SysComp ordering for full concentration deltas */
+		for (size_t idx = 0; idx < ND; idx++)
+			fullDeltas[idx] = ECHMETRealToDouble(_derivatives->at(idx));
+
 		_derivatives->destroy();
 
-		return DeltaPack{std::move(deltas), conductivityDerivative, perturbedConstituent};
+		return {DeltaPack{std::move(deltas), conductivityDerivative, perturbedConstituent}, std::move(fullDeltas)};
 	};
 
-	std::vector<std::future<DeltaPack>> results{};
+	std::vector<std::future<WorkerResult>> results{};
 
 	try {
 		results.reserve(NCO);
@@ -478,8 +486,11 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 			results.emplace_back(std::async(std::launch::async, worker, perturbedConstituent));
 		}
 
-		for (auto &f : results)
-			deltaPacks.emplace_back(f.get());
+		for (auto &f : results) {
+			auto &&r = f.get();
+			deltaPacks.emplace_back(std::move(std::get<0>(r)));
+			concentrationDeltasVec.emplace_back(std::move(std::get<1>(r)));
+		}
 	} catch (CalculationException &ex) {
 		for (auto &f : results) {
 			if (f.valid())
@@ -495,7 +506,8 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 	for (size_t cIdx = 0; cIdx < NCO; cIdx++) {
 		const SysComp::Constituent *perturbedConstituent = systemPack.constituents.at(cIdx).internalConstituent;
 		ECHMETReal conductivityDerivative;
-		EMVector deltas{NIF};
+		EMVector deltas(NIF);
+		ERVector fullDeltas(ND);
 
 		tRet = CAES::calculateFirstConcentrationDerivatives_prepared(derivatives, conductivityDerivative,
 									     solver, H, corrections,
@@ -514,12 +526,16 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 
 			deltas(iFIdx) = ECHMETRealToDouble(derivatives->at(iF->internalIonicFormConcentrationIdx));
 		}
-
 		deltas(H3O_idx) = ECHMETRealToDouble(derivatives->at(0));
 		deltas(OH_idx) = ECHMETRealToDouble(derivatives->at(1));
 
+		/* Use SysComp ordering for full concentration deltas */
+		for (size_t idx = 0; idx < ND; idx++)
+			fullDeltas[idx] = ECHMETRealToDouble(derivatives->at(idx));
+
 		try {
 			deltaPacks.emplace_back(std::move(deltas), ECHMETRealToDouble(conductivityDerivative), perturbedConstituent);
+			concentrationDeltasVec.emplace_back(std::move(fullDeltas));
 		} catch (std::bad_alloc &) {
 			solver->context()->destroy();
 			solver->destroy();
@@ -533,7 +549,7 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 	derivatives->destroy();
 }
 
-void prepareModelData(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks, const RealVecPtr &analConcsBGELike, const RealVecPtr &analConcsSample, Calculator::SolutionProperties &BGELikeProps, const NonidealityCorrections corrections)
+void prepareModelData(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks, ConcentrationDeltasVec &concentrationDeltasVec, const RealVecPtr &analConcsBGELike, const RealVecPtr &analConcsSample, Calculator::SolutionProperties &BGELikeProps, const NonidealityCorrections corrections)
 {
 	/* Step 1 - Identify the target and its flaws, there are always flaws... oops, not this "step one"...
 	 *
@@ -571,7 +587,7 @@ void prepareModelData(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks
 	bindSystemPack(systemPack, analConcsBGELike, analConcsSample);
 
 	/* Step 3 - Precalculate concentration derivatives */
-	precalculateConcentrationDeltas(systemPack, deltaPacks, analConcsBGELike, corrections);
+	precalculateConcentrationDeltas(systemPack, deltaPacks, concentrationDeltasVec, analConcsBGELike, corrections);
 }
 
 void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections)
