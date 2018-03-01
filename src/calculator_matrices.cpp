@@ -118,7 +118,7 @@ EMMatrix makeM2Derivative(const CalculatorSystemPack &systemPack, const RealVecP
 	for (size_t col = 0; col < COLS; col++) {
 		const SysComp::Constituent *cK = systemPack.constituents.at(col).internalConstituent;
 
-		::ECHMET::RetCode tRet = CAES::calculateCrossConstituentDerivatives_prepared(derivatives, solver, H, chemSystemRaw, analyticalConcentrationsForDiffs.get(), pivotalConstituent, cK);
+		::ECHMET::RetCode tRet = CAES::calculateCrossConcentrationDerivatives_prepared(derivatives, solver, H, chemSystemRaw, analyticalConcentrationsForDiffs.get(), pivotalConstituent, cK);
 		if (tRet != ::ECHMET::RetCode::OK)
 			throw CalculationException{"Cannot calculate concentration derivatives for M2 derivative", coreLibsErrorToNativeError(tRet)};
 
