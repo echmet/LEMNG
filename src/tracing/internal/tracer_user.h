@@ -34,7 +34,9 @@
 
 #else
 
-#define ECHMET_S(str)
+static const std::string __empty_trace_string{};
+
+#define ECHMET_S(str) __empty_trace_string.c_str()
 #define ECHMET_TRACE(TraceClass, TPID, ...)
 #define ECHMET_TRACER_LOG(TracerClass) std::string{}
 

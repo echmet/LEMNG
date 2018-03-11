@@ -175,7 +175,7 @@ static std::string TRACEPOINT_LOGGER(Args...);
 		template <>
 		constexpr __DUMMY_TRACER_CLASS FIRST_TRACEPOINT_ID<__DUMMY_TRACER_CLASS>() { return __DUMMY_TRACER_CLASS::NONE; }
 		template <>
-		void TRACEPOINT_INFO_BUILD<_DUMMY_TRACER_CLASS, __DUMMY_TRACER_CLASS::NONE>(std::vector<std::tuple<TPIDInt, std::string>> &)
+		void TRACEPOINT_INFO_BUILD<__DUMMY_TRACER_CLASS, __DUMMY_TRACER_CLASS::NONE>(std::vector<std::tuple<TPIDInt, std::string>> &)
 		{
 			return;
 		}
