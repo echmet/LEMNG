@@ -54,6 +54,7 @@ CZESystemImpl::CZESystemImpl(CZESystemImpl &&other) noexcept :
 	m_calcPropsBGE{std::move(other.m_calcPropsBGE)},
 	m_calcPropsFull{std::move(other.m_calcPropsFull)},
 	m_systemPack{std::move(other.m_systemPack)},
+	m_systemPackUncharged{std::move(other.m_systemPackUncharged)},
 	m_isAnalyteMap{std::move(other.m_isAnalyteMap)}
 {
 }
@@ -158,8 +159,8 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 		it->destroy();
 	};
 
-	Calculator::DeltaPackVec deltaPacks{};				/* LEMNG ordering */
-	Calculator::ConcentrationDeltasVec concentrationDeltasVec{};	/* SysComp ordering */
+	Calculator::DeltaPackVec deltaPacks{};
+	Calculator::DeltaPackVec deltaPacksUncharged{};
 	/* Initialize vectors of concentrations */
 	RealVecPtr analConcsBGE{nullptr, echmetRealVecDeleter};
 	RealVecPtr analConcsBGELike{nullptr, echmetRealVecDeleter};
@@ -219,7 +220,7 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 	Calculator::SolutionProperties BGELikeProps;
 	/* Precalculate what is used in many places of the linear model */
 	try {
-		Calculator::prepareModelData(m_systemPack, deltaPacks, concentrationDeltasVec, analConcsBGELike, analConcsFull, BGELikeProps, corrections);
+		Calculator::prepareModelData(m_systemPack, m_systemPackUncharged, deltaPacks, deltaPacksUncharged, analConcsBGELike, analConcsFull, BGELikeProps, corrections);
 	} catch (std::bad_alloc &) {
 		fillResultsBGE(m_chemicalSystemBGE, BGEProps, corrections, results);
 		return RetCode::E_NO_MEMORY;
@@ -235,7 +236,7 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 	bool allZonesValid;
 	try {
 		Calculator::LinearResults linResults = Calculator::calculateLinear(m_systemPack, deltaPacks, corrections);
-		Calculator::EigenzoneDispersionVec ezDisps = Calculator::calculateNonlinear(m_systemPack, analConcsBGELike, deltaPacks, concentrationDeltasVec,
+		Calculator::EigenzoneDispersionVec ezDisps = Calculator::calculateNonlinear(m_systemPack, m_systemPackUncharged, analConcsBGELike, deltaPacks, deltaPacksUncharged,
 											    linResults.M1, linResults.M2, linResults.QLQR, corrections);
 
 		fillResults(m_chemicalSystemBGE, m_chemicalSystemFull, BGEProps, BGELikeProps, linResults, ezDisps, corrections, results);
@@ -360,7 +361,8 @@ void CZESystemImpl::setupInternal(const SysComp::ChemicalSystem &chemicalSystemB
 	m_calcPropsFull->ionicStrength = 0;
 	m_calcPropsFull->conductivity = 0;
 
-	m_systemPack = Calculator::makeSystemPack(m_chemicalSystemFull, m_calcPropsFull, [this](const std::string &s) { return this->isAnalyte(s); });
+	m_systemPack = Calculator::makeSystemPack(m_chemicalSystemFull, m_calcPropsFull, [this](const std::string &s) { return this->isAnalyte(s); }, false);
+	m_systemPackUncharged = Calculator::makeSystemPack(m_chemicalSystemFull, m_calcPropsFull, [this](const std::string &s) { return this->isAnalyte(s); }, true);
 }
 
 const char * ECHMET_CC LEMNGerrorToString(const RetCode tRet) noexcept

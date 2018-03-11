@@ -45,7 +45,8 @@ const char * CalculationException::what() const noexcept
 static
 void buildSystemPackVectors(CalculatorConstituentVec &ccVec, CalculatorIonicFormVec &ifVec, const std::vector<const SysComp::Constituent *> &allConstituents,
 			    const SysComp::IonicForm *internalIFH3O, const SysComp::IonicForm *internalIFOH,
-			    const std::function<bool (const std::string &)> &isAnalyte)
+			    const std::function<bool (const std::string &)> &isAnalyte,
+			    const bool includeUncharged)
 {
 
 	auto findInIfVec = [&ifVec](const char *name) -> CalculatorIonicForm * {
@@ -75,7 +76,7 @@ void buildSystemPackVectors(CalculatorConstituentVec &ccVec, CalculatorIonicForm
 			/* We do not need to represent uncharged ionic forms in the mobility matrices.
 			 * Leaving them out will spare us some unnecessary multiplications.
 			 */
-			if (iF->totalCharge == 0)
+			if (iF->totalCharge == 0 && !includeUncharged)
 				continue;
 
 			/* We need to build a list of indices of all ligands that are present
@@ -301,7 +302,8 @@ bool isComplex<EMVectorC>(const EMVectorC &I)
 }
 
 CalculatorSystemPack makeSystemPack(const ChemicalSystemPtr &chemSystem, const CalculatedPropertiesPtr &calcProps,
-				    const std::function<bool (const std::string &)> &isAnalyte)
+				    const std::function<bool (const std::string &)> &isAnalyte,
+				    const bool includeUncharged)
 {
 	CalculatorConstituentVec ccVec{};
 	CalculatorIonicFormVec ifVec{};
@@ -315,7 +317,7 @@ CalculatorSystemPack makeSystemPack(const ChemicalSystemPtr &chemSystem, const C
 	try {
 		buildSystemPackVectors(ccVec, ifVec, orderedConstituents,
 				       chemSystem->ionicForms->at(0), chemSystem->ionicForms->at(1),
-				       isAnalyte);
+				       isAnalyte, includeUncharged);
 	} catch (std::bad_alloc &) {
 		for (auto &&item : ifVec)
 			delete item;
@@ -401,14 +403,27 @@ RealVecPtr makeAnalyticalConcentrationsForDerivator(const CalculatorSystemPack &
 }
 #endif // ECHMET_LEMNG_SENSITIVE_NUMDERS
 
-void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks, ConcentrationDeltasVec &concentrationDeltasVec, const RealVecPtr &analyticalConcentrations, const NonidealityCorrections corrections)
+void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, CalculatorSystemPack &systemPackUncharged, DeltaPackVec &deltaPacks, DeltaPackVec &deltaPacksUncharged, const RealVecPtr &analyticalConcentrations, const NonidealityCorrections corrections)
 {
 	static const ECHMETReal H = DELTA_H;
 
+	static const auto mapDerivatives = [](const CalculatorIonicFormVec &ifVec, const RealVec *derivatives, EMVector &deltas) {
+		/* Use LEMNG ordering for concentration deltas */
+		const size_t NIF = ifVec.size();
+		const size_t H3O_idx = NIF - 2;
+		const size_t OH_idx = NIF - 1;
+
+		for (size_t iFIdx = 0; iFIdx < NIF - 2; iFIdx++) {
+			const CalculatorIonicForm *iF = ifVec.at(iFIdx);
+
+			deltas(iFIdx) = ECHMETRealToDouble(derivatives->at(iF->internalIonicFormConcentrationIdx));
+		}
+
+		deltas(H3O_idx) = ECHMETRealToDouble(derivatives->at(0));
+		deltas(OH_idx) = ECHMETRealToDouble(derivatives->at(1));
+	};
+
 	const size_t NCO = systemPack.constituents.size();
-	const size_t NIF = systemPack.ionicForms.size();
-	const size_t H3O_idx = NIF - 2;
-	const size_t OH_idx = NIF - 1;
 	const SysComp::ChemicalSystem &chemSystemRaw = *systemPack.chemSystemRaw;
 	const SysComp::CalculatedProperties *calcPropsRaw = systemPack.calcPropsRaw;
 #ifdef ECHMET_LEMNG_SENSITIVE_NUMDERS
@@ -422,7 +437,7 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 	RealVec *derivatives = nullptr;
 
 	deltaPacks.reserve(NCO);
-	concentrationDeltasVec.reserve(NCO);
+	deltaPacksUncharged.reserve(NCO);
 
 	::ECHMET::RetCode tRet = CAES::prepareDerivatorContext(derivatives, solver, chemSystemRaw, corrections);
 	if (tRet != ::ECHMET::RetCode::OK)
@@ -431,11 +446,11 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 	const size_t ND = derivatives->size();
 
 #if ECHMET_LEMNG_PARALLEL_NUM_OPS
-	typedef std::tuple<DeltaPack, ERVector> WorkerResult;
+	typedef std::tuple<DeltaPack, DeltaPack> WorkerResult;
 
 	auto worker = [&](const SysComp::Constituent *perturbedConstituent) -> WorkerResult {
-		EMVector deltas(NIF);
-		ERVector fullDeltas(ND);
+		EMVector deltas(systemPack.ionicForms.size());
+		EMVector deltasUncharged(systemPackUncharged.ionicForms.size());
 		ECHMETReal conductivityDerivative;
 		RealVec *_derivatives = ::ECHMET::createRealVec(ND);
 		if (_derivatives == nullptr)
@@ -455,22 +470,13 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 			throw CalculationException{"Cannot calculate concentration derivatives for M2", coreLibsErrorToNativeError(tRet)};
 		}
 
-		/* Use LEMNG ordering for concentration deltas */
-		for (size_t iFIdx = 0; iFIdx < NIF - 2; iFIdx++) {
-			const CalculatorIonicForm *iF = systemPack.ionicForms.at(iFIdx);
-
-			deltas(iFIdx) = ECHMETRealToDouble(_derivatives->at(iF->internalIonicFormConcentrationIdx));
-		}
-		deltas(H3O_idx) = ECHMETRealToDouble(_derivatives->at(0));
-		deltas(OH_idx) = ECHMETRealToDouble(_derivatives->at(1));
-
-		/* Use SysComp ordering for full concentration deltas */
-		for (size_t idx = 0; idx < ND; idx++)
-			fullDeltas[idx] = ECHMETRealToDouble(_derivatives->at(idx));
+		mapDerivatives(systemPack.ionicForms, _derivatives, deltas);
+		mapDerivatives(systemPackUncharged.ionicForms, _derivatives, deltasUncharged);
 
 		_derivatives->destroy();
 
-		return {DeltaPack{std::move(deltas), conductivityDerivative, perturbedConstituent}, std::move(fullDeltas)};
+		return {DeltaPack{std::move(deltas), ECHMETRealToDouble(conductivityDerivative), perturbedConstituent},
+			DeltaPack{std::move(deltasUncharged), ECHMETRealToDouble(conductivityDerivative), perturbedConstituent}};
 	};
 
 	std::vector<std::future<WorkerResult>> results{};
@@ -494,9 +500,9 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 		for (auto &f : results) {
 			auto &&r = f.get();
 			deltaPacks.emplace_back(std::move(std::get<0>(r)));
-			concentrationDeltasVec.emplace_back(std::move(std::get<1>(r)));
+			deltaPacksUncharged.emplace_back(std::move(std::get<1>(r)));
 		}
-	} catch (CalculationException &ex) {
+	} catch (const CalculationException &ex) {
 		for (auto &f : results) {
 			if (f.valid())
 				f.wait();
@@ -512,7 +518,7 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 		const SysComp::Constituent *perturbedConstituent = systemPack.constituents.at(cIdx).internalConstituent;
 		ECHMETReal conductivityDerivative;
 		EMVector deltas(NIF);
-		ERVector fullDeltas(ND);
+		EMVector deltasUncharged(systemPackUncharged.ionicForms.size());
 
 		tRet = CAES::calculateFirstConcentrationDerivatives_prepared(derivatives, conductivityDerivative,
 									     solver, H, corrections,
@@ -526,22 +532,12 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 			throw CalculationException{"Cannot calculate concentration derivatives for M2", coreLibsErrorToNativeError(tRet)};
 		}
 
-		/* Use LEMNG ordering for concentration deltas */
-		for (size_t iFIdx = 0; iFIdx < NIF - 2; iFIdx++) {
-			const CalculatorIonicForm *iF = systemPack.ionicForms.at(iFIdx);
-
-			deltas(iFIdx) = ECHMETRealToDouble(derivatives->at(iF->internalIonicFormConcentrationIdx));
-		}
-		deltas(H3O_idx) = ECHMETRealToDouble(derivatives->at(0));
-		deltas(OH_idx) = ECHMETRealToDouble(derivatives->at(1));
-
-		/* Use SysComp ordering for full concentration deltas */
-		for (size_t idx = 0; idx < ND; idx++)
-			fullDeltas[idx] = ECHMETRealToDouble(derivatives->at(idx));
+		mapDerivatives(systemPack.ionicForms, _derivatives, deltas);
+		mapDerivatives(systemPackUncharged.ionicForms, _derivatives, deltasUncharged);
 
 		try {
 			deltaPacks.emplace_back(std::move(deltas), ECHMETRealToDouble(conductivityDerivative), perturbedConstituent);
-			concentrationDeltasVec.emplace_back(std::move(fullDeltas));
+			deltaPacksUncharged.emplace_back(std::move(deltasUncharged), ECHMETRealToDouble(conductivityDerivative), perturbedConstituent);
 		} catch (std::bad_alloc &) {
 			solver->context()->destroy();
 			solver->destroy();
@@ -555,7 +551,7 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 	derivatives->destroy();
 }
 
-void prepareModelData(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks, ConcentrationDeltasVec &concentrationDeltasVec, const RealVecPtr &analConcsBGELike, const RealVecPtr &analConcsSample, Calculator::SolutionProperties &BGELikeProps, const NonidealityCorrections corrections)
+void prepareModelData(CalculatorSystemPack &systemPack, CalculatorSystemPack &systemPackUncharged, DeltaPackVec &deltaPacks, DeltaPackVec &deltaPacksUncharged, const RealVecPtr &analConcsBGELike, const RealVecPtr &analConcsSample, Calculator::SolutionProperties &BGELikeProps, const NonidealityCorrections corrections)
 {
 	/* Step 1 - Identify the target and its flaws, there are always flaws... oops, not this "step one"...
 	 *
@@ -591,9 +587,10 @@ void prepareModelData(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks
 	/* Step 2 - Bind the now known properties of the present ionic forms to the SystemPack.
 	 */
 	bindSystemPack(systemPack, analConcsBGELike, analConcsSample);
+	bindSystemPack(systemPackUncharged, analConcsBGELike, analConcsSample);
 
 	/* Step 3 - Precalculate concentration derivatives */
-	precalculateConcentrationDeltas(systemPack, deltaPacks, concentrationDeltasVec, analConcsBGELike, corrections);
+	precalculateConcentrationDeltas(systemPack, systemPackUncharged, deltaPacks, deltaPacksUncharged, analConcsBGELike, corrections);
 }
 
 void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections)

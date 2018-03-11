@@ -229,6 +229,7 @@ EMMatrixVec calculateM2Derivatives(const CalculatorSystemPack &systemPack, const
 	return M2Derivatives;
 }
 
+#if 0
 static
 EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealVecPtr &analyticalConcentrations, const ConcentrationDeltasVec &concentrationDeltasVec)
 {
@@ -594,6 +595,121 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealV
 
 	return diffMatrix;
 }
+#endif
+
+EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPackUncharged, const DeltaPackVec &deltaPackUncharged)
+{
+	static const auto calcDiffCoeff = [](const double mobility, const int32_t charge) {
+		const int32_t _charge = charge == 0 ? 1 : charge;
+
+		return mobility * ECHMET::PhChConsts::Tlab * ECHMET::PhChConsts::bk / (std::abs(_charge) * ECHMET::PhChConsts::e);
+	};
+
+	const CalculatorIonicFormVec &ionicForms = systemPackUncharged.ionicForms;
+	const size_t NIF = ionicForms.size();
+	const SysComp::CalculatedProperties *calcPropsRaw = systemPackUncharged.calcPropsRaw;
+
+	ERVector diffusionCoefficients{};
+
+	diffusionCoefficients.reserve(NIF);
+
+	for (size_t ifIdx = 0; ifIdx < NIF; ifIdx++) {
+		const SysComp::IonicForm *iF = ionicForms.at(ifIdx)->internalIonicForm;
+		const ECHMETReal mobility = [calcPropsRaw](const SysComp::IonicForm *iF) -> double {
+			if (iF->totalCharge != 0)
+				return calcPropsRaw->ionicMobilities->at(iF->ionicMobilityIndex);
+
+			const SysComp::Constituent *c = iF->nucleus;
+
+			/* Our ionic form has zero charge. This does not work with our diffusion coefficient formula
+			 * as it only works for charged particles. Approximate the diffusion coefficient from the
+			 * charged ionic forms that are the most similar to our given form.
+			 */
+			const SysComp::IonicForm *chMinusOne = nullptr;
+			const SysComp::IonicForm *chPlusOne = nullptr;
+			auto findNextToZeroIFs = [](const SysComp::IonicForm *&chMinusOne, const SysComp::IonicForm *&chPlusOne, const SysComp::IonicForm *iF,  const SysComp::Constituent *c) {
+				std::function<bool (const SysComp::IonicForm *, const SysComp::IonicForm *)> haveSameBuildingBlocks = [&haveSameBuildingBlocks](const SysComp::IonicForm *target, const SysComp::IonicForm *candidate) {
+					/* Check whether both forms either are or are not a complex */
+					const bool targetHasLigand = target->ligand != nullptr;
+					const bool candidateHasLigand = candidate->ligand != nullptr;
+					if (targetHasLigand != candidateHasLigand)
+						return false;
+
+					/* If we have complexes check if we have a same ligand */
+					if (targetHasLigand && candidateHasLigand) {
+						if (*(target->ligand->name) != *(candidate->ligand->name))
+							return false;
+
+						/* Check that both forms have the same ancestor structure. This is a fun one */
+						const bool targetHasAncestor = target->ancestor != nullptr;
+						const bool candidateHasAncestor = candidate->ancestor != nullptr;
+
+						if (targetHasAncestor != candidateHasAncestor)
+							return false;
+
+						/* We have reached the bottom of the ancestor tree */
+						if ((targetHasAncestor == false) && (candidateHasAncestor == false))
+							return true;
+
+						if (*(target->ancestor->nucleus->name) != *(candidate->ancestor->nucleus->name))
+							return false;
+
+						/* Dive down the ancestor tree with some recursive madness */
+						return haveSameBuildingBlocks(target->ancestor, candidate->ancestor);
+					}
+
+					return *(target->nucleus->name) == *(candidate->nucleus->name);
+				};
+
+				for (size_t idx = 0; idx < c->ionicForms->size(); idx++) {
+					const SysComp::IonicForm *ionicForm = c->ionicForms->at(idx);
+
+					_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_NEIGHBOUR_FORMS_LOOKUP, const char *, const char *>(ionicForm->name->c_str(), iF->name->c_str());
+
+					/* TODO: return early once we find all the ionic forms we need */
+
+					if (ionicForm->totalCharge == -1 && chMinusOne == nullptr) {
+						if (haveSameBuildingBlocks(iF, ionicForm))
+							chMinusOne = ionicForm;
+					} else if (ionicForm->totalCharge == 1 && chPlusOne == nullptr) {
+						if (haveSameBuildingBlocks(iF, ionicForm))
+							chPlusOne = ionicForm;
+					}
+				}
+			};
+
+			findNextToZeroIFs(chMinusOne, chPlusOne, iF, c);
+
+			/* Acid */
+			if (chMinusOne && !chPlusOne)
+				return calcPropsRaw->ionicMobilities->at(chMinusOne->ionicMobilityIndex);
+			/* Base */
+			else if (!chMinusOne && chPlusOne)
+				return calcPropsRaw->ionicMobilities->at(chPlusOne->ionicMobilityIndex);
+			/* Ampholyte */
+			else if (chMinusOne && chPlusOne) {
+				const double mobMinusOne = calcPropsRaw->ionicMobilities->at(chMinusOne->ionicMobilityIndex);
+				const double mobPlusOne = calcPropsRaw->ionicMobilities->at(chPlusOne->ionicMobilityIndex);
+
+				return (mobMinusOne + mobPlusOne) / 2.0;
+			} else
+				return 1.0; /* Arbitrarily chosen mobility for constituents that really have no charge */
+		}(iF);
+
+		diffusionCoefficients.emplace_back(calcDiffCoeff(mobility, iF->totalCharge));
+	}
+
+	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_DIFFUSION_COEFFS, const CalculatorSystemPack&, const ERVector&>(systemPackUncharged, diffusionCoefficients);
+
+	const EMMatrix DOne = makeMatrixD1(systemPackUncharged, diffusionCoefficients);
+	const EMMatrix DTwo = makeMatrixD2(systemPackUncharged, deltaPackUncharged);
+
+	const EMMatrix diffMatrix = DOne * DTwo;
+
+	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_DIFF_MATRIX, const EMMatrix&>(diffMatrix);
+
+	return diffMatrix;
+}
 
 static
 EMMatrix makeConcentrationDeltas(const CalculatorSystemPack &systemPack)
@@ -610,8 +726,9 @@ EMMatrix makeConcentrationDeltas(const CalculatorSystemPack &systemPack)
 	return deltaCVec;
 }
 
-EigenzoneDispersionVec calculateNonlinear(const CalculatorSystemPack &systemPack, const RealVecPtr &analyticalConcentrations,
-					  const DeltaPackVec &deltaPacks, const ConcentrationDeltasVec &concentrationDeltasVec,
+EigenzoneDispersionVec calculateNonlinear(const CalculatorSystemPack &systemPack, const CalculatorSystemPack &systemPackUncharged,
+					  const RealVecPtr &analyticalConcentrations,
+					  const DeltaPackVec &deltaPacks, const DeltaPackVec &deltaPacksUncharged,
 					  const EMMatrix &M1, const EMMatrix &M2, const QLQRPack &QLQR,
 					  const NonidealityCorrections corrections)
 {
@@ -622,7 +739,7 @@ EigenzoneDispersionVec calculateNonlinear(const CalculatorSystemPack &systemPack
 
 	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_PROGRESS, const char*>("Individual matrix derivatives solved");
 
-	const EMMatrix diffMatrix = makeDiffusionMatrix(systemPack, analyticalConcentrations, concentrationDeltasVec);
+	const EMMatrix diffMatrix = makeDiffusionMatrix(systemPackUncharged, deltaPacksUncharged);
 	const EMMatrixVec MDerivatives = calculateMDerivatives(M1, M2, M1Derivatives, M2Derivatives);
 	const EMMatrix deltaCVec = makeConcentrationDeltas(systemPack);
 
@@ -696,6 +813,18 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_DIFFCOEFF_TERM_D_SUM, const double 
 	std::ostringstream ss{};
 
 	ss << "Term D Sum " << sum;
+
+	return ss.str();
+}
+
+ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_NONLIN_DIFFUSION_COEFFS, "Diffusion coefficients")
+ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_DIFFUSION_COEFFS, const ECHMET::LEMNG::Calculator::CalculatorSystemPack &systemPackUncharged, const ECHMET::LEMNG::Calculator::ERVector &diffCoeffs)
+{
+	std::ostringstream ss{};
+
+	ss << "-- Diffusion coefficients --\n";
+	for (size_t ifIdx = 0; ifIdx < systemPackUncharged.ionicForms.size(); ifIdx++)
+		ss << systemPackUncharged.ionicForms.at(ifIdx)->name << "; " << diffCoeffs[ifIdx] << "\n";
 
 	return ss.str();
 }

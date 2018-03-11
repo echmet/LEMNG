@@ -139,6 +139,77 @@ EMMatrix makeM2Derivative(const CalculatorSystemPack &systemPack, const RealVecP
 	return MTwoDer;
 }
 
+EMMatrix makeMatrixD1(const CalculatorSystemPack &systemPack, const ERVector &diffusionCoefficients)
+{
+	const size_t ROWS = systemPack.constituents.size();
+	const size_t COLS = systemPack.ionicForms.size();
+	const size_t H3O_idx = COLS - 2;
+	const size_t OH_idx = COLS - 1;
+	EMMatrix DOne{ROWS, COLS};
+
+	const CalculatorConstituentVec &ccVec = systemPack.constituents;
+	const CalculatorIonicFormVec &ifVec = systemPack.ionicForms;
+
+	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_D1_DIMS, const size_t&, const size_t&>(ROWS, COLS);
+
+	for (size_t row = 0; row < ROWS; row++) {
+		const CalculatorConstituent &c = ccVec.at(row);
+
+		const double uIcIFSum = [](const CalculatorConstituent &c, const double conductivity) {
+			double s = 0.0;
+
+			_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_D1_UICIF_BLOCK, const char*>(c.name.c_str());
+
+			for (size_t idx = 0; idx < c.ionicForms.size(); idx++) {
+				const CalculatorIonicForm *iF = c.ionicForms.at(idx);
+
+				s += iF->concentration * iF->mobility * cxsgn(iF->charge);
+				_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_D1_UICIF_INTERMEDIATE, const double&, const CalculatorIonicForm*&>(s, iF);
+			}
+
+			return s * PhChConsts::F / (conductivity * 1.0e9);
+		}(c, systemPack.conductivity);
+
+		for (size_t col = 0; col < COLS - 2; col++) {
+			const CalculatorIonicForm *iF = ifVec.at(col);
+			const auto &ctuentList = iF->containedConstituents;
+			const int32_t charge = iF->charge;
+			const double diffCoeff = diffusionCoefficients.at(col);
+			const int d = M1KroeneckerDelta(row, ctuentList);
+
+			_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_D1_ROW_BLOCK, const std::string&, const int &, const size_t&, const double &>(iF->name, d, col, diffCoeff);
+
+			//DOne(row, col) = (d * cxsgn(charge) + uIcIFSum * std::abs(charge)) * diffCoeff;
+			DOne(row, col) = (d + uIcIFSum * diffCoeff) * diffCoeff;
+		}
+
+		/* H3O+ and OH- are in the last two columns */
+		DOne(row, H3O_idx) = uIcIFSum * diffusionCoefficients.at(H3O_idx);
+		DOne(row, OH_idx) = uIcIFSum * diffusionCoefficients.at(OH_idx);
+	}
+
+	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_D1_OUTPUT, const EMMatrix&, const CalculatorConstituentVec&, const CalculatorIonicFormVec&>(DOne, systemPack.constituents, systemPack.ionicForms);
+
+	return DOne;
+}
+
+EMMatrix makeMatrixD2(const CalculatorSystemPack &systemPack, const DeltaPackVec &deltaPacks)
+{
+	const size_t ROWS = systemPack.ionicForms.size();
+	const size_t COLS = systemPack.constituents.size();
+	EMMatrix DTwo{ROWS, COLS};
+
+	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_D2_DIMS, const size_t&, const size_t&>(ROWS, COLS);
+
+	for (size_t col = 0; col < COLS; col++)
+		DTwo.col(col) = deltaPacks.at(col).concentrationDeltas;
+
+
+	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_D2_OUTPUT, const EMMatrix&, const CalculatorConstituentVec&, const CalculatorIonicFormVec&>(DTwo, systemPack.constituents, systemPack.ionicForms);
+
+	return DTwo;
+}
+
 EMMatrix makeMatrixM1(const CalculatorSystemPack &systemPack)
 {
 	const size_t ROWS = systemPack.constituents.size();
@@ -381,6 +452,95 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_DM2_OUTPUT, const ECHMET::LEMNG::Ca
 	return ss.str();
 }
 
+ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_D1_DIMS, "Matrix D1 dimensions")
+ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D1_DIMS, const size_t &rows, const size_t &cols)
+{
+	std::ostringstream ss{};
+
+	ss << "Calculating Matrix D1(" << rows << ", " << cols << ")";
+	return ss.str();
+}
+
+ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_D2_DIMS, "Matrix D2 dimensions")
+ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D2_DIMS, const size_t &rows, const size_t &cols)
+{
+	std::ostringstream ss{};
+
+	ss << "Calculating Matrix D2(" << rows << ", " << cols << ")";
+	return ss.str();
+}
+
+ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_D1_ROW_BLOCK, "Matrix D1 row block")
+ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D1_ROW_BLOCK, const std::string &name, const int &KrD, const size_t &col, const double &diffCoeff)
+{
+	std::ostringstream ss{};
+
+	ss << "D1 row block[" << name << "], KroeneckerDelta = " << KrD << ", col = " << col << ", diffCoeff = " << diffCoeff;
+
+	return ss.str();
+}
+
+ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_D1_OUTPUT, "Matrix D1 output")
+ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D1_OUTPUT, const ECHMET::LEMNG::Calculator::EMMatrix &DOne, const ECHMET::LEMNG::Calculator::CalculatorConstituentVec &ccVec, const ECHMET::LEMNG::Calculator::CalculatorIonicFormVec &cIfVec)
+{
+	std::ostringstream ss{};
+
+	ss << "-- Matrix D1 --\n";
+	ss << "Columns -> ";
+	for (auto *iF : cIfVec)
+		ss << iF->name << "; ";
+	ss << "\nRows -> ";
+	for (auto &cc : ccVec)
+		ss << cc.name << "; ";
+	ss << "\n";
+
+	ss << "---\n\n" << DOne << "\n\n---";
+
+	return ss.str();
+}
+
+ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_D2_OUTPUT, "Matrix D2 output")
+ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D2_OUTPUT, const ECHMET::LEMNG::Calculator::EMMatrix &DOne, const ECHMET::LEMNG::Calculator::CalculatorConstituentVec &ccVec, const ECHMET::LEMNG::Calculator::CalculatorIonicFormVec &cIfVec)
+{
+	std::ostringstream ss{};
+
+	ss << "-- Matrix D2 --\n";
+	ss << "Columns -> ";
+	for (auto *iF : cIfVec)
+		ss << iF->name << "; ";
+	ss << "\nRows -> ";
+	for (auto &cc : ccVec)
+		ss << cc.name << "; ";
+	ss << "\n";
+
+	ss << "---\n\n" << DOne << "\n\n---";
+
+	return ss.str();
+}
+
+ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_D1_UICIF_BLOCK, "Matrix D1 uIcIF intermediate block beginning")
+ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D1_UICIF_BLOCK, const char *block)
+{
+	std::ostringstream ss{};
+
+	ss << "Entering Matrix D1 uIcIF block " << block;
+	return ss.str();
+}
+
+ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_D1_UICIF_INTERMEDIATE, "Matrix D1 uIcIF intermediate block output")
+ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D1_UICIF_INTERMEDIATE, const double &s, const ECHMET::LEMNG::Calculator::CalculatorIonicForm *&ccIf)
+{
+	std::ostringstream ss{};
+	const std::string &name = ccIf->name;
+
+	ss << "Entering Matrix D1 uIcIF intermediate(" << name << "):\n"
+	   << "s(current) = " << s << "\n"
+	   << "concentration = " << ccIf->concentration << "\n"
+	   << "totalCharge = " << ccIf->charge << "\n"
+	   << "mobility = " << ccIf->mobility << "\n";
+
+	return ss.str();
+}
 #endif // ECHMET_TRACER_DISABLE_TRACING
 
 } // namespace ECHMET

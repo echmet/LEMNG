@@ -21,6 +21,8 @@ CalculatorSystemPack makeIonicFormPack(const ChemicalSystemPtr &BGESystem, const
 				       const RealVecPtr &analConcsBGE,
 				       const std::function<bool (const std::string &s)> &isAnalyte,
 				       const bool correctForIonicStrength);
+EMMatrix makeMatrixD1(const CalculatorSystemPack &systemPack, const ERVector &diffusionCoefficients);
+EMMatrix makeMatrixD2(const CalculatorSystemPack &systemPack, const DeltaPackVec &deltaPacks);
 EMMatrix makeMatrixM1(const CalculatorSystemPack &systemPack);
 EMMatrix makeMatrixM2(const CalculatorSystemPack &systemPack, const DeltaPackVec &deltaPacks);
 EMMatrix makeM1Derivative(const CalculatorSystemPack &systemPack, const DeltaPack &deltaPack) noexcept;

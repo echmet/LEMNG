@@ -31,6 +31,7 @@ private:
 	CalculatedPropertiesPtr m_calcPropsBGE;
 	CalculatedPropertiesPtr m_calcPropsFull;
 	Calculator::CalculatorSystemPack m_systemPack;
+	Calculator::CalculatorSystemPack m_systemPackUncharged;
 
 	IsAnalyteMap m_isAnalyteMap;
 

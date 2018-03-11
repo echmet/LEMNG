@@ -35,8 +35,9 @@ bool isComplex(const T &I);
 
 RealVecPtr makeAnalyticalConcentrationsForDerivator(const CalculatorSystemPack &systemPack);
 CalculatorSystemPack makeSystemPack(const ChemicalSystemPtr &chemSystem, const CalculatedPropertiesPtr &calcProps,
-				    const std::function<bool (const std::string &)> &isAnalyte);
-void prepareModelData(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks, ConcentrationDeltasVec &concentrationDeltasVec, const RealVecPtr &analConcsBGELike, const RealVecPtr &analConcsSample, Calculator::SolutionProperties &BGELikeProps, const NonidealityCorrections corrections);
+				    const std::function<bool (const std::string &)> &isAnalyte,
+				    const bool includeUncharged);
+void prepareModelData(CalculatorSystemPack &systemPack, CalculatorSystemPack &systemPackUncharged, DeltaPackVec &deltaPacks, DeltaPackVec &deltaPacksUncharged, const RealVecPtr &analConcsBGELike, const RealVecPtr &analConcsSample, Calculator::SolutionProperties &BGELikeProps, const NonidealityCorrections corrections);
 void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections);
 void solveChemicalSystem(const ChemicalSystemPtr &chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const NonidealityCorrections corrections);
 std::vector<const SysComp::Constituent *> sysCompToLEMNGOrdering(const ChemicalSystemPtr &chemSystem);
