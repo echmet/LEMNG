@@ -138,12 +138,11 @@ void _ECHMET_TRACE(Args ...args)
 	auto &tracer = TRACER_INSTANCE<TracepointIDs>();
 	if (tracer.isTracepointEnabled(TPID))
 		tracer.log(TRACEPOINT_LOGGER<TracepointIDs, TPID, Args...>(args...));
-		//tracer.log(TRACEPOINT_LOGGER<TracepointIDs, TPID, Args...>(std::forward<Args>(args)...));
 	/* Do nothing */
 }
 #else
 template <typename TracepointIDs, TracepointIDs TPID, typename ...Args>
-void _ECHMET_TRACE(Args && ...) {} /* Do nothing */
+void _ECHMET_TRACE(Args ...) {} /* Do nothing */
 #endif // ECHMET_TRACER_DISABLE_TRACING
 
 } // namespace ECHMET
