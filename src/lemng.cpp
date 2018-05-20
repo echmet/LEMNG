@@ -222,11 +222,9 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 		Calculator::prepareModelData(m_systemPack, deltaPacks, concentrationDeltasVec, analConcsBGELike, analConcsFull, BGELikeProps, corrections);
 	} catch (std::bad_alloc &) {
 		fillResultsBGE(m_chemicalSystemBGE, BGEProps, corrections, results);
-		fillResultsAnalytesDissociation(m_chemicalSystemFull, BGELikeProps, results);
 		return RetCode::E_NO_MEMORY;
 	} catch (Calculator::CalculationException &ex) {
 		fillResultsBGE(m_chemicalSystemBGE, BGEProps, corrections, results);
-		fillResultsAnalytesDissociation(m_chemicalSystemFull, BGELikeProps, results);
 		m_lastErrorString = ex.what();
 		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_PROGRESS_ERR, const char*, const char*>("Cannot prepare model data", ex.what());
 
