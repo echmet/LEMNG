@@ -361,6 +361,7 @@ void fillResults(const ChemicalSystemPtr &chemSystemBGE, const ChemicalSystemPtr
 				return EigenzoneType::ANALYTE;
 			return EigenzoneType::SYSTEM;
 		}();
+		rEz.valid = ez.valid;
 	};
 
 	/* Fill out BGE properties */

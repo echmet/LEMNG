@@ -159,6 +159,8 @@ public:
 	RSolutionProperties solutionProperties;	/*!< Properties of the solution comprising the zone */
 	bool tainted;				/*!< Set to true if the concentrations of the constituents
 						     that make up the zones had to be clamped to valid values. */
+	bool valid;				/*!< Set to false if the eigenzone could not have been fully resolved
+						     by the solver. */
 };
 IS_POD(REigenzone)
 typedef Vec<REigenzone> REigenzoneVec;
