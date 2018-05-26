@@ -35,8 +35,9 @@ ECHMET_ST_ENUM(RetCode) {
 	E_INTERNAL_ERROR = 0x13,		/*!< Unspecified internal error */
 	E_COMPLEX_EIGENMOBILITIES = 0x14,	/*!< System contains complex eigenmobilites and therefore exhibits oscillating behavior
 						     see Hruška, V; Jaroš, M; Gaš, B, ELECTROPHORESIS 2006 Volume: 27  Issue: 3  Pages: 513-518  Special Issue: SI (DOI: 10.1002/elps.200500731) */
-	E_CONCENTRATION_TOO_LOW = 0x15		/*!< Concentration of a constituent is too low to ensure that
+	E_CONCENTRATION_TOO_LOW = 0x15,		/*!< Concentration of a constituent is too low to ensure that
 						     the numerical sovler will be able to solve the system */
+	E_PARTIAL_EIGENZONES = 0x16		/*!< Some eigenzones in the system could not have been fully resolved */
 	ENUM_FORCE_INT32_SIZE(LEMNGRetCode)
 };
 

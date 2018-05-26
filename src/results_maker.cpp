@@ -349,14 +349,15 @@ void fillSolutionProperties(const ChemicalSystemPtr &chemSystem, const Calculato
 void fillResults(const ChemicalSystemPtr &chemSystemBGE, const ChemicalSystemPtr &chemSystemFull, const Calculator::SolutionProperties &BGEProperties, const Calculator::SolutionProperties &BGELikeProperties, const Calculator::LinearResults &linResults, const Calculator::EigenzoneDispersionVec &ezDisps, const NonidealityCorrections corrections, Results &r)
 {
 	auto fillEigenzone = [corrections](const ChemicalSystemPtr &chemSystem, const Calculator::Eigenzone &ez, const Calculator::EigenzoneDispersion &disp, REigenzone &rEz) {
-		fillSolutionProperties(chemSystem, ez.solutionProperties, corrections, rEz.solutionProperties);
+		if (ez.valid)
+			fillSolutionProperties(chemSystem, ez.solutionProperties, corrections, rEz.solutionProperties);
 
 		rEz.mobility = ez.zoneMobility;
 		rEz.a2t = disp.a2t;
 		rEz.uEMD = disp.uEMD;
 		rEz.tainted = ez.tainted;
 		rEz.ztype = [ez]() {
-			if (ez.isAnalyzeZone)
+			if (ez.isAnalyteZone)
 				return EigenzoneType::ANALYTE;
 			return EigenzoneType::SYSTEM;
 		}();

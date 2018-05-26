@@ -18,20 +18,22 @@ namespace Calculator {
 
 typedef Eigen::ComplexEigenSolver<EMMatrixC> EMSolverC;
 
-Eigenzone::Eigenzone(std::vector<double> &&zeroCC) noexcept :
-	constituentConcentrations(zeroCC),
-	zoneMobility{0},
+Eigenzone::Eigenzone(const double zoneMobility, const bool isAnalyteZone, const size_t dummySize) :
+	constituentConcentrations(std::vector<double>(dummySize)),
+	zoneMobility{zoneMobility},
 	tainted{true},
-	isAnalyzeZone{false}
+	isAnalyteZone{isAnalyteZone},
+	valid{false}
 {
 }
 
-Eigenzone::Eigenzone(const double zoneMobility, std::vector<double> &&constituentConcentrations, SolutionProperties &&solutionProperties, const bool tainted, const bool isAnalyzeZone) noexcept :
+Eigenzone::Eigenzone(const double zoneMobility, std::vector<double> &&constituentConcentrations, SolutionProperties &&solutionProperties, const bool tainted, const bool isAnalyteZone) noexcept :
 	constituentConcentrations(constituentConcentrations),
 	solutionProperties{solutionProperties},
 	zoneMobility{zoneMobility},
 	tainted{tainted},
-	isAnalyzeZone{isAnalyzeZone}
+	isAnalyteZone{isAnalyteZone},
+	valid{true}
 {
 }
 
@@ -40,7 +42,8 @@ Eigenzone::Eigenzone(const Eigenzone &other) :
 	solutionProperties{other.solutionProperties},
 	zoneMobility{other.zoneMobility},
 	tainted{other.tainted},
-	isAnalyzeZone{other.isAnalyzeZone}
+	isAnalyteZone{other.isAnalyteZone},
+	valid{other.valid}
 {
 }
 
@@ -49,7 +52,8 @@ Eigenzone::Eigenzone(Eigenzone &&other) noexcept :
 	solutionProperties{std::move(other.solutionProperties)},
 	zoneMobility{other.zoneMobility},
 	tainted{other.tainted},
-	isAnalyzeZone{other.isAnalyzeZone}
+	isAnalyteZone{other.isAnalyteZone},
+	valid{other.valid}
 {
 }
 
@@ -215,7 +219,7 @@ LinearResults calculateLinear(const CalculatorSystemPack &systemPack, const Delt
 		for (size_t idx = 0; idx < eigenzoneCompositions.size(); idx++) {
 			auto &&ez = std::get<0>(eigenzoneCompositions.at(idx));
 			const bool tainted = std::get<1>(eigenzoneCompositions.at(idx));
-			const bool isAnalyzeZone = std::get<2>(eigenzoneCompositions.at(idx));
+			const bool isAnalyteZone = std::get<2>(eigenzoneCompositions.at(idx));
 			RealVecPtr zoneConcsVec = makeAnalyticalConcentrationsVec(systemPack.chemSystemRaw);
 			CalculatedPropertiesPtr zoneCalcProps = makeCalculatedProperties(systemPack.chemSystemRaw);
 			const double zoneMobility = eigenmobs(idx).real();
@@ -233,12 +237,9 @@ LinearResults calculateLinear(const CalculatorSystemPack &systemPack, const Delt
 
 			try {
 				SolutionProperties zoneProps = calculateSolutionProperties(systemPack.chemSystemRaw, zoneConcsVec, zoneCalcProps.get(), corrections);
-				eigenzones.emplace_back(zoneMobility, std::move(ez), std::move(zoneProps), tainted, isAnalyzeZone);
+				eigenzones.emplace_back(zoneMobility, std::move(ez), std::move(zoneProps), tainted, isAnalyteZone);
 			} catch (CalculationException &) {
-				std::vector<double> dummyCC;
-				dummyCC.resize(eigenzoneCompositions.size());
-
-				eigenzones.emplace_back(Eigenzone{std::move(dummyCC)});
+				eigenzones.emplace_back(zoneMobility, isAnalyteZone, eigenzoneCompositions.size());
 				allZonesValid = false;
 			}
 		}

@@ -11,7 +11,7 @@ namespace Calculator {
 
 class Eigenzone {
 public:
-	Eigenzone(std::vector<double> &&constituentConcentrations) noexcept;
+	Eigenzone(const double zoneMobility, const bool isAnalyteZone, const size_t dummySize);
 	Eigenzone(const double zoneMobility, std::vector<double> &&constituentConcentrations, SolutionProperties &&solutionProperties, const bool tainted, const bool isAnalyzeZone) noexcept;
 	Eigenzone(const Eigenzone &other);
 	Eigenzone(Eigenzone &&other) noexcept;
@@ -20,7 +20,8 @@ public:
 	const SolutionProperties solutionProperties;
 	const double zoneMobility;
 	const bool tainted;
-	const bool isAnalyzeZone;
+	const bool isAnalyteZone;
+	const bool valid;
 };
 
 class LinearResults {
