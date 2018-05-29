@@ -286,15 +286,20 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_LIN_ZONE_TAINTED, const int &zoneNum, cons
 	return ss.str();
 }
 
-ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_EIGENMOBS, "Complex eigenmobilities")
+ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_EIGENMOBS, "Eigenmobilities")
 ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_EIGENMOBS, const LEMNG::Calculator::EMVectorC &mobilities)
 {
 	std::ostringstream ss{};
+
+	ss << "-- Eigenmobilities --\n";
+	ss << "---\n\n";
 
 	for (int idx = 0; idx < mobilities.cols(); idx++) {
 		const auto &cu = mobilities(idx);
 		ss << "Real: " << cu.real() << "; Imag: " << cu.imag() << "\n";
 	}
+
+	ss << "\n\n---";
 
 	return ss.str();
 }
