@@ -69,6 +69,7 @@ add_library(LEMNG SHARED ${libIonProps_SRCS})
 set_target_properties(LEMNG
                       PROPERTIES VERSION 0.4
                                  SOVERSION 0.4
+                                 LINK_FLAGS "-Wl,--default-symver"
                       PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/lemng.h")
 target_link_libraries(LEMNG
                       PRIVATE ECHMETShared
