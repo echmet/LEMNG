@@ -45,6 +45,7 @@ public:
 	const bool visible;
 };
 
+static
 double signalResponse(const RSolutionProperties &solProps, const EFGResponseType respType, const char *constituentName)
 {
 	switch (respType) {
@@ -65,6 +66,7 @@ double signalResponse(const RSolutionProperties &solProps, const EFGResponseType
 	throw std::runtime_error{"Unexpected EFG reponse type"};
 }
 
+static
 int calcSlice(const int NCpus, const int points) noexcept
 {
 	const double part = NCpus;
@@ -72,6 +74,7 @@ int calcSlice(const int NCpus, const int points) noexcept
 	return static_cast<int>(std::ceil(static_cast<double>(points) / part));
 }
 
+static
 double guessPlotToTime(const double longestZoneMaximumTime) noexcept
 {
 	if (longestZoneMaximumTime < 60)
@@ -82,6 +85,7 @@ double guessPlotToTime(const double longestZoneMaximumTime) noexcept
 	return longestZoneMaximumTime * 1.1;
 }
 
+static
 void makeEigenzonePlotParams(const REigenzoneVec *eigenzones,
 			     const EFGResponseType respType,
 			     const char *constituentName,
@@ -117,6 +121,7 @@ void makeEigenzonePlotParams(const REigenzoneVec *eigenzones,
 	}
 }
 
+static
 void makePlotBaseline(const double baselineSignal, const int NCpus, const int points, VecImpl<EFGPair, false>::STLVec &stlEfg)
 {
 	const auto worker = [&](const int from, const int to) noexcept {
@@ -145,6 +150,7 @@ void makePlotBaseline(const double baselineSignal, const int NCpus, const int po
 		w.join();
 }
 
+static
 double calculateHVLR(const double t, const double x, const double d, const double vZero, const double vEMD, const double L) noexcept
 {
 	static const double ZERO = 0;
@@ -300,6 +306,7 @@ REigenzoneEnvelope calcZoneEnvelope(const EigenzonePlotParams &params, const dou
 	return REigenzoneEnvelope{ beginsAt, endsAt };
 }
 
+static
 void makePlot(const std::vector<EigenzonePlotParams> &ezPlotParams, const double effectiveLength, const double bslSignal,
 	      const double plotToTime, const double zoneLength, const double vEOF,
 	      VecImpl<EFGPair, false>::STLVec &stlEfg)

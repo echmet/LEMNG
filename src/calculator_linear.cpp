@@ -93,6 +93,7 @@ LinearResults::LinearResults(LinearResults &&other) noexcept :
 {
 }
 
+static
 std::vector<EMMatrixC> calculatePMatrices(const EMMatrixC &QL, const EMMatrixC &QR)
 {
 	std::vector<EMMatrixC> PMatrices{};
@@ -109,6 +110,7 @@ std::vector<EMMatrixC> calculatePMatrices(const EMMatrixC &QL, const EMMatrixC &
 	return PMatrices;
 }
 
+static
 QLQRPack calculateQLQR(EMSolverC &ces)
 {
 	EMMatrixC QR = ces.eigenvectors();
@@ -117,6 +119,7 @@ QLQRPack calculateQLQR(EMSolverC &ces)
 	return QLQRPack{QL, QR};
 }
 
+static
 std::vector<std::tuple<std::vector<double>, bool, bool>> calculateEigenzoneCompositions(const std::vector<EMMatrixC> &PMatrices, const CalculatorSystemPack &systemPack)
 {
 	auto isAnalytePresent = [](const double cInZone, const double cInSample) {

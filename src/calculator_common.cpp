@@ -42,6 +42,7 @@ const char * CalculationException::what() const noexcept
 	return m_message.c_str();
 }
 
+static
 void buildSystemPackVectors(CalculatorConstituentVec &ccVec, CalculatorIonicFormVec &ifVec, const std::vector<const SysComp::Constituent *> &allConstituents,
 			    const SysComp::IonicForm *internalIFH3O, const SysComp::IonicForm *internalIFOH,
 			    const std::function<bool (const std::string &)> &isAnalyte)
@@ -192,6 +193,7 @@ void buildSystemPackVectors(CalculatorConstituentVec &ccVec, CalculatorIonicForm
 	}
 }
 
+static
 void calcIonicProperties(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections)
 {
 	::ECHMET::RetCode tRet;
@@ -220,6 +222,7 @@ void calcIonicProperties(const SysComp::ChemicalSystem *chemSystem, const RealVe
 	ctx->destroy();
 }
 
+static
 double calculateSolutionBufferCapacity(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, const SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections)
 {
 	::ECHMET::RetCode tRet;

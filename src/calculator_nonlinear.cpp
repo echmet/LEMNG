@@ -24,6 +24,7 @@ EigenzoneDispersion::EigenzoneDispersion(const double a2t, const double uEMD) :
 {
 }
 
+static
 EigenzoneDispersionVec calculateEigenzoneDispersion(const QLQRPack &QLQR, const EMMatrixVec &MDerivatives, const EMMatrix &concentrationDeltas, const EMMatrix &diffMatrix, const size_t NCO)
 {
 	const EMMatrixC &QL = QLQR.QL();
@@ -80,6 +81,7 @@ EigenzoneDispersionVec calculateEigenzoneDispersion(const QLQRPack &QLQR, const 
 	return ezDisps;
 }
 
+static
 EMMatrixVec calculateMDerivatives(const EMMatrix &MOne, const EMMatrix &MTwo, const EMMatrixVec &MOneDerivatives, const EMMatrixVec &MTwoDerivatives)
 {
 	EMMatrixVec MDerivatives{};
@@ -115,6 +117,7 @@ EMMatrixVec calculateMDerivatives(const EMMatrix &MOne, const EMMatrix &MTwo, co
 	return MDerivatives;
 }
 
+static
 EMMatrixVec calculateM1Derivatives(const CalculatorSystemPack &systemPack, const DeltaPackVec &deltaPacks)
 {
 	EMMatrixVec M1Derivatives{};
@@ -144,6 +147,7 @@ EMMatrixVec calculateM1Derivatives(const CalculatorSystemPack &systemPack, const
 	return M1Derivatives;
 }
 
+static
 EMMatrixVec calculateM2Derivatives(const CalculatorSystemPack &systemPack, const RealVecPtr &analyticalConcentrations, const NonidealityCorrections corrections)
 {
 	const size_t NCO = systemPack.constituents.size();
@@ -225,6 +229,7 @@ EMMatrixVec calculateM2Derivatives(const CalculatorSystemPack &systemPack, const
 	return M2Derivatives;
 }
 
+static
 EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealVecPtr &analyticalConcentrations, const ConcentrationDeltasVec &concentrationDeltasVec)
 {
 	/* WARNING - This piece of code is a terrible read. */
@@ -585,6 +590,7 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealV
 	return diffMatrix;
 }
 
+static
 EMMatrix makeConcentrationDeltas(const CalculatorSystemPack &systemPack)
 {
 	const size_t NCO = systemPack.constituents.size();

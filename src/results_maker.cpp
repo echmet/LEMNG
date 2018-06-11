@@ -12,11 +12,13 @@
 namespace ECHMET {
 namespace LEMNG {
 
+static
 void releaseRIon(RIon &ion) noexcept
 {
 	ion.name->destroy();
 }
 
+static
 void releaseRForm(RForm &f) noexcept
 {
 	for (size_t idx = 0; idx < f.ions->size(); idx++)
@@ -25,6 +27,7 @@ void releaseRForm(RForm &f) noexcept
 	f.ions->destroy();
 }
 
+static
 void releaseRConstituent(RConstituent &c)
 {
 	SKMapImpl<RForm> *formsImpl = dynamic_cast<SKMapImpl<RForm> *>(c.forms);
@@ -38,6 +41,7 @@ void releaseRConstituent(RConstituent &c)
 	c.forms->destroy();
 }
 
+static
 void teardownRConstituentMap(SKMapImpl<RConstituent> *map)
 {
 	for (auto &&c : map->STL())
@@ -46,6 +50,7 @@ void teardownRConstituentMap(SKMapImpl<RConstituent> *map)
 	map->destroy();
 }
 
+static
 void releaseRDissociationRatioVec(RDissociationRatioVec *vec)
 {
 	VecImpl<RDissociationRatio, false> *vecImpl = dynamic_cast<VecImpl<RDissociationRatio, false> *>(vec);
@@ -58,6 +63,7 @@ void releaseRDissociationRatioVec(RDissociationRatioVec *vec)
 	vec->destroy();
 }
 
+static
 void releaseRSolutionProperties(RSolutionProperties &props)
 {
 	SKMapImpl<RConstituent> *compositionImpl = dynamic_cast<SKMapImpl<RConstituent> *>(props.composition);
@@ -67,6 +73,7 @@ void releaseRSolutionProperties(RSolutionProperties &props)
 	teardownRConstituentMap(compositionImpl);
 }
 
+static
 void teardownRFormMap(SKMapImpl<RForm> *map)
 {
 	for (auto &&f : map->STL())
@@ -75,6 +82,7 @@ void teardownRFormMap(SKMapImpl<RForm> *map)
 	map->destroy();
 }
 
+static
 void teardownRIonVec(VecImpl<RIon, false> *vec)
 {
 	for (auto &&i : vec->STL())
@@ -83,6 +91,7 @@ void teardownRIonVec(VecImpl<RIon, false> *vec)
 	vec->destroy();
 }
 
+static
 void teardownREigenzoneVec(VecImpl<REigenzone, false> *vec)
 {
 	for (auto &&ez: vec->STL())
@@ -91,6 +100,7 @@ void teardownREigenzoneVec(VecImpl<REigenzone, false> *vec)
 	vec->destroy();
 }
 
+static
 void teardownRDissociatedConstituentVec(VecImpl<RDissociatedConstituent, false> *vec)
 {
 	for (auto &&dc : vec->STL()) {
@@ -108,12 +118,14 @@ typedef std::unique_ptr<VecImpl<RIon, false>, decltype(&teardownRIonVec)> RIonVe
 typedef std::unique_ptr<VecImpl<RDissociatedConstituent, false>, decltype(&teardownRDissociatedConstituentVec)> RDissociatedConstituentVecWrapper;
 
 template <typename T>
+static
 void zeroize(typename std::enable_if<!std::is_pointer<T>::value, T>::type *t)
 {
 	const size_t SZ = sizeof(T);
 	memset(t, 0, SZ);
 }
 
+static
 RConstituentMapWrapper prepareComposition(const ChemicalSystemPtr &chemSystem)
 {
 	RConstituentMapWrapper compMap{new SKMapImpl<RConstituent>{}, teardownRConstituentMap};
@@ -201,6 +213,7 @@ RConstituentMapWrapper prepareComposition(const ChemicalSystemPtr &chemSystem)
 	return compMap;
 }
 
+static
 RDissociatedConstituent makeDissociatedConstituent(const SysComp::Constituent *ctuent)
 {
 	RDissociatedConstituent dissocC;
@@ -242,6 +255,7 @@ RDissociatedConstituent makeDissociatedConstituent(const SysComp::Constituent *c
 	return dissocC;
 }
 
+static
 RDissociatedConstituentVecWrapper prepareDissociation(const ChemicalSystemPtr &chemSystem, const std::function<bool (const std::string &)> &isAnalyte)
 {
 	RDissociatedConstituentVecWrapper dissociation{new VecImpl<RDissociatedConstituent, false>, teardownRDissociatedConstituentVec};
@@ -264,6 +278,7 @@ RDissociatedConstituentVecWrapper prepareDissociation(const ChemicalSystemPtr &c
 	return dissociation;
 }
 
+static
 REigenzoneVecWrapper prepareEigenzones(const ChemicalSystemPtr &chemSystem)
 {
 	REigenzoneVecWrapper eigenzones{new VecImpl<REigenzone, false>{}, teardownREigenzoneVec};
@@ -286,6 +301,7 @@ REigenzoneVecWrapper prepareEigenzones(const ChemicalSystemPtr &chemSystem)
 	return eigenzones;
 }
 
+static
 void fillAnalytesDissociation(const ChemicalSystemPtr &chemSystem, const Calculator::SolutionProperties &props, RDissociatedConstituentVec *rVec)
 {
 	const auto &anConcs = props.analyticalConcentrations;
@@ -312,6 +328,7 @@ void fillAnalytesDissociation(const ChemicalSystemPtr &chemSystem, const Calcula
 	}
 }
 
+static
 void fillSolutionProperties(const ChemicalSystemPtr &chemSystem, const Calculator::SolutionProperties &props, const NonidealityCorrections corrections, RSolutionProperties &rProps)
 {
 	auto H3OConcentration = [](const std::vector<double> &icVec) {

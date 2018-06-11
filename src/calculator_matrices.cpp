@@ -16,6 +16,7 @@ namespace ECHMET {
 namespace LEMNG {
 namespace Calculator {
 
+static
 int M1KroeneckerDelta(const size_t i, const std::vector<size_t> &mList)
 {
 	for (const size_t m : mList)
