@@ -166,6 +166,22 @@ IS_POD(REigenzone)
 typedef Vec<REigenzone> REigenzoneVec;
 
 /*!
+ * Eigenzone envelope.
+ *
+ * Contains time in seconds where an eigenzone begins and ends
+ * for a given set of sytem parameters.
+ * Beginning and end of the zone is calculated as a point on the time
+ * axis there the zone has less than 5 % of its maximum height.
+ */
+class REigenzoneEnvelope {
+public:
+	double beginsAt;			/*!< Beginning of the zone */
+	double endsAt;				/*!< End of the zone */
+};
+IS_POD(REigenzoneEnvelope)
+typedef Vec<REigenzoneEnvelope> REigenzoneEnvelopeVec;
+
+/*!
  * Description of a fully resolved system
  */
 class Results {
@@ -310,6 +326,24 @@ ECHMET_API RetCode ECHMET_CC makeCZESystem(SysComp::InConstituentVec *BGE, SysCo
  * @return Minimum safe concentration
  */
 ECHMET_API double ECHMET_CC minimumSafeConcentration() ECHMET_NOEXCEPT;
+
+/*!
+ * Finds envelopes of eigenzones.
+ *
+ * @param[out] envelopes Vector of found envelopes. Has the same order as <tt>eigenzones</tt> vector is <tt>Results</tt>.
+ * @param[in] results Results to generate the electrophoregram for.
+ * @param[in] drivingVoltage Voltage applied to the system in <tt>V</tt>.
+ * @param[in] totalLength Total length of the capillary in <tt>m</tt>.
+ * @param[in] effectiveLength Distance between the inlet and the detector in <tt>m</tt>.
+ * @param[in] EOFMobility Mobility of the electroosmotic flow in <tt>m.m/V/s . 1e-9</tt>.
+ * @param[in] injectionZoneLength Length of the injection zone in <tt>m</tt>.
+ * @param[in] plotToTime End the plotted electrophoregram at a specified in <tt>sec</tt>. Default value
+ *                       ends the plot after the last visible eigenzone.
+ */
+ECHMET_API RetCode ECHMET_CC findEigenzoneEnvelopes(REigenzoneEnvelopeVec *&envelopes, const Results &results,
+						    const double drivingVoltage, const double totalLength, const double effectiveLength,
+						    const double EOFMobility, const double injectionZoneLength,
+						    const double plotToTime) ECHMET_NOEXCEPT;
 
 /*!
  * Plots expected electrophoregrams for given results.

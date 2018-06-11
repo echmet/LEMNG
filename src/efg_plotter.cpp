@@ -20,11 +20,21 @@ typedef std::vector<std::future<std::vector<double>>> HVLPlotFutureVec;
 
 class EigenzonePlotParams {
 public:
+	EigenzonePlotParams() :
+		vZero{0},
+		vEMD{0},
+		zoneSignal{0},
+		diffCoeff{0},
+		visible{false}
+	{
+	}
+
 	EigenzonePlotParams(const double vZero, const double vEMD, const double zoneSignal, const double diffCoeff) :
 		vZero{vZero},
 		vEMD{vEMD},
 		zoneSignal{zoneSignal},
-		diffCoeff{diffCoeff}
+		diffCoeff{diffCoeff},
+		visible{true}
 	{
 	}
 
@@ -32,6 +42,7 @@ public:
 	const double vEMD;
 	const double zoneSignal;
 	const double diffCoeff;
+	const bool visible;
 };
 
 double signalResponse(const RSolutionProperties &solProps, const EFGResponseType respType, const char *constituentName)
@@ -80,6 +91,12 @@ void makeEigenzonePlotParams(const REigenzoneVec *eigenzones,
 {
 	for (size_t idx = 0; idx < eigenzones->size(); idx++) {
 		const REigenzone &ez = eigenzones->at(idx);
+
+		if (!ez.valid) {
+			ezPlotParams.emplace_back();
+			continue;
+		}
+
 		const double ezMob = ez.mobility * 1.0e-9;
 		const double diffCoeff = ez.a2t * 1.0e-9;
 		const double vZero = ezMob * E;
@@ -87,8 +104,11 @@ void makeEigenzonePlotParams(const REigenzoneVec *eigenzones,
 		const double zoneMaximumTime = effectiveLength / (vZero + EOFVelocity);
 		double zoneSignal = signalResponse(ez.solutionProperties, respType, constituentName);
 
-		if (zoneMaximumTime < 0.0) /* Invisible zone */
+		if (zoneMaximumTime < 0.0) {
+			/* Invisible zone */
+			ezPlotParams.emplace_back();
 			continue;
+		}
 
 		if (zoneMaximumTime > longestZoneMaximumTime)
 			longestZoneMaximumTime = zoneMaximumTime;
@@ -213,6 +233,73 @@ double calculateHVLR(const double t, const double x, const double d, const doubl
 	return ZERO;
 }
 
+static
+REigenzoneEnvelope calcZoneEnvelope(const EigenzonePlotParams &params, const double E, const double vEOF, const double effectiveLength, const double zoneLength, const double tLast)
+{
+	if (!params.visible)
+		return { -1.0, -1.0 };
+
+	const double THRESHOLD = 0.05;
+	double zoneTime = effectiveLength / (params.vZero + vEOF);
+	double beginsAt;
+	double endsAt;
+
+	/* Find maximum value */
+	double t = effectiveLength / (params.vZero + vEOF);
+	double yMax = calculateHVLR(t, effectiveLength - vEOF * t, params.diffCoeff, params.vZero, params.vEMD, zoneLength);
+	double yX = yMax;
+
+	if (t > tLast)
+		return { -1.0, -1.0 };
+
+	const double uEMDabs = std::abs(params.vEMD / E);
+
+	if (uEMDabs > 1.0e-13) {
+		if (params.vEMD > 0.0) {
+			do  {
+				t -= TIME_STEP;
+				yX = calculateHVLR(t, effectiveLength - vEOF * t, params.diffCoeff, params.vZero, params.vEMD, zoneLength);
+				if (yX > yMax)
+					yMax = yX;
+				else
+					break;
+			} while (t > 0.0);
+		} else if (params.vEMD < -0.0) {
+			do {
+				t += TIME_STEP;
+				yX = calculateHVLR(t, effectiveLength - vEOF * t, params.diffCoeff, params.vZero, params.vEMD, zoneLength);
+				if (yX > yMax)
+					yMax = yX;
+				else
+					break;
+			} while (t < tLast);
+		}
+
+		yX = yMax;
+		zoneTime = t;
+	}
+
+	/* Find the envelope of the zone */
+	/* Left lobe */
+	t = zoneTime - TIME_STEP;
+	while (yX / yMax > THRESHOLD && t > 0.0) {
+		yX = calculateHVLR(t, effectiveLength - vEOF * t, params.diffCoeff, params.vZero, params.vEMD, zoneLength);
+		t -= TIME_STEP;
+	}
+	beginsAt = t;
+
+	/* Right lobe */
+	t = zoneTime + TIME_STEP;
+	yX = yMax;
+	while (yX / yMax > THRESHOLD && t < tLast) {
+		yX = calculateHVLR(t, effectiveLength - vEOF * t, params.diffCoeff, params.vZero, params.vEMD, zoneLength);
+		t += TIME_STEP;
+	}
+	endsAt = t;
+
+	return REigenzoneEnvelope{ beginsAt, endsAt };
+}
+
 void makePlot(const std::vector<EigenzonePlotParams> &ezPlotParams, const double effectiveLength, const double bslSignal,
 	      const double plotToTime, const double zoneLength, const double vEOF,
 	      VecImpl<EFGPair, false>::STLVec &stlEfg)
@@ -246,6 +333,9 @@ void makePlot(const std::vector<EigenzonePlotParams> &ezPlotParams, const double
 
 	const int slice = calcSlice(NCpus, points);
 	for (const auto &params : ezPlotParams) {
+		if (!params.visible)
+			continue;
+
 		std::vector<std::thread> workers{};
 		workers.reserve(NCpus);
 
@@ -262,6 +352,61 @@ void makePlot(const std::vector<EigenzonePlotParams> &ezPlotParams, const double
 		for (auto &w : workers)
 			w.join();
 	}
+}
+
+RetCode ECHMET_CC findEigenzoneEnvelopes(REigenzoneEnvelopeVec *&envelopes, const Results &results,
+					 const double drivingVoltage, const double totalLength, const double effectiveLength,
+					 const double EOFMobility, const double injectionZoneLength, const double plotToTime) noexcept
+{
+	if (totalLength <= 0)
+		return RetCode::E_INVALID_CAPILLARY;
+	if (totalLength < effectiveLength || effectiveLength <= 0)
+		return RetCode::E_INVALID_DETECTOR_POSITION;
+	if (injectionZoneLength <= 0.0)
+		return RetCode::E_INVALID_ARGUMENT;
+
+	const double E = drivingVoltage / totalLength;		/* Electric field intensity */
+	const double EOFVelocity = EOFMobility * E * 1.0e-9;
+
+	envelopes = createECHMETVec<REigenzoneEnvelope, false>(results.eigenzones->size());
+	if (envelopes == nullptr)
+		return RetCode::E_NO_MEMORY;
+
+	try {
+		double longestZoneTime = 0.0;
+		std::vector<EigenzonePlotParams> ezPlotParams{};
+
+		makeEigenzonePlotParams(results.eigenzones,
+					EFGResponseType::RESP_CONDUCTIVITY,	/* The response type does not matter here */
+					nullptr,
+					E, effectiveLength, EOFVelocity,
+					ezPlotParams,
+					longestZoneTime);
+
+		const double _plotToTime = [plotToTime, longestZoneTime] {
+			if (plotToTime > 0.0)
+				return plotToTime;
+			else
+				return guessPlotToTime(longestZoneTime);
+		}();
+
+		for (const auto &params : ezPlotParams) {
+			const auto envelope = calcZoneEnvelope(params, E, EOFVelocity, effectiveLength, injectionZoneLength, _plotToTime);
+			ECHMET_TRACE(LEMNGTracing, EFGPLOT_ZONE_ENVELOPE, params.vZero, envelope.beginsAt, envelope.endsAt);
+
+			if (envelopes->push_back(envelope) != ::ECHMET::RetCode::OK) {
+				envelopes->destroy();
+
+				return RetCode::E_NO_MEMORY;
+			}
+		}
+	} catch (std::bad_alloc &) {
+		envelopes->destroy();
+
+		return RetCode::E_NO_MEMORY;
+	}
+
+	return RetCode::OK;
 }
 
 RetCode ECHMET_CC plotElectrophoregram(EFGPairVec *&electrophoregram,
@@ -366,6 +511,16 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, EFGPLOT_INPUT_PARAMS, const double voltage, con
 	ss << "\n";
 
 	addParam("Plot to time", plotToTime);
+
+	return ss.str();
+}
+
+ECHMET_MAKE_TRACEPOINT(LEMNGTracing, EFGPLOT_ZONE_ENVELOPE, "Eigenzone envelopes")
+ECHMET_MAKE_LOGGER(LEMNGTracing, EFGPLOT_ZONE_ENVELOPE, const double mobility, const double begins, const double ends)
+{
+	std::ostringstream ss{};
+
+	ss << "Eigenzone envelope: u = " << mobility << ", beginsAt = " << begins << ", endsAt = " << ends << "\n";
 
 	return ss.str();
 }
