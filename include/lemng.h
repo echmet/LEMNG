@@ -177,6 +177,7 @@ class REigenzoneEnvelope {
 public:
 	double beginsAt;			/*!< Beginning of the zone */
 	double endsAt;				/*!< End of the zone */
+	double HVLRMax;				/*!< Peak value of the HVL-R function */
 };
 IS_POD(REigenzoneEnvelope)
 typedef Vec<REigenzoneEnvelope> REigenzoneEnvelopeVec;
