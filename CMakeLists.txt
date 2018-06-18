@@ -19,6 +19,7 @@ if (WIN32)
         add_definitions("-DECHMET_COMPILER_MSYS")
     elseif (MSVC)
         add_definitions("-DECHMET_COMPILER_MSVC")
+        set(DEFAULT_SYMVER_LINK " ")
     else ()
         message(FATAL "Unsupported or mistedected compiler")
     endif ()
@@ -31,6 +32,7 @@ elseif (UNIX)
 
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -g")
         add_definitions("-DECHMET_COMPILER_GCC_LIKE")
+        set(DEFAULT_SYMVER_LINK "-Wl,--default-symver")
     elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
         if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.4)
 		message(FATAL_ERROR "Clang 3.4 or newer is required to build ECHMETCoreLibs")
@@ -38,6 +40,7 @@ elseif (UNIX)
 
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++14 -Wall -Wextra -Wno-c++98-compat -Wno-unused-function -pedantic -fvisibility=hidden -g")
         add_definitions("-DECHMET_COMPILER_GCC_LIKE")
+        set(DEFAULT_SYMVER_LINK "-Wl,--default-symver")
     else ()
         message(FATAL "Unsupported or misdetected compiler")
     endif ()
@@ -77,7 +80,7 @@ add_library(LEMNG SHARED ${libIonProps_SRCS})
 set_target_properties(LEMNG
                       PROPERTIES VERSION 0.4
                                  SOVERSION 0.4
-                                 LINK_FLAGS "-Wl,--default-symver"
+                                 LINK_FLAGS ${DEFAULT_SYMVER_LINK}
                       PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/lemng.h")
 target_link_libraries(LEMNG
                       PRIVATE ECHMETShared
