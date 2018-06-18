@@ -74,6 +74,7 @@ int calcSlice(const int NCpus, const int points) noexcept
 	return static_cast<int>(std::ceil(static_cast<double>(points) / part));
 }
 
+
 static
 double guessPlotToTime(const double longestZoneMaximumTime) noexcept
 {
@@ -83,6 +84,14 @@ double guessPlotToTime(const double longestZoneMaximumTime) noexcept
 		return 3600;
 
 	return longestZoneMaximumTime * 1.1;
+}
+
+static
+double inputPlotTimeToTime(const double inputTime, const double longestZoneTime) noexcept
+{
+	if (inputTime > 0.0)
+		return inputTime;
+	return guessPlotToTime(longestZoneTime);
 }
 
 static
@@ -390,12 +399,7 @@ RetCode ECHMET_CC findEigenzoneEnvelopes(REigenzoneEnvelopeVec *&envelopes, cons
 					ezPlotParams,
 					longestZoneTime);
 
-		const double _plotToTime = [plotToTime, longestZoneTime] {
-			if (plotToTime > 0.0)
-				return plotToTime;
-			else
-				return guessPlotToTime(longestZoneTime);
-		}();
+		const double _plotToTime = inputPlotTimeToTime(plotToTime, longestZoneTime);
 
 		for (const auto &params : ezPlotParams) {
 			const auto envelope = calcZoneEnvelope(params, E, EOFVelocity, effectiveLength, injectionZoneLength, _plotToTime);
@@ -444,7 +448,7 @@ RetCode ECHMET_CC plotElectrophoregram(EFGPairVec *&electrophoregram,
 		return RetCode::E_NO_MEMORY;
 
 	try {
-		double longestZoneMaximumTime = 0.0;
+		double longestZoneTime = 0.0;
 		const double bslSignal = signalResponse(results.BGEProperties, respType, constituentName);
 		std::vector<EigenzonePlotParams> ezPlotParams{};
 
@@ -453,14 +457,9 @@ RetCode ECHMET_CC plotElectrophoregram(EFGPairVec *&electrophoregram,
 					constituentName,
 					E, effectiveLength, EOFVelocity,
 					ezPlotParams,
-					longestZoneMaximumTime);
+					longestZoneTime);
 
-		const double _plotToTime = [plotToTime, longestZoneMaximumTime] {
-			if (plotToTime > 0.0)
-				return plotToTime;
-			else
-				return guessPlotToTime(longestZoneMaximumTime);
-		}();
+		const double _plotToTime = inputPlotTimeToTime(plotToTime, longestZoneTime);
 
 		makePlot(ezPlotParams, effectiveLength, bslSignal, _plotToTime, injectionZoneLength, EOFVelocity, electrophoregramImpl->STL());
 	} catch (std::bad_alloc &) {
