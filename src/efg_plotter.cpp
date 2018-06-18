@@ -252,7 +252,7 @@ static
 REigenzoneEnvelope calcZoneEnvelope(const EigenzonePlotParams &params, const double E, const double vEOF, const double effectiveLength, const double zoneLength, const double tLast)
 {
 	if (!params.visible)
-		return { -1.0, -1.0, 0.0 };
+		return { -1.0, -1.0, 0.0, -1.0 };
 
 	const double THRESHOLD = 0.05;
 	double zoneTime = effectiveLength / (params.vZero + vEOF);
@@ -265,7 +265,7 @@ REigenzoneEnvelope calcZoneEnvelope(const EigenzonePlotParams &params, const dou
 	double yX = yMax;
 
 	if (t > tLast)
-		return { -1.0, -1.0, 0.0 };
+		return { -1.0, -1.0, 0.0, -1.0 };
 
 	const double uEMDabs = std::abs(params.vEMD / E);
 
@@ -312,7 +312,7 @@ REigenzoneEnvelope calcZoneEnvelope(const EigenzonePlotParams &params, const dou
 	}
 	endsAt = t;
 
-	return REigenzoneEnvelope{ beginsAt, endsAt, yMax };
+	return REigenzoneEnvelope{ beginsAt, endsAt, yMax, zoneTime };
 }
 
 static

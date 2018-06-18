@@ -178,6 +178,7 @@ public:
 	double beginsAt;			/*!< Beginning of the zone */
 	double endsAt;				/*!< End of the zone */
 	double HVLRMax;				/*!< Peak value of the HVL-R function */
+	double tMax;				/*!< Time of maximum signal value */
 };
 IS_POD(REigenzoneEnvelope)
 typedef Vec<REigenzoneEnvelope> REigenzoneEnvelopeVec;
