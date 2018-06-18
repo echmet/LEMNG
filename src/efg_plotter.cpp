@@ -403,7 +403,8 @@ RetCode ECHMET_CC findEigenzoneEnvelopes(REigenzoneEnvelopeVec *&envelopes, cons
 
 		for (const auto &params : ezPlotParams) {
 			const auto envelope = calcZoneEnvelope(params, E, EOFVelocity, effectiveLength, injectionZoneLength, _plotToTime);
-			ECHMET_TRACE(LEMNGTracing, EFGPLOT_ZONE_ENVELOPE, params.vZero, envelope.beginsAt, envelope.endsAt);
+			ECHMET_TRACE(LEMNGTracing, EFGPLOT_ZONE_ENVELOPE, params.vZero, envelope.beginsAt, envelope.endsAt,
+				     envelope.HVLRMax, envelope.tMax);
 
 			if (envelopes->push_back(envelope) != ::ECHMET::RetCode::OK) {
 				envelopes->destroy();
@@ -522,11 +523,17 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, EFGPLOT_INPUT_PARAMS, const double voltage, con
 }
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, EFGPLOT_ZONE_ENVELOPE, "Eigenzone envelopes")
-ECHMET_MAKE_LOGGER(LEMNGTracing, EFGPLOT_ZONE_ENVELOPE, const double mobility, const double begins, const double ends)
+ECHMET_MAKE_LOGGER(LEMNGTracing, EFGPLOT_ZONE_ENVELOPE, const double mobility, const double beginsAt, const double endsAt,
+							const double HVLRMax, const double tMax)
 {
 	std::ostringstream ss{};
 
-	ss << "Eigenzone envelope: u = " << mobility << ", beginsAt = " << begins << ", endsAt = " << ends << "\n";
+	ss << "Eigenzone envelope\n"
+	   << "\tu = " << mobility << "\n"
+	   << "\tbeginsAt = " << beginsAt << "\n"
+	   << "\tendsAt = " << endsAt << "\n"
+	   << "\tHVLRMax = " << HVLRMax << "\n"
+	   << "\ttMax = " << tMax << "\n\n";
 
 	return ss.str();
 }
