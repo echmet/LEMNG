@@ -122,9 +122,10 @@ typedef SKMap<RForm> RFormMap;
  */
 class RConstituent {
 public:
-	FixedString *name;	/*!< Name of the chemical element constituting the constituent. */
-	double concentration;	/*!< Analytical (total) concentration of the constituent in the system <tt>mmol/dm<sup>3</sup></tt>. */
-	RFormMap *forms;	/*!< All forms that contain the constituent present in the system. */
+	FixedString *name;		/*!< Name of the chemical element constituting the constituent. */
+	double concentration;		/*!< Analytical (total) concentration of the constituent in the system <tt>mmol/dm<sup>3</sup></tt>. */
+	double effectiveMobility;	/*!< Effective mobility of the constituent. */
+	RFormMap *forms;		/*!< All forms that contain the constituent present in the system. */
 };
 IS_POD(RConstituent)
 typedef SKMap<RConstituent> RConstituentMap;

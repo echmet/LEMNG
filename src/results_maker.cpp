@@ -196,7 +196,7 @@ RConstituentMapWrapper prepareComposition(const ChemicalSystemPtr &chemSystem)
 		}
 
 		SKMapImpl<RForm> *fMapRaw = fMap.release();
-		RConstituent ctuent{createFixedString(c->name->c_str()), 0, fMapRaw};
+		RConstituent ctuent{createFixedString(c->name->c_str()), 0, 0, fMapRaw};
 		if (ctuent.name == nullptr) {
 			teardownRFormMap(fMapRaw);
 			throw;
@@ -335,7 +335,8 @@ void fillSolutionProperties(const ChemicalSystemPtr &chemSystem, const Calculato
 		return icVec.at(0);
 	};
 
-	auto mapComposition =  [](const ChemicalSystemPtr &chemSystem, const std::vector<double> &anConcs, const std::vector<double> &icConcs, RConstituentMap *composition) {
+	auto mapComposition =  [](const ChemicalSystemPtr &chemSystem, const std::vector<double> &anConcs, const std::vector<double> &icConcs,
+				  const std::vector<double> &effectiveMobilities, RConstituentMap *composition) {
 		auto &compositionSTL = static_cast<SKMapImpl<RConstituent> *>(composition)->STL();
 
 		for (size_t idx = 0; idx < chemSystem->constituents->size(); idx++) {
@@ -344,6 +345,7 @@ void fillSolutionProperties(const ChemicalSystemPtr &chemSystem, const Calculato
 			auto &rFormsSTL = static_cast<SKMapImpl<RForm> *>(rCtuent.forms)->STL();
 
 			rCtuent.concentration = anConcs.at(c->analyticalConcentrationIndex);
+			rCtuent.effectiveMobility = effectiveMobilities.at(c->effectiveMobilityIndex);
 
 			for (size_t jdx = 0; jdx < c->ionicForms->size(); jdx++) {
 				const SysComp::IonicForm *iF = c->ionicForms->at(jdx);
@@ -360,7 +362,7 @@ void fillSolutionProperties(const ChemicalSystemPtr &chemSystem, const Calculato
 	rProps.conductivity = props.conductivity;
 	rProps.ionicStrength = props.ionicStrength;
 	rProps.pH = IonProps::calculatepH_direct(cH, (correctForIS ? props.ionicStrength : 0.0));
-	mapComposition(chemSystem, props.analyticalConcentrations, props.ionicConcentrations, rProps.composition);
+	mapComposition(chemSystem, props.analyticalConcentrations, props.ionicConcentrations, props.effectiveMobilities, rProps.composition);
 }
 
 void fillResults(const ChemicalSystemPtr &chemSystemBGE, const ChemicalSystemPtr &chemSystemFull, const Calculator::SolutionProperties &BGEProperties, const Calculator::SolutionProperties &BGELikeProperties, const Calculator::LinearResults &linResults, const Calculator::EigenzoneDispersionVec &ezDisps, const NonidealityCorrections corrections, Results &r)
