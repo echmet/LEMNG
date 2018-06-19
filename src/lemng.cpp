@@ -298,66 +298,6 @@ CZESystemImpl * CZESystemImpl::make(const SysComp::InConstituentVec *inCtuentVec
 	}
 }
 
-void ECHMET_CC CZESystemImpl::toggleAllTracepoints(const bool state) noexcept
-{
-	if (state)
-		TRACER_INSTANCE<LEMNGTracing>().enableAllTracepoints();
-	else
-		TRACER_INSTANCE<LEMNGTracing>().disableAllTracepoints();
-}
-
-void ECHMET_CC CZESystemImpl::toggleTracepoint(const int32_t TPID, const bool state) noexcept
-{
-	if (state)
-		TRACER_INSTANCE<LEMNGTracing>().enableTracepoint(TPID);
-	else
-		TRACER_INSTANCE<LEMNGTracing>().disableTracepoint(TPID);
-}
-
-FixedString * ECHMET_CC CZESystemImpl::trace(const bool dontClear) noexcept
-{
-#ifdef ECHMET_TRACER_DISABLE_TRACING
-	(void)dontClear;
-	return nullptr;
-#else
-	return createFixedString(TRACER_INSTANCE<LEMNGTracing>().logged(dontClear).c_str());
-#endif // ECHMET_TRACER_DISABLE_TRACING
-}
-
-TracepointInfoVec * ECHMET_CC CZESystemImpl::tracepointInfo() const noexcept
-{
-#ifdef ECHMET_TRACER_DISABLE_TRACING
-	return nullptr;
-#else // ECHMET_TRACER_DISABLE_TRACING
-	VecImpl<TracepointInfo, false> *tpiVec = createECHMETVec<TracepointInfo, false>(0);
-	if (tpiVec == nullptr)
-		return nullptr;
-
-	auto &tpiVecSTL = tpiVec->STL();
-	auto &tracerInstance = TRACER_INSTANCE<LEMNGTracing>();
-	auto tracepoints = tracerInstance.tracepoints();
-
-	try {
-		for (auto &tp : tracepoints) {
-			FixedString *desc = createFixedString(std::get<1>(tp).c_str());
-			if (desc == nullptr)
-				throw std::bad_alloc{};
-			tpiVecSTL.emplace_back(TracepointInfo{std::get<0>(tp), desc});
-		}
-	} catch (std::bad_alloc &) {
-		tpiVec->destroy();
-		return nullptr;
-	}
-
-	return tpiVec;
-#endif // ECHMET_TRACER_DISABLE_TRACING
-}
-
-bool ECHMET_CC CZESystemImpl::tracepointState(const int32_t TPID) const noexcept
-{
-	return TRACER_INSTANCE<LEMNGTracing>().isTracepointEnabled(TPID);
-}
-
 RetCode ECHMET_CC CZESystemImpl::makeAnalyticalConcentrationsMaps(InAnalyticalConcentrationsMap *&acMapBGE, InAnalyticalConcentrationsMap *&acMapFull) const noexcept
 {
 	typedef std::unique_ptr<MutSKMapImpl<double>> InAnalyticalConcentrationsMapPtr;
@@ -480,6 +420,66 @@ void ECHMET_CC releaseCZESystem(const CZESystem *czeSystem) noexcept
 }
 
 CZESystem::~CZESystem() noexcept {}
+
+void ECHMET_CC toggleAllTracepoints(const bool state) noexcept
+{
+	if (state)
+		TRACER_INSTANCE<LEMNGTracing>().enableAllTracepoints();
+	else
+		TRACER_INSTANCE<LEMNGTracing>().disableAllTracepoints();
+}
+
+void ECHMET_CC toggleTracepoint(const int32_t TPID, const bool state) noexcept
+{
+	if (state)
+		TRACER_INSTANCE<LEMNGTracing>().enableTracepoint(TPID);
+	else
+		TRACER_INSTANCE<LEMNGTracing>().disableTracepoint(TPID);
+}
+
+FixedString * ECHMET_CC trace(const bool dontClear) noexcept
+{
+#ifdef ECHMET_TRACER_DISABLE_TRACING
+	(void)dontClear;
+	return nullptr;
+#else
+	return createFixedString(TRACER_INSTANCE<LEMNGTracing>().logged(dontClear).c_str());
+#endif // ECHMET_TRACER_DISABLE_TRACING
+}
+
+TracepointInfoVec * ECHMET_CC tracepointInfo() noexcept
+{
+#ifdef ECHMET_TRACER_DISABLE_TRACING
+	return nullptr;
+#else // ECHMET_TRACER_DISABLE_TRACING
+	VecImpl<TracepointInfo, false> *tpiVec = createECHMETVec<TracepointInfo, false>(0);
+	if (tpiVec == nullptr)
+		return nullptr;
+
+	auto &tpiVecSTL = tpiVec->STL();
+	auto &tracerInstance = TRACER_INSTANCE<LEMNGTracing>();
+	auto tracepoints = tracerInstance.tracepoints();
+
+	try {
+		for (auto &tp : tracepoints) {
+			FixedString *desc = createFixedString(std::get<1>(tp).c_str());
+			if (desc == nullptr)
+				throw std::bad_alloc{};
+			tpiVecSTL.emplace_back(TracepointInfo{std::get<0>(tp), desc});
+		}
+	} catch (std::bad_alloc &) {
+		tpiVec->destroy();
+		return nullptr;
+	}
+
+	return tpiVec;
+#endif // ECHMET_TRACER_DISABLE_TRACING
+}
+
+bool ECHMET_CC tracepointState(const int32_t TPID) noexcept
+{
+	return TRACER_INSTANCE<LEMNGTracing>().isTracepointEnabled(TPID);
+}
 
 } // namespace LEMNG
 

@@ -257,45 +257,6 @@ public:
 	 */
 	virtual RetCode ECHMET_CC makeAnalyticalConcentrationsMaps(InAnalyticalConcentrationsMap *&acMapBGE, InAnalyticalConcentrationsMap *&acMapFull) const ECHMET_NOEXCEPT = 0;
 
-	/*!
-	 * Sets all tracepoints to the given state.
-	 *
-	 * @param[in] state If \p true all tracepoints will be enabled and vice versa.
-	 */
-	virtual void ECHMET_CC toggleAllTracepoints(const bool state) ECHMET_NOEXCEPT = 0;
-
-	/*!
-	 * Set state of one tracepoint.
-	 *
-	 * @param[in] TPID Internal ID of the tracepoint to set.
-	 * @param[in] state If \p true the tracepoint will be enabled and vice versa.
-	 */
-	virtual void ECHMET_CC toggleTracepoint(const int32_t TPID, const bool state) ECHMET_NOEXCEPT = 0;
-	/*!
-	 * Returns the complete trace.
-	 *
-	 * @param[in] dontClear If \p true the trace log will not be cleared.
-	 *
-	 * @return String containing the whole trace.
-	 */
-	virtual FixedString * ECHMET_CC trace(const bool dontClear = false) ECHMET_NOEXCEPT = 0;
-
-	/*!
-	 * Returns information about available tracepoints.
-	 *
-	 * @retval Pointer to a vector of all available tracepoints. May be \p NULL if
-	 *         the operation fails or if no tracepoins are available.
-	 */
-	virtual TracepointInfoVec * ECHMET_CC tracepointInfo() const ECHMET_NOEXCEPT = 0;
-
-	/*!
-	 * Returns the state of a given tracepoint.
-	 *
-	 * @param[in] TPID Internal ID of the tracepoint whose state is requested.
-	 *
-	 * @retval \p true if the tracepoint is enabled and vice versa.
-	 */
-	virtual bool ECHMET_CC tracepointState(const int32_t TPID) const ECHMET_NOEXCEPT = 0;
 protected:
 	virtual ~CZESystem() ECHMET_NOEXCEPT = 0;
 };
@@ -391,6 +352,48 @@ ECHMET_API void ECHMET_CC releaseCZESystem(const CZESystem *czeSystem) ECHMET_NO
  * @param[in] results Results object to be released.
  */
 ECHMET_API void ECHMET_CC releaseResults(Results &results) ECHMET_NOEXCEPT;
+
+/*!
+ * Sets all tracepoints to the given state.
+ *
+ * @param[in] state If \p true all tracepoints will be enabled and vice versa.
+ */
+ECHMET_API void ECHMET_CC toggleAllTracepoints(const bool state) ECHMET_NOEXCEPT;
+
+/*!
+ * Set state of one tracepoint.
+ *
+ * @param[in] TPID Internal ID of the tracepoint to set.
+ * @param[in] state If \p true the tracepoint will be enabled and vice versa.
+ */
+ECHMET_API void ECHMET_CC toggleTracepoint(const int32_t TPID, const bool state) ECHMET_NOEXCEPT;
+
+/*!
+ * Returns the complete trace.
+ *
+ * @param[in] dontClear If \p true the trace log will not be cleared.
+ *
+ * @return String containing the whole trace.
+ */
+ECHMET_API FixedString * ECHMET_CC trace(const bool dontClear = false) ECHMET_NOEXCEPT;
+
+/*!
+ * Returns information about available tracepoints.
+ *
+ * @retval Pointer to a vector of all available tracepoints. May be \p NULL if
+ *         the operation fails or if no tracepoins are available.
+ */
+ECHMET_API TracepointInfoVec * ECHMET_CC tracepointInfo() ECHMET_NOEXCEPT;
+
+/*!
+ * Returns the state of a given tracepoint.
+ *
+ * @param[in] TPID Internal ID of the tracepoint whose state is requested.
+ *
+ * @retval \p true if the tracepoint is enabled and vice versa.
+ */
+ECHMET_API bool ECHMET_CC tracepointState(const int32_t TPID) ECHMET_NOEXCEPT;
+
 
 } // extern "C"
 

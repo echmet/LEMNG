@@ -19,11 +19,6 @@ public:
 					   const NonidealityCorrections corrections, Results &results) noexcept override;
 	virtual const char * ECHMET_CC lastErrorString() const noexcept override;
 	virtual RetCode ECHMET_CC makeAnalyticalConcentrationsMaps(InAnalyticalConcentrationsMap *&acMapBGE, InAnalyticalConcentrationsMap *&acMapFull) const noexcept override;
-	virtual void ECHMET_CC toggleAllTracepoints(const bool state) noexcept override;
-	virtual void ECHMET_CC toggleTracepoint(const int32_t TPID, const bool state) noexcept override;
-	virtual FixedString * ECHMET_CC trace(const bool dontClear) noexcept override;
-	virtual TracepointInfoVec * ECHMET_CC tracepointInfo() const noexcept override;
-	virtual bool ECHMET_CC tracepointState(const int32_t TPID) const noexcept override;
 
 	static CZESystemImpl * make(const SysComp::InConstituentVec *inCtuentVecBGE, const SysComp::InConstituentVec *inCtuentVecSample);
 
