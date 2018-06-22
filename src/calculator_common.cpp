@@ -197,26 +197,26 @@ static
 void calcIonicProperties(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections)
 {
 	::ECHMET::RetCode tRet;
-	IonProps::ComputationContext *ctx = IonProps::makeComputationContext(*chemSystem, concentrations.get(), *calcProps);
+	IonProps::ComputationContext *ctx = IonProps::makeComputationContext(*chemSystem, IonProps::ComputationContext::defaultOptions());
 
 	if (ctx == nullptr)
 		throw CalculationException{"Cannot create IonProps computation context", RetCode::E_NO_MEMORY};
 
-	tRet = IonProps::correctMobilities(ctx, corrections);
+	tRet = IonProps::correctMobilities(ctx, corrections, concentrations.get(), *calcProps);
 	if (tRet != ::ECHMET::RetCode::OK) {
 		ctx->destroy();
 		throw CalculationException{"Cannot correct ionic mobilities for ionic strength: " + std::string(errorToString(tRet)), coreLibsErrorToNativeError(tRet)};
 	}
 	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_COMMON_CALC_SOLPROPS_ION_MOBS, const SysComp::IonicFormVec*, const SysComp::CalculatedProperties*>(chemSystem->ionicForms, calcProps);
 
-	tRet = IonProps::calculateEffectiveMobilities(ctx);
+	tRet = IonProps::calculateEffectiveMobilities(ctx, concentrations.get(), *calcProps);
 	if (tRet != ::ECHMET::RetCode::OK) {
 		ctx->destroy();
 		throw CalculationException{"Cannot calculate effective mobilities: " + std::string(errorToString(tRet)), coreLibsErrorToNativeError(tRet)};
 	}
 	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_COMMON_CALC_SOLPROPS_EFF_MOBS, const SysComp::ConstituentVec*, const SysComp::CalculatedProperties*>(chemSystem->constituents, calcProps);
 
-	IonProps::calculateConductivity(ctx);
+	IonProps::calculateConductivity(ctx, *calcProps);
 	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_COMMON_CALC_SOLPROPS_CONDUCTIVITY, const double&>(calcProps->conductivity);
 
 	ctx->destroy();
@@ -410,6 +410,7 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 	const size_t H3O_idx = NIF - 2;
 	const size_t OH_idx = NIF - 1;
 	const SysComp::ChemicalSystem &chemSystemRaw = *systemPack.chemSystemRaw;
+	const SysComp::CalculatedProperties *calcPropsRaw = systemPack.calcPropsRaw;
 #ifdef ECHMET_LEMNG_SENSITIVE_NUMDERS
 	(void)analyticalConcentrations;
 	const RealVecPtr analyticalConcentrationsForDiffs = makeAnalyticalConcentrationsForDerivator(systemPack);
@@ -447,7 +448,8 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 		::ECHMET::RetCode tRet = CAES::calculateFirstConcentrationDerivatives_prepared(_derivatives, conductivityDerivative,
 											       solver, H, corrections,
 											       chemSystemRaw, analyticalConcentrationsForDiffs.get(),
-											       perturbedConstituent);
+											       perturbedConstituent,
+											       calcPropsRaw->ionicStrength);
 		if (tRet != ::ECHMET::RetCode::OK) {
 			_derivatives->destroy();
 			throw CalculationException{"Cannot calculate concentration derivatives for M2", coreLibsErrorToNativeError(tRet)};
@@ -515,7 +517,8 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, DeltaPack
 		tRet = CAES::calculateFirstConcentrationDerivatives_prepared(derivatives, conductivityDerivative,
 									     solver, H, corrections,
 									     chemSystemRaw, analyticalConcentrationsForDiffs.get(),
-									     perturbedConstituent);
+									     perturbedConstituent,
+									     calcPropsRaw->ionicStrength);
 		if (tRet != ::ECHMET::RetCode::OK) {
 			solver->context()->destroy();
 			solver->destroy();
@@ -605,13 +608,13 @@ void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVe
 		throw CalculationException{"Failed to create solver context: " + std::string{errorToString(tRet)}, coreLibsErrorToNativeError(tRet)};
 	}
 
-	solver = CAES::createSolver(solverCtx, corrections, opts);
+	solver = CAES::createSolver(solverCtx, opts, corrections);
 	if (solver == nullptr) {
 		solverCtx->destroy();
 		throw CalculationException{"Failed to create solver", RetCode::E_NO_MEMORY};
 	}
 
-	tRet = CAES::estimateDistribution(solver, concentrations.get(), *calcProps);
+	tRet = solver->estimateDistributionSafe(concentrations.get(), *calcProps);
 	if (tRet != ::ECHMET::RetCode::OK) {
 		solver->destroy();
 		solverCtx->destroy();
