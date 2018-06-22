@@ -598,6 +598,8 @@ void prepareModelData(CalculatorSystemPack &systemPack, DeltaPackVec &deltaPacks
 
 void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections)
 {
+	using EnumOps::operator|;
+
 	::ECHMET::RetCode tRet;
 	CAES::SolverContext *solverCtx;
 	CAES::Solver *solver;
