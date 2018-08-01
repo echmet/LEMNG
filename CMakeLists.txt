@@ -6,6 +6,10 @@ option(SENSITIVE_NUMDERS "Use more precise input concentrations to calculate num
 option(PARALLEL_NUM_OPS "Enable parallel numeric operations" ON)
 option(DISABLE_TRACING "Disable tracing" OFF)
 
+if (WIN32)
+    option(ECHMET_FORCE_WINXP "Define target Windows version to Windows XP")
+endif ()
+
 add_definitions("-D_USE_MATH_DEFINES -DECHMET_DLL_BUILD")
 
 set(LEMNG_THREADING_LIBS)
@@ -22,6 +26,10 @@ if (WIN32)
     elseif (MSVC)
         add_definitions("-DECHMET_COMPILER_MSVC")
         set(DEFAULT_SYMVER_LINK " ")
+
+        if (ECHMET_FORCE_WINXP)
+            add_definitions("-D_WIN32_WINNT=0x0501")
+        endif ()
     else ()
         message(FATAL "Unsupported or mistedected compiler")
     endif ()
@@ -30,14 +38,14 @@ elseif (UNIX)
     if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
         if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9.2)
             message(FATAL_ERROR "GCC 4.9.2 or newer is required to build ECHMETCoreLibs")
-	endif ()
+        endif ()
 
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -g")
         add_definitions("-DECHMET_COMPILER_GCC_LIKE")
         set(DEFAULT_SYMVER_LINK "-Wl,--default-symver")
     elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
         if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.4)
-		message(FATAL_ERROR "Clang 3.4 or newer is required to build ECHMETCoreLibs")
+        message(FATAL_ERROR "Clang 3.4 or newer is required to build ECHMETCoreLibs")
 	endif ()
 
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++14 -Wall -Wextra -Wno-c++98-compat -Wno-unused-function -pedantic -fvisibility=hidden -g")
