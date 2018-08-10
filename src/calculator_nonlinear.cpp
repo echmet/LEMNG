@@ -347,7 +347,7 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealV
 
 					return (mobMinusOne + mobPlusOne) / 2.0;
 				} else
-					return 1.0; /* Arbitrarily chosen mobility for constituents that really have no charge */
+					return 20.0; /* Arbitrarily chosen mobility for constituents that really have no charge */
 			}(iF, c);
 
 			_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_NERNST_EINST_INPUT, const double&, const int32_t&>( mobility, iF->totalCharge);
