@@ -364,9 +364,14 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPack, const RealV
 			 * derivatives of concentrations.
 			 * Here we convert concentration derivatives to derivatives of
 			 * degrees of dissociation. */
-                        const double cDer = concentrationDeltas.at(iF->ionicConcentrationIndex);
+			const double cDer = concentrationDeltas.at(iF->ionicConcentrationIndex);
 			const double dCHdCX = concentrationDeltas.at(0);
-			const double dDissocDegreeDX = (cDer - dissocDegree) / (dCHdCX * anC);
+			const double dDissocDegreeDX = [&]() {
+				if (dCHdCX > 0.0)
+					return (cDer - dissocDegree) / (dCHdCX * anC);
+				else
+					return 0.0;
+			}();
 
 			dDissocDegreesDXForCtuent.emplace_back(dDissocDegreeDX);
 		}
