@@ -131,9 +131,9 @@ const char * isEnabledAns(const bool enabled)
 	return "no";
 }
 
-void printTracepointInfo(const ECHMET::LEMNG::CZESystem *czeSystem)
+void printTracepointInfo()
 {
-	ECHMET::LEMNG::TracepointInfoVec *tpiVec = czeSystem->tracepointInfo();
+	ECHMET::LEMNG::TracepointInfoVec *tpiVec = ECHMET::LEMNG::tracepointInfo();
 	if (tpiVec == NULL) {
 		std::cout << "No tracepoints\n";
 		return;
@@ -142,7 +142,7 @@ void printTracepointInfo(const ECHMET::LEMNG::CZESystem *czeSystem)
 	for (size_t idx = 0; idx < tpiVec->size(); idx++) {
 		const ECHMET::LEMNG::TracepointInfo &tpi = tpiVec->at(idx);
 		std::cout << "TRACEPOINT " << tpi.id << " " << tpi.description->c_str()
-			  << ", enabled: " << isEnabledAns(czeSystem->tracepointState(tpi.id)) << "\n";
+			  << ", enabled: " << isEnabledAns(ECHMET::LEMNG::tracepointState(tpi.id)) << "\n";
 	}
 
 	for (size_t idx = 0; idx < tpiVec->size(); idx++)
@@ -150,9 +150,9 @@ void printTracepointInfo(const ECHMET::LEMNG::CZESystem *czeSystem)
 	tpiVec->destroy();
 }
 
-void printTrace(ECHMET::LEMNG::CZESystem *czeSystem)
+void printTrace()
 {
-	ECHMET::FixedString *trace = czeSystem->trace();
+	ECHMET::FixedString *trace = ECHMET::LEMNG::trace();
 	if (trace != NULL) {
 		std::cout << trace->c_str();
 		trace->destroy();
@@ -221,13 +221,13 @@ int launch(int argc, char **argv)
 	}
 
 	{
-		ECHMET::LEMNG::TracepointInfoVec *tpVec = czeSystem->tracepointInfo();
-		czeSystem->toggleAllTracepoints(false);
-		/*czeSystem->toggleTracepoint(14, true);
-		czeSystem->toggleTracepoint(15, true);
-		czeSystem->toggleTracepoint(16, true);
-		czeSystem->toggleTracepoint(tpVec->back().id, true);*/
-		printTracepointInfo(czeSystem);
+		ECHMET::LEMNG::TracepointInfoVec *tpVec = ECHMET::LEMNG::tracepointInfo();
+		ECHMET::LEMNG::toggleAllTracepoints(false);
+		ECHMET::LEMNG::toggleTracepoint(14, true);
+		ECHMET::LEMNG::toggleTracepoint(15, true);
+		ECHMET::LEMNG::toggleTracepoint(16, true);
+		ECHMET::LEMNG::toggleTracepoint(tpVec->back().id, true);
+		printTracepointInfo();
 
 		for (size_t idx = 0; idx < tpVec->size(); idx++)
 			tpVec->at(idx).description->destroy();
@@ -245,13 +245,13 @@ int launch(int argc, char **argv)
 	applyConcentrations(acBGEMap, inputDesc.BGEConcentrations);
 	applyConcentrations(acFullMap, inputDesc.SampleConcentrations);
 
-	ECHMET::NonidealityCorrections corrections;
+	ECHMET::NonidealityCorrections corrections = ECHMET::defaultNonidealityCorrections();
 	if (correctForDH)
-		corrections |= ECHMET::CORR_DEBYE_HUCKEL;
+		ECHMET::nonidealityCorrectionSet(corrections, ECHMET::CORR_DEBYE_HUCKEL);
 	if (correctForOF)
-		corrections |= ECHMET::CORR_ONSAGER_FUOSS;
+		ECHMET::nonidealityCorrectionSet(corrections, ECHMET::CORR_ONSAGER_FUOSS);
 	if (correctForVS)
-		corrections |= ECHMET::CORR_VISCOSITY;
+		ECHMET::nonidealityCorrectionSet(corrections, ECHMET::CORR_VISCOSITY);
 
 	ECHMET::LEMNG::Results results;
 	ECHMET::LEMNG::RetCode tRet = czeSystem->evaluate(acBGEMap, acFullMap, corrections, results);
@@ -261,7 +261,7 @@ int launch(int argc, char **argv)
 	else
 		printResults(results, drivingVoltage, totalLength, effectiveLength, uEOF, inputDesc.SampleConcentrations);
 
-	printTrace(czeSystem);
+	printTrace();
 
 	acBGEMap->destroy();
 	acFullMap->destroy();
