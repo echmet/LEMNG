@@ -64,14 +64,6 @@ public:
 #endif // TRACER_DISABLE_TRACING
 	}
 
-	static Tracer<TracepointIDs> & instance()
-	{
-		if (s_instance == nullptr)
-			s_instance = std::unique_ptr<Tracer<TracepointIDs>>(new Tracer<TracepointIDs>{});
-
-		return *s_instance.get();
-	}
-
 	template <typename RTPID>
 	bool isTracepointEnabled(const RTPID &tpid) const
 	{
@@ -124,31 +116,103 @@ private:
 	std::map<TracepointIDs, bool> m_enabledTracepoints;
 	std::string m_log;
 	std::mutex m_logLock;
-
-	static std::unique_ptr<Tracer<TracepointIDs>> s_instance;
 };
 
 template <typename TracepointIDs>
 Tracer<TracepointIDs> & TRACER_INSTANCE();
 
 #ifndef ECHMET_TRACER_DISABLE_TRACING
-template <typename TracepointIDs, TracepointIDs TPID, typename ...Args>
-void _ECHMET_TRACE(Args ...args)
+template <typename TracepointIDs, TracepointIDs TPID, typename... Args>
+void _ECHMET_TRACE(Args... args)
 {
 	auto &tracer = TRACER_INSTANCE<TracepointIDs>();
 	if (tracer.isTracepointEnabled(TPID))
-		tracer.log(TRACEPOINT_LOGGER<TracepointIDs, TPID, Args...>(args...));
+		tracer.log(TracepointLogger<TracepointIDs, TPID>::call(args...));
 	/* Do nothing */
 }
+
+template <typename TracepointIDs, TracepointIDs TPID,
+	 typename T1,
+	 typename... Args>
+void _ECHMET_TRACE_T1(Args... args)
+{
+	auto &tracer = TRACER_INSTANCE<TracepointIDs>();
+	if (tracer.isTracepointEnabled(TPID))
+		tracer.log(TracepointLogger<TracepointIDs, TPID, T1>::call(args...));
+	/* Do nothing */
+}
+
+template <typename TracepointIDs, TracepointIDs TPID,
+	  typename T1, typename T2,
+	  typename... Args>
+void _ECHMET_TRACE_T2(Args ...args)
+{
+	auto &tracer = TRACER_INSTANCE<TracepointIDs>();
+	if (tracer.isTracepointEnabled(TPID))
+		tracer.log(TracepointLogger<TracepointIDs, TPID, T1, T2>::call(args...));
+	/* Do nothing */
+}
+
+template <typename TracepointIDs, TracepointIDs TPID,
+	  typename T1, typename T2, typename T3,
+	  typename... Args>
+void _ECHMET_TRACE_T3(Args ...args)
+{
+	auto &tracer = TRACER_INSTANCE<TracepointIDs>();
+	if (tracer.isTracepointEnabled(TPID))
+		tracer.log(TracepointLogger<TracepointIDs, TPID, T1, T2, T3>::call(args...));
+	/* Do nothing */
+}
+
+template <typename TracepointIDs, TracepointIDs TPID,
+	  typename T1, typename T2, typename T3, typename T4,
+	  typename... Args>
+void _ECHMET_TRACE_T4(Args ...args)
+{
+	auto &tracer = TRACER_INSTANCE<TracepointIDs>();
+	if (tracer.isTracepointEnabled(TPID))
+		tracer.log(TracepointLogger<TracepointIDs, TPID, T1, T2, T3, T4>::call(args...));
+	/* Do nothing */
+}
+
+template <typename TracepointIDs, TracepointIDs TPID,
+	  typename T1, typename T2, typename T3, typename T4, typename T5,
+	  typename... Args>
+void _ECHMET_TRACE_T5(Args ...args)
+{
+	auto &tracer = TRACER_INSTANCE<TracepointIDs>();
+	if (tracer.isTracepointEnabled(TPID))
+		tracer.log(TracepointLogger<TracepointIDs, TPID, T1, T2, T3, T4, T5>::call(args...));
+	/* Do nothing */
+}
+
+
+
 #else
-template <typename TracepointIDs, TracepointIDs TPID, typename ...Args>
+template <typename TracepointIDs, TracepointIDs TPID, typename... Args>
 void _ECHMET_TRACE(Args ...) {} /* Do nothing */
+
+template <typename TracepointIDs, TracepointIDs TPID, typename... Args>
+void _ECHMET_TRACE_T1(Args ...) {} /* Do nothing */
+
+template <typename TracepointIDs, TracepointIDs TPID, typename... Args>
+void _ECHMET_TRACE_T2(Args ...) {} /* Do nothing */
+
+template <typename TracepointIDs, TracepointIDs TPID, typename... Args>
+void _ECHMET_TRACE_T3(Args ...) {} /* Do nothing */
+
+template <typename TracepointIDs, TracepointIDs TPID, typename... Args>
+void _ECHMET_TRACE_T4(Args ...) {} /* Do nothing */
+
+template <typename TracepointIDs, TracepointIDs TPID, typename... Args>
+void _ECHMET_TRACE_T5(Args ...) {} /* Do nothing */
+
 #endif // ECHMET_TRACER_DISABLE_TRACING
 
 } // namespace ECHMET
 
 /*!
- * \def MAKE_TRACER(TracerClass)
+ * \def ECHMET_MAKE_TRACER(TracerClass)
  * Defines an instance of the given \TracerClass
  *
  * @param TracerClass Tracer class
@@ -156,17 +220,17 @@ void _ECHMET_TRACE(Args ...) {} /* Do nothing */
 #define ECHMET_MAKE_TRACER(TracerClass) \
 	namespace ECHMET { \
 		template <> \
-		std::unique_ptr<Tracer<::TracerClass>> Tracer<::TracerClass>::s_instance{nullptr}; \
-		template <> \
+		inline \
 		Tracer<::TracerClass> & TRACER_INSTANCE<::TracerClass>() \
 		{ \
-			return Tracer<::TracerClass>::instance(); \
+			static std::unique_ptr<Tracer<::TracerClass>> instance{new Tracer<::TracerClass>{}}; \
+			return *instance.get(); \
 		} \
-	} // namespace ECHMET
+	}
 
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 /*!
- * \def GET_TRACER_INSTANCE(TracerClass)
+ * \def ECHMET_GET_TRACER_INSTANCE(TracerClass)
  * Returns an instance of the given \TracerClass
  *
  * @param TracerClass Tracer class

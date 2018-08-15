@@ -674,25 +674,27 @@ std::vector<const SysComp::Constituent *> sysCompToLEMNGOrdering(const ChemicalS
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_PROGRESS, "Solution properties calculation progress")
-ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_PROGRESS, const char *msg)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_PROGRESS, const char *msg)
 {
 	std::ostringstream ss{};
 
 	ss << "Calculating solution properties, stage: " << msg;
 	return ss.str();
 }
+ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_ITERS, "Iterations needed to calculate concentration equilibrium")
-ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_ITERS, const uint32_t &outer, const uint32_t &total)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_ITERS, const uint32_t &outer, const uint32_t &total)
 {
 	std::ostringstream ss{};
 
 	ss << "Iterations needed to calculate equilibrium: outer (for IS correction): " << outer << ", total (NRS): " << total;
 	return ss.str();
 }
+ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_EQ_COMP, "Equilibrium composition")
-ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_EQ_COMP, const ECHMET::SysComp::IonicFormVec *ionicForms, const ECHMET::SysComp::CalculatedProperties *calcProps)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_EQ_COMP, const ECHMET::SysComp::IonicFormVec *ionicForms, const ECHMET::SysComp::CalculatedProperties *calcProps)
 {
 	std::ostringstream ss{};
 
@@ -719,9 +721,10 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_EQ_COMP, const ECHMET
 
 	return ss.str();
 }
+ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_ION_MOBS, "Ionic moblities corrected to ionic strength")
-ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_ION_MOBS, const ECHMET::SysComp::IonicFormVec *ionicForms, const ECHMET::SysComp::CalculatedProperties *calcProps)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_ION_MOBS, const ECHMET::SysComp::IonicFormVec *ionicForms, const ECHMET::SysComp::CalculatedProperties *calcProps)
 {
 	std::ostringstream ss{};
 
@@ -748,9 +751,10 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_ION_MOBS, const ECHME
 
 	return ss.str();
 }
+ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_EFF_MOBS, "Ionic moblities corrected to ionic strength")
-ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_EFF_MOBS, const ECHMET::SysComp::ConstituentVec *constituents, const ECHMET::SysComp::CalculatedProperties *calcProps)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_EFF_MOBS, const ECHMET::SysComp::ConstituentVec *constituents, const ECHMET::SysComp::CalculatedProperties *calcProps)
 {
 	std::ostringstream ss{};
 
@@ -766,15 +770,17 @@ ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_EFF_MOBS, const ECHME
 
 	return ss.str();
 }
+ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_CONDUCTIVITY, "Solution conductivity")
-ECHMET_MAKE_LOGGER(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_CONDUCTIVITY, const double &conductivity)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_CONDUCTIVITY, const double &conductivity)
 {
 	std::ostringstream ss{};
 
 	ss << "Conductivity: " << conductivity << " (S/m)";
 	return ss.str();
 }
+ECHMET_END_MAKE_LOGGER
 
 #endif // ECHMET_TRACER_DISABLE_TRACING
 

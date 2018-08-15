@@ -488,28 +488,31 @@ bool ECHMET_CC tracepointState(const int32_t TPID) noexcept
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, MAKE_CZE_SYSTEM_ERR, "makeCZEsystemError")
-ECHMET_MAKE_LOGGER(LEMNGTracing, MAKE_CZE_SYSTEM_ERR, const char *err)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, MAKE_CZE_SYSTEM_ERR, const char *err)
 {
 	return std::string{err};
 }
+ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, EVAL_INIT_ERR, "Evaluation initialization error")
-ECHMET_MAKE_LOGGER(LEMNGTracing, EVAL_INIT_ERR, const char *where, const char *why)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, EVAL_INIT_ERR, const char *where, const char *why)
 {
 	std::ostringstream ss{};
 	ss << "Error during evaluation initialization: " << where << " (" << why << ")";
 
 	return ss.str();
 }
+ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, EVAL_PROGRESS_ERR, "Error during evaluation")
-ECHMET_MAKE_LOGGER(LEMNGTracing, EVAL_PROGRESS_ERR, const char *where, const char *why)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, EVAL_PROGRESS_ERR, const char *where, const char *why)
 {
 	std::ostringstream ss{};
 	ss << "Error during evaluation: " << where << " (" << why << ")";
 
 	return ss.str();
 }
+ECHMET_END_MAKE_LOGGER
 
 #endif // ECHMET_TRACER_DISABLE_TRACING
 

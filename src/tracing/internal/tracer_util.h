@@ -25,7 +25,8 @@ Tracepoint<TracerClass> TRACEPOINT_INFO();
  * @return ID of the first tracepoint
  */
 template <typename TracerClass>
-static constexpr TracerClass FIRST_TRACEPOINT_ID();
+inline
+constexpr TracerClass FIRST_TRACEPOINT_ID();
 
 /*!
  * Returns ID of the next tracepoint
@@ -35,14 +36,16 @@ static constexpr TracerClass FIRST_TRACEPOINT_ID();
  * @return ID of the next tracepoint
  */
 template <typename TracerClass, TracerClass TPID>
-static constexpr TracerClass NEXT_TRACEPOINT_ID()
+inline
+constexpr TracerClass NEXT_TRACEPOINT_ID()
 {
 	typedef typename std::underlying_type<TracerClass>::type UType;
 	return static_cast<TracerClass>(static_cast<UType>(TPID) + 1);
 }
 
 template <typename TracerClass>
-static constexpr TracerClass LAST_TRACEPOINT_ID();
+inline
+constexpr TracerClass LAST_TRACEPOINT_ID();
 
 template <typename TracerClass>
 struct TUTYPE {
@@ -50,13 +53,15 @@ struct TUTYPE {
 };
 
 template <typename TracerClass, typename UType = typename std::underlying_type<TracerClass>::type>
-static constexpr UType TUTYPE_CAST(const TracerClass &TPID)
+inline
+constexpr UType TUTYPE_CAST(const TracerClass &TPID)
 {
 	return static_cast<UType>(TPID);
 }
 
 template <typename RTPID, typename TracerClass>
-static bool IS_TPID_VALID(const RTPID &tpid)
+inline
+bool IS_TPID_VALID(const RTPID &tpid)
 {
 	static_assert(std::is_same<RTPID, typename TUTYPE<TracerClass>::type>::value, "Incompatible raw tracepoint IDs");
 
@@ -76,7 +81,8 @@ static bool IS_TPID_VALID(const RTPID &tpid)
  * @return Vector of Tracepoint<TracerClass> objects
  */
 template <typename TracerClass, TracerClass TPID>
-static void TRACEPOINT_INFO_BUILD(std::vector<std::tuple<TPIDInt, std::string>> &tracepointInfoVec)
+inline
+void TRACEPOINT_INFO_BUILD(std::vector<std::tuple<TPIDInt, std::string>> &tracepointInfoVec)
 {
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 	const auto tpinfo = TRACEPOINT_INFO<TracerClass, TPID>();
@@ -89,7 +95,8 @@ static void TRACEPOINT_INFO_BUILD(std::vector<std::tuple<TPIDInt, std::string>> 
 }
 
 template <typename TracerClass, TracerClass TPID>
-static void TOGGLE_ALL_TRACEPOINTS(const bool state, std::map<TracerClass, bool> &enabledTracepoints)
+inline
+void TOGGLE_ALL_TRACEPOINTS(const bool state, std::map<TracerClass, bool> &enabledTracepoints)
 {
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 	enabledTracepoints[TPID] = state;
@@ -101,22 +108,19 @@ static void TOGGLE_ALL_TRACEPOINTS(const bool state, std::map<TracerClass, bool>
 }
 
 /*!
- * Logging function.
+ * Logging functor.
  *
  * @tparam Tracer class
  * @tparam TPID ID of the tracepoint
- * @tparam Args Argument template of the logging function
- * @param[in] Args... Arguments of the logging function
- *
- * @return String to be logged
+ * @tparam TFArgs Optional template arguments template of the logging function
  */
-template <typename TracerClass, TracerClass TPID, typename... Args>
-static std::string TRACEPOINT_LOGGER(Args...);
+template <typename TracerClass, TracerClass TPID, typename... TFArgs>
+class TracepointLogger;
 
 } // namespace ECHMET
 
 /*!
- * \def MAKE_TRACEPOINT(TracerClass, TPID, description)
+ * \def ECHMET_MAKE_TRACEPOINT(TracerClass, TPID, description)
  * Defines functions necessary to query information about tracepoints for the given \TracerClass
  *
  * @param TracerClass Tracer class
@@ -128,21 +132,66 @@ static std::string TRACEPOINT_LOGGER(Args...);
 	Tracepoint<TracerClass> TRACEPOINT_INFO<TracerClass, TracerClass::TPID>() { return Tracepoint<TracerClass>{TracerClass::TPID, description}; }
 
 /*!
- * \def MAKE_LOGGER(TracerClass, TPID, Args...)
- * Defines a logging function for a given tracer and its tracepoint
+ * \def ECHMET_MAKE_LOGGER(TracerClass, TPID, Args...)
+ * Defines logging functor for a given tracer and its tracepoint
  *
  * @param TracerClass Tracer class
  * @param TPID ID of the tracepoint whose logging function is being declared
  * @Args... Argument template of the logging function
  */
-#define ECHMET_MAKE_LOGGER(TracerClass, TPID, ...) \
+#define ECHMET_BEGIN_MAKE_LOGGER(TracerClass, TPID, ...) \
 	template <> \
-	std::string TRACEPOINT_LOGGER<::TracerClass, ::TracerClass::TPID>(__VA_ARGS__)
+	class TracepointLogger<::TracerClass, ::TracerClass::TPID> { \
+	public: \
+		static std::string call(__VA_ARGS__)
+
+#define ECHMET_BEGIN_MAKE_LOGGER_NOARGS(TracerClass, TPID) \
+	template <> \
+	class TracepointLogger<::TracerClass, ::TracerClass::TPID> { \
+	public: \
+		static std::string call()
+
+#define ECHMET_BEGIN_MAKE_LOGGER_T1(TracerClass, TPID, ...) \
+	template <typename T1> \
+	class TracepointLogger<::TracerClass, ::TracerClass::TPID, T1> { \
+	public: \
+		static std::string call(__VA_ARGS__)
+
+#define ECHMET_BEGIN_MAKE_LOGGER_T2(TracerClass, TPID, ...) \
+	template <typename T1, typename T2> \
+	class TracepointLogger<::TracerClass, ::TracerClass::TPID, T1, T2> { \
+	public: \
+		static std::string call(__VA_ARGS__)
+
+#define ECHMET_BEGIN_MAKE_LOGGER_T3(TracerClass, TPID, ...) \
+	template <typename T1, typename T2, typename T3> \
+	class TracepointLogger<::TracerClass, ::TracerClass::TPID, T1, T2, T3> { \
+	public: \
+		static std::string call(__VA_ARGS__)
+
+#define ECHMET_BEGIN_MAKE_LOGGER_T4(TracerClass, TPID, ...) \
+	template <typename T1, typename T2, typename T3, typename T4> \
+	class TracepointLogger<::TracerClass, ::TracerClass::TPID, T1, T2, T3, T4> { \
+	public: \
+		static std::string call(__VA_ARGS__)
+
+#define ECHMET_BEGIN_MAKE_LOGGER_T5(TracerClass, TPID, ...) \
+	template <typename T1, typename T2, typename T3, typename T4, typename T5> \
+	class TracepointLogger<::TracerClass, ::TracerClass::TPID, T1, T2, T3, T4, T5> { \
+	public: \
+		static std::string call(__VA_ARGS__)
+
+/* Five template parameters ought to be enough for everyone! */
+
+#define ECHMET_END_MAKE_LOGGER };
+
+#define ECHMET_LOGGER_ADD_OVERLOAD(...) \
+	static std::string call(__VA_ARGS__)
 
 #ifndef _ECHMET_TRACER_IMPL_SECTION
 	#ifndef ECHMET_TRACER_DISABLE_TRACING
 	/*!
-	 * \def MAKE_TRAECPOINT_IDS(TracerClass, first, last)
+	 * \def ECHMET_MAKE_TRAECPOINT_IDS(TracerClass, first, last)
 	 * Defines functions necessary to build a list of tracepoints for the given \TracerClass
 	 *
 	 * @param TracerClass Tracer class
@@ -152,21 +201,26 @@ static std::string TRACEPOINT_LOGGER(Args...);
 	#define ECHMET_MAKE_TRACEPOINT_IDS(TracerClass, first, last) \
 		namespace ECHMET { \
 			template <> \
+			inline \
 			constexpr ::TracerClass FIRST_TRACEPOINT_ID<::TracerClass>() { return ::TracerClass::first; } \
 			template <> \
+			inline \
 			constexpr ::TracerClass LAST_TRACEPOINT_ID<::TracerClass>() { return ::TracerClass::last; } \
 			template <> \
+			inline \
 			void TRACEPOINT_INFO_BUILD<::TracerClass, ::TracerClass::last>(std::vector<std::tuple<TPIDInt, std::string>> &tracepointInfoVec) \
 			{ \
 				(void)tracepointInfoVec; \
 				return; /* No-op for the last dummy tracepoint */ \
 			} \
 			template <> \
+			inline \
 			void TOGGLE_ALL_TRACEPOINTS<::TracerClass, ::TracerClass::last>(const bool state, std::map<TracerClass, bool> &enabledTracepoints) \
 			{ \
 				enabledTracepoints[TracerClass::last] = state; \
 			} \
 			template <> \
+			inline \
 			bool IS_TPID_VALID<::TracerClass, ::TracerClass>(const ::TracerClass &) { return true; } \
 		} // namespace ECHMET
 	#else
@@ -175,11 +229,13 @@ static std::string TRACEPOINT_LOGGER(Args...);
 		template <>
 		constexpr __DUMMY_TRACER_CLASS FIRST_TRACEPOINT_ID<__DUMMY_TRACER_CLASS>() { return __DUMMY_TRACER_CLASS::NONE; }
 		template <>
+		inline
 		void TRACEPOINT_INFO_BUILD<__DUMMY_TRACER_CLASS, __DUMMY_TRACER_CLASS::NONE>(std::vector<std::tuple<TPIDInt, std::string>> &)
 		{
 			return;
 		}
 		template <>
+		inline
 		void TOGGLE_ALL_TRACEPOINTS<__DUMMY_TRACER_CLASS, __DUMMY_TRACER_CLASS::NONE>(const bool, std::map<__DUMMY_TRACER_CLASS, bool> &)
 		{
 			return;
