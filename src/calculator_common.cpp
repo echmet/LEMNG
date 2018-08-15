@@ -208,17 +208,17 @@ void calcIonicProperties(const SysComp::ChemicalSystem *chemSystem, const RealVe
 		ctx->destroy();
 		throw CalculationException{"Cannot correct ionic mobilities for ionic strength: " + std::string(errorToString(tRet)), coreLibsErrorToNativeError(tRet)};
 	}
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_COMMON_CALC_SOLPROPS_ION_MOBS, const SysComp::IonicFormVec*, const SysComp::CalculatedProperties*>(chemSystem->ionicForms, calcProps);
+	ECHMET_TRACE(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_ION_MOBS, chemSystem->ionicForms, calcProps);
 
 	tRet = IonProps::calculateEffectiveMobilities(ctx, concentrations.get(), *calcProps);
 	if (tRet != ::ECHMET::RetCode::OK) {
 		ctx->destroy();
 		throw CalculationException{"Cannot calculate effective mobilities: " + std::string(errorToString(tRet)), coreLibsErrorToNativeError(tRet)};
 	}
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_COMMON_CALC_SOLPROPS_EFF_MOBS, const SysComp::ConstituentVec*, const SysComp::CalculatedProperties*>(chemSystem->constituents, calcProps);
+	ECHMET_TRACE(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_EFF_MOBS, chemSystem->constituents, calcProps);
 
 	IonProps::calculateConductivity(ctx, *calcProps);
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_COMMON_CALC_SOLPROPS_CONDUCTIVITY, const double&>(calcProps->conductivity);
+	ECHMET_TRACE(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_CONDUCTIVITY, calcProps->conductivity);
 
 	ctx->destroy();
 }
@@ -247,7 +247,7 @@ SolutionProperties calculateSolutionProperties(const SysComp::ChemicalSystem *ch
 		return outVec;
 	};
 
-	ECHMET_TRACE(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_PROGRESS, ECHMET_S("Solving equilibrium"));
+	ECHMET_TRACE(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_PROGRESS, "Solvingequilibrium");
 	solveChemicalSystem(chemSystem, concentrations, calcProps, corrections);
 
 	auto analyticalConcentrations = sysCompToLEMNGVec(concentrations);
@@ -628,9 +628,9 @@ void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVe
 		throw CalculationException{"Solver was unable to calculate equilibrium composition: " + std::string(errorToString(tRet)), coreLibsErrorToNativeError(tRet)};
 	}
 
-	ECHMET_TRACE(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_PROGRESS, ECHMET_S("Equilibrium successfuly solved"));
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_COMMON_CALC_SOLPROPS_ITERS, const uint32_t&, const uint32_t&>(solvIters.outer, solvIters.total);
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_COMMON_CALC_SOLPROPS_EQ_COMP, const SysComp::IonicFormVec*, const SysComp::CalculatedProperties*>(chemSystem->ionicForms, calcProps);
+	ECHMET_TRACE(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_PROGRESS, "Equilibrium successfuly solved");
+	ECHMET_TRACE(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_ITERS, solvIters.outer, solvIters.total);
+	ECHMET_TRACE(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_EQ_COMP, chemSystem->ionicForms, calcProps);
 
 	solver->destroy();
 	solverCtx->destroy();

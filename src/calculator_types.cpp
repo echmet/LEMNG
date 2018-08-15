@@ -272,7 +272,7 @@ SolutionProperties::SolutionProperties(const SolutionProperties &other) :
 	ionicConcentrations(other.ionicConcentrations),
 	effectiveMobilities(other.effectiveMobilities)
 {
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_OBJECT_CONSTRUCTION, const std::string&>(ECHMET_S("SolutionProperties copy c-tor"));
+	ECHMET_TRACE(LEMNGTracing, CALC_OBJECT_CONSTRUCTION, "SolutionProperties copy c-tor");
 }
 
 SolutionProperties::SolutionProperties(SolutionProperties &&other) noexcept :
@@ -283,7 +283,7 @@ SolutionProperties::SolutionProperties(SolutionProperties &&other) noexcept :
 	ionicConcentrations(std::move(other.ionicConcentrations)),
 	effectiveMobilities(std::move(other.effectiveMobilities))
 {
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_OBJECT_CONSTRUCTION, const std::string&>(ECHMET_S("SolutionProperties move c-tor"));
+	ECHMET_TRACE(LEMNGTracing, CALC_OBJECT_CONSTRUCTION, "SolutionProperties move c-tor");
 }
 
 SolutionProperties & SolutionProperties::operator=(const SolutionProperties &other)
@@ -295,7 +295,7 @@ SolutionProperties & SolutionProperties::operator=(const SolutionProperties &oth
 	const_cast<std::vector<double>&>(ionicConcentrations) = other.ionicConcentrations;
 	const_cast<std::vector<double>&>(effectiveMobilities) = other.effectiveMobilities;
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_OBJECT_CONSTRUCTION, const std::string&>(ECHMET_S("SolutionProperties copy assignment"));
+	ECHMET_TRACE(LEMNGTracing, CALC_OBJECT_CONSTRUCTION, "SolutionProperties copy assignment");
 
 	return *this;
 }
@@ -309,7 +309,7 @@ SolutionProperties & SolutionProperties::operator=(SolutionProperties &&other) n
 	const_cast<std::vector<double>&>(ionicConcentrations) = std::move(other.ionicConcentrations);
 	const_cast<std::vector<double>&>(effectiveMobilities) = std::move(other.effectiveMobilities);
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_OBJECT_CONSTRUCTION, const std::string&>(ECHMET_S("SolutionProperties move assignment"));
+	ECHMET_TRACE(LEMNGTracing, CALC_OBJECT_CONSTRUCTION, "SolutionProperties move assignment");
 
 	return *this;
 }
@@ -320,9 +320,9 @@ SolutionProperties & SolutionProperties::operator=(SolutionProperties &&other) n
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_OBJECT_CONSTRUCTION, "Calculator object construction/assignment")
-ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_OBJECT_CONSTRUCTION, const std::string &msg)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_OBJECT_CONSTRUCTION, const char *msg)
 {
-	return msg;
+	return std::string{msg};
 }
 ECHMET_END_MAKE_LOGGER
 

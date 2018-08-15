@@ -38,7 +38,7 @@ EMMatrix makeM1Derivative(const CalculatorSystemPack &systemPack, const DeltaPac
 	const double baseConductivity = systemPack.conductivity * 1.0e9;
 	const double dKdcJ = deltaPack.conductivityDelta * 1.0e9;
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_DM1_INPUT, const double&, const EMVector&>(baseConductivity, deltaPack.concentrationDeltas);
+	ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_DM1_INPUT, baseConductivity, std::cref(deltaPack.concentrationDeltas));
 
 	for (size_t row = 0; row < ROWS; row++) {
 		const CalculatorConstituent &c = ccVec.at(row);
@@ -48,7 +48,7 @@ EMMatrix makeM1Derivative(const CalculatorSystemPack &systemPack, const DeltaPac
 
 			for (const CalculatorIonicForm *iF : c.ionicForms) {
 				s += iF->concentration * iF->mobility * cxsgn(iF->charge);
-				_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_DM1_UICIDKDC, const double&, const double&, const int32_t&>(s, iF->mobility, cxsgn(iF->charge));
+				ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_DM1_UICIDKDC, s, iF->mobility, cxsgn(iF->charge));
 			}
 
 			return s * 2.0 / std::pow(baseConductivity, 2) * dKdcJ;
@@ -59,7 +59,7 @@ EMMatrix makeM1Derivative(const CalculatorSystemPack &systemPack, const DeltaPac
 
 			for (const CalculatorIonicForm *iF : c.ionicForms) {
 				s += iF->mobility * cxsgn(iF->charge) * deltaPack.concentrationDeltas(iF->globalIonicFormConcentrationIdx);
-				_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_DM1_UIDCIDCJ, const std::string&, const size_t&, const double&, const double&>(iF->name, iF->globalIonicFormConcentrationIdx, deltaPack.concentrationDeltas(iF->globalIonicFormConcentrationIdx), s);
+				ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_DM1_UIDCIDCJ, std::cref(iF->name), iF->globalIonicFormConcentrationIdx, deltaPack.concentrationDeltas(iF->globalIonicFormConcentrationIdx), s);
 			}
 
 			return -s / baseConductivity;
@@ -78,7 +78,7 @@ EMMatrix makeM1Derivative(const CalculatorSystemPack &systemPack, const DeltaPac
 			result += termTwo * std::abs(charge);
 			result *= mobility;
 
-			_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_DM1_KRD, const int&>(d);
+			ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_DM1_KRD, d);
 
 			MOneDer(row, col) = result;
 		}
@@ -86,14 +86,14 @@ EMMatrix makeM1Derivative(const CalculatorSystemPack &systemPack, const DeltaPac
 		const double H3OMob = ifVec.at(H3O_idx)->mobility;
 		const double OHMob = ifVec.at(OH_idx)->mobility;
 
-		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_DM1_ROW_BLOCK, const double&, const double&, const double&, const double&, const double&>(uIcIdKdC, uIdcIdcJ, termTwo, H3OMob, OHMob);
+		ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_DM1_ROW_BLOCK, uIcIdKdC, uIdcIdcJ, termTwo, H3OMob, OHMob);
 
 		/* H3O+ and OH- are in the last two columns */
 		MOneDer(row, H3O_idx) = termTwo * H3OMob;
 		MOneDer(row, OH_idx) = termTwo * OHMob;
 	}
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_DM1_OUTPUT, const EMMatrix&>(MOneDer);
+	ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_DM1_OUTPUT, std::cref(MOneDer));
 
 	return MOneDer;
 }
@@ -134,7 +134,7 @@ EMMatrix makeM2Derivative(const CalculatorSystemPack &systemPack, const RealVecP
 		MTwoDer(OH_idx, col) = ECHMETRealToDouble(derivatives->at(1));
 	}
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_DM2_OUTPUT, const EMMatrix&>(MTwoDer);
+	ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_DM2_OUTPUT, std::cref(MTwoDer));
 
 	return MTwoDer;
 }
@@ -150,7 +150,7 @@ EMMatrix makeMatrixD1(const CalculatorSystemPack &systemPack, const ERVector &di
 	const CalculatorConstituentVec &ccVec = systemPack.constituents;
 	const CalculatorIonicFormVec &ifVec = systemPack.ionicForms;
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_D1_DIMS, const size_t&, const size_t&>(ROWS, COLS);
+	ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_D1_DIMS, ROWS, COLS);
 
 	for (size_t row = 0; row < ROWS; row++) {
 		const CalculatorConstituent &c = ccVec.at(row);
@@ -158,13 +158,13 @@ EMMatrix makeMatrixD1(const CalculatorSystemPack &systemPack, const ERVector &di
 		const double uIcIFSum = [](const CalculatorConstituent &c, const double conductivity) {
 			double s = 0.0;
 
-			_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_D1_UICIF_BLOCK, const char*>(c.name.c_str());
+			ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_D1_UICIF_BLOCK, c.name.c_str());
 
 			for (size_t idx = 0; idx < c.ionicForms.size(); idx++) {
 				const CalculatorIonicForm *iF = c.ionicForms.at(idx);
 
 				s += iF->concentration * iF->mobility * cxsgn(iF->charge);
-				_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_D1_UICIF_INTERMEDIATE, const double&, const CalculatorIonicForm*&>(s, iF);
+				ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_D1_UICIF_INTERMEDIATE, s, iF);
 			}
 
 			return s * PhChConsts::F / (conductivity * 1.0e9);
@@ -176,7 +176,7 @@ EMMatrix makeMatrixD1(const CalculatorSystemPack &systemPack, const ERVector &di
 			const double diffCoeff = diffusionCoefficients.at(col);
 			const int d = M1KroeneckerDelta(row, ctuentList);
 
-			_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_D1_ROW_BLOCK, const std::string&, const int &, const size_t&, const double &>(iF->name, d, col, diffCoeff);
+			ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_D1_ROW_BLOCK, std::cref(iF->name), d, col, diffCoeff);
 
 			DOne(row, col) = (d + uIcIFSum * diffCoeff) * diffCoeff;
 		}
@@ -186,7 +186,7 @@ EMMatrix makeMatrixD1(const CalculatorSystemPack &systemPack, const ERVector &di
 		DOne(row, OH_idx) = uIcIFSum * diffusionCoefficients.at(OH_idx);
 	}
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_D1_OUTPUT, const EMMatrix&, const CalculatorConstituentVec&, const CalculatorIonicFormVec&>(DOne, systemPack.constituents, systemPack.ionicForms);
+	ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_D1_OUTPUT, std::cref(DOne), std::cref(systemPack.constituents), std::cref(systemPack.ionicForms));
 
 	return DOne;
 }
@@ -197,13 +197,13 @@ EMMatrix makeMatrixD2(const CalculatorSystemPack &systemPack, const DeltaPackVec
 	const size_t COLS = systemPack.constituents.size();
 	EMMatrix DTwo{ROWS, COLS};
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_D2_DIMS, const size_t&, const size_t&>(ROWS, COLS);
+	ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_D2_DIMS, ROWS, COLS);
 
 	for (size_t col = 0; col < COLS; col++)
 		DTwo.col(col) = deltaPacks.at(col).concentrationDeltas;
 
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_D2_OUTPUT, const EMMatrix&, const CalculatorConstituentVec&, const CalculatorIonicFormVec&>(DTwo, systemPack.constituents, systemPack.ionicForms);
+	ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_D2_OUTPUT, std::cref(DTwo), std::cref(systemPack.constituents), std::cref(systemPack.ionicForms));
 
 	return DTwo;
 }
@@ -219,7 +219,7 @@ EMMatrix makeMatrixM1(const CalculatorSystemPack &systemPack)
 	const CalculatorConstituentVec &ccVec = systemPack.constituents;
 	const CalculatorIonicFormVec &ifVec = systemPack.ionicForms;
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_M1_DIMS, const size_t&, const size_t&>(ROWS, COLS);
+	ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_M1_DIMS, ROWS, COLS);
 
 	for (size_t row = 0; row < ROWS; row++) {
 		const CalculatorConstituent &c = ccVec.at(row);
@@ -227,13 +227,13 @@ EMMatrix makeMatrixM1(const CalculatorSystemPack &systemPack)
 		const double uIcIFSum = [](const CalculatorConstituent &c, const double conductivity) {
 			double s = 0.0;
 
-			_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_M1_UICIF_BLOCK, const char*>(c.name.c_str());
+			ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_M1_UICIF_BLOCK, c.name.c_str());
 
 			for (size_t idx = 0; idx < c.ionicForms.size(); idx++) {
 				const CalculatorIonicForm *iF = c.ionicForms.at(idx);
 
 				s += iF->concentration * iF->mobility * cxsgn(iF->charge);
-				_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_M1_UICIF_INTERMEDIATE, const double&, const CalculatorIonicForm*&>(s, iF);
+				ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_M1_UICIF_INTERMEDIATE, s, iF);
 			}
 
 			return s * PhChConsts::F / (conductivity * 1.0e9);
@@ -246,7 +246,7 @@ EMMatrix makeMatrixM1(const CalculatorSystemPack &systemPack)
 			const double mobility = iF->mobility;
 			const int d = M1KroeneckerDelta(row, ctuentList);
 
-			_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_M1_ROW_BLOCK, const std::string&, const int &, const size_t&, const double &>(iF->name, d, col, mobility);
+			ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_M1_ROW_BLOCK, std::cref(iF->name), d, col, mobility);
 
 			MOne(row, col) = (d * cxsgn(charge) - uIcIFSum * std::abs(charge)) * mobility;
 		}
@@ -256,7 +256,7 @@ EMMatrix makeMatrixM1(const CalculatorSystemPack &systemPack)
 		MOne(row, OH_idx) = -uIcIFSum * ifVec.at(OH_idx)->mobility;
 	}
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_M1_OUTPUT, const EMMatrix&, const CalculatorConstituentVec&, const CalculatorIonicFormVec&>(MOne, systemPack.constituents, systemPack.ionicForms);
+	ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_M1_OUTPUT, std::cref(MOne), std::cref(systemPack.constituents), std::cref(systemPack.ionicForms));
 
 	return MOne;
 }
@@ -267,13 +267,13 @@ EMMatrix makeMatrixM2(const CalculatorSystemPack &systemPack, const DeltaPackVec
 	const size_t COLS = systemPack.constituents.size();
 	EMMatrix MTwo{ROWS, COLS};
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_M2_DIMS, const size_t&, const size_t&>(ROWS, COLS);
+	ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_M2_DIMS, ROWS, COLS);
 
 	for (size_t col = 0; col < COLS; col++)
 		MTwo.col(col) = deltaPacks.at(col).concentrationDeltas;
 
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_M2_OUTPUT, const EMMatrix&, const CalculatorConstituentVec&, const CalculatorIonicFormVec&>(MTwo, systemPack.constituents, systemPack.ionicForms);
+	ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_M2_OUTPUT, std::cref(MTwo), std::cref(systemPack.constituents), std::cref(systemPack.ionicForms));
 
 	return MTwo;
 }
@@ -284,7 +284,7 @@ EMMatrix makeMatrixM2(const CalculatorSystemPack &systemPack, const DeltaPackVec
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_M1_DIMS, "Matrix M1 dimensions")
-ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_M1_DIMS, const size_t &rows, const size_t &cols)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_M1_DIMS, const size_t rows, const size_t cols)
 {
 	std::ostringstream ss{};
 
@@ -294,7 +294,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_M1_DIMS, const size_t &rows, 
 ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_M2_DIMS, "Matrix M2 dimensions")
-ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_M2_DIMS, const size_t &rows, const size_t &cols)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_M2_DIMS, const size_t rows, const size_t cols)
 {
 	std::ostringstream ss{};
 
@@ -314,7 +314,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_M1_UICIF_BLOCK, const char *b
 ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_M1_UICIF_INTERMEDIATE, "Matrix M1 uIcIF intermediate block output")
-ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_M1_UICIF_INTERMEDIATE, const double &s, const ECHMET::LEMNG::Calculator::CalculatorIonicForm *&ccIf)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_M1_UICIF_INTERMEDIATE, const double s, const ECHMET::LEMNG::Calculator::CalculatorIonicForm *ccIf)
 {
 	std::ostringstream ss{};
 	const std::string &name = ccIf->name;
@@ -330,7 +330,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_M1_UICIF_INTERMEDIATE, const 
 ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_M1_ROW_BLOCK, "Matrix M1 row block")
-ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_M1_ROW_BLOCK, const std::string &name, const int &KrD, const size_t &col, const double &mobility)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_M1_ROW_BLOCK, const std::string &name, const int KrD, const size_t col, const double mobility)
 {
 	std::ostringstream ss{};
 
@@ -382,7 +382,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_M2_OUTPUT, const ECHMET::LEMN
 ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_DM1_INPUT, "dM1/dC input")
-ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_DM1_INPUT, const double &baseConductivity, const ECHMET::LEMNG::Calculator::EMVector &cDeltas)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_DM1_INPUT, const double baseConductivity, const ECHMET::LEMNG::Calculator::EMVector &cDeltas)
 {
 	std::ostringstream ss{};
 
@@ -396,7 +396,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_DM1_INPUT, const double &base
 ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_DM1_UICIDKDC, "dM1/dC dConductivity/dC")
-ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_DM1_UICIDKDC, const double &s, const double &mobility, const int32_t &absCharge)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_DM1_UICIDKDC, const double s, const double mobility, const int32_t absCharge)
 {
 	std::ostringstream ss{};
 
@@ -408,7 +408,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_DM1_UICIDKDC, const double &s
 ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_DM1_UIDCIDCJ, "dM1/dC dCi/dCj")
-ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_DM1_UIDCIDCJ, const std::string &name, const size_t &gIdx, const double &cDelta, const double &s)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_DM1_UIDCIDCJ, const std::string &name, const size_t gIdx, const double cDelta, const double s)
 {
 	std::ostringstream ss{};
 
@@ -420,14 +420,14 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_DM1_UIDCIDCJ, const std::stri
 ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_DM1_KRD, "dM1/dC Kroenecker delta")
-ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_DM1_KRD, const int &KrD)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_DM1_KRD, const int KrD)
 {
 	return std::string{"Kroenecker delta = "} + std::to_string(KrD);
 }
 ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_DM1_ROW_BLOCK, "dM1/dC row block")
-ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_DM1_ROW_BLOCK, const double &uIcIcKdC, const double &uIdcIdcJ, const double &termTwo, const double &H3OMob, const double &OHMob)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_DM1_ROW_BLOCK, const double uIcIcKdC, const double uIdcIdcJ, const double termTwo, const double H3OMob, const double OHMob)
 {
 	std::ostringstream ss{};
 
@@ -465,7 +465,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_DM2_OUTPUT, const ECHMET::LEM
 ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_D1_DIMS, "Matrix D1 dimensions")
-ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D1_DIMS, const size_t &rows, const size_t &cols)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D1_DIMS, const size_t rows, const size_t cols)
 {
 	std::ostringstream ss{};
 
@@ -475,7 +475,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D1_DIMS, const size_t &rows, 
 ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_D2_DIMS, "Matrix D2 dimensions")
-ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D2_DIMS, const size_t &rows, const size_t &cols)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D2_DIMS, const size_t rows, const size_t cols)
 {
 	std::ostringstream ss{};
 
@@ -485,7 +485,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D2_DIMS, const size_t &rows, 
 ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_D1_ROW_BLOCK, "Matrix D1 row block")
-ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D1_ROW_BLOCK, const std::string &name, const int &KrD, const size_t &col, const double &diffCoeff)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D1_ROW_BLOCK, const std::string &name, const int KrD, const size_t col, const double diffCoeff)
 {
 	std::ostringstream ss{};
 
@@ -546,7 +546,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D1_UICIF_BLOCK, const char *b
 ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_MATRIX_D1_UICIF_INTERMEDIATE, "Matrix D1 uIcIF intermediate block output")
-ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D1_UICIF_INTERMEDIATE, const double &s, const ECHMET::LEMNG::Calculator::CalculatorIonicForm *&ccIf)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_MATRIX_D1_UICIF_INTERMEDIATE, const double s, const ECHMET::LEMNG::Calculator::CalculatorIonicForm *ccIf)
 {
 	std::ostringstream ss{};
 	const std::string &name = ccIf->name;

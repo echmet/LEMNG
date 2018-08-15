@@ -51,7 +51,7 @@ EigenzoneDispersionVec calculateEigenzoneDispersion(const QLQRPack &QLQR, const 
 	/* Diffusive parameters */
 	const EMMatrixC LDiffR = QL * diffMatrix * QR;
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_DIFF_PARAMS_MATRIX, const EMMatrixC&>(LDiffR);
+	ECHMET_TRACE(LEMNGTracing, CALC_NONLIN_DIFF_PARAMS_MATRIX, std::cref(LDiffR));
 
 	for (size_t idx = 0; idx < NCO; idx++) {
 		/* Get diffusive parameter of the eigenzone */
@@ -297,7 +297,7 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPackUncharged, co
 				for (size_t idx = 0; idx < c->ionicForms->size(); idx++) {
 					const SysComp::IonicForm *ionicForm = c->ionicForms->at(idx);
 
-					_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_NEIGHBOUR_FORMS_LOOKUP, const char *, const char *>(ionicForm->name->c_str(), iF->name->c_str());
+					ECHMET_TRACE(LEMNGTracing, CALC_NONLIN_NEIGHBOUR_FORMS_LOOKUP, ionicForm->name->c_str(), iF->name->c_str());
 
 					/* TODO: return early once we find all the ionic forms we need */
 
@@ -332,14 +332,14 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPackUncharged, co
 		diffusionCoefficients.emplace_back(calcDiffCoeff(mobility, iF->totalCharge));
 	}
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_DIFFUSION_COEFFS, const CalculatorSystemPack&, const ERVector&>(systemPackUncharged, diffusionCoefficients);
+	ECHMET_TRACE(LEMNGTracing, CALC_NONLIN_DIFFUSION_COEFFS, std::cref(systemPackUncharged), std::cref(diffusionCoefficients));
 
 	const EMMatrix DOne = makeMatrixD1(systemPackUncharged, diffusionCoefficients);
 	const EMMatrix DTwo = makeMatrixD2(systemPackUncharged, deltaPackUncharged);
 
 	const EMMatrix diffMatrix = DOne * DTwo;
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_DIFF_MATRIX, const EMMatrix&>(diffMatrix);
+	ECHMET_TRACE(LEMNGTracing, CALC_NONLIN_DIFF_MATRIX, std::cref(diffMatrix));
 
 	return diffMatrix;
 }
@@ -365,12 +365,12 @@ EigenzoneDispersionVec calculateNonlinear(const CalculatorSystemPack &systemPack
 					  const EMMatrix &M1, const EMMatrix &M2, const QLQRPack &QLQR,
 					  const NonidealityCorrections corrections)
 {
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_PROGRESS, const char*>("Starting");
+	ECHMET_TRACE(LEMNGTracing, CALC_NONLIN_PROGRESS, "Starting");
 
 	const EMMatrixVec M1Derivatives = calculateM1Derivatives(systemPack, deltaPacks);
 	const EMMatrixVec M2Derivatives = calculateM2Derivatives(systemPack, analyticalConcentrations, corrections);
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_NONLIN_PROGRESS, const char*>("Individual matrix derivatives solved");
+	ECHMET_TRACE(LEMNGTracing, CALC_NONLIN_PROGRESS, "Individual matrix derivatives solved");
 
 	const EMMatrix diffMatrix = makeDiffusionMatrix(systemPackUncharged, deltaPacksUncharged);
 	const EMMatrixVec MDerivatives = calculateMDerivatives(M1, M2, M1Derivatives, M2Derivatives);
@@ -403,7 +403,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_NEIGHBOUR_FORMS_LOOKUP, const
 ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_NONLIN_NERNST_EINST_INPUT, "Mobility and total charge of ionic form used in Nermst-Einstein equation")
-ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_NERNST_EINST_INPUT, const double &mobility, const int32_t &totalCharge)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_NERNST_EINST_INPUT, const double mobility, const int32_t totalCharge)
 {
 	std::ostringstream ss{};
 

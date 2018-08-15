@@ -171,7 +171,7 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 		analConcsFull = makeAnalyticalConcentrationsVec(m_chemicalSystemFull);
 	} catch (std::bad_alloc &) {
 		m_lastErrorString = "Cannot make vectors of analytical concentrations";
-		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_INIT_ERR, const char*, const char*>("Cannot make vectors of analytical concentrations", "Insufficient memory");
+		ECHMET_TRACE(LEMNGTracing, EVAL_INIT_ERR, "Cannot make vectors of analytical concentrations", "Insufficient memory");
 
 		return RetCode::E_NO_MEMORY;
 	}
@@ -182,12 +182,12 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 		applyConcentrationMappingBGELike(analConcsBGELike);
 	} catch (const CannotApplyConcentrationException &ex) {
 		m_lastErrorString = "Cannot process input analytical concentrations";
-		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_INIT_ERR, const char*, const char*>("Cannot process input analytical concentrations", "Malformed input data");
+		ECHMET_TRACE(LEMNGTracing, EVAL_INIT_ERR, "Cannot process input analytical concentrations", "Malformed input data");
 
 		return RetCode::E_INTERNAL_ERROR;
 	} catch (const ConcentrationTooLowException &ex) {
 		m_lastErrorString = "Concentration of " + std::string{ex.what()} + " is too low for the numerical solver";
-		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_INIT_ERR, const char*, const char*>("Cannot process input analytical concentrations", "Concentration too low");
+		ECHMET_TRACE(LEMNGTracing, EVAL_INIT_ERR, "Cannot process input analytical concentrations", "Concentration too low");
 
 		return RetCode::E_CONCENTRATION_TOO_LOW;
 	}
@@ -199,7 +199,7 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 		results = prepareResults(m_chemicalSystemBGE, m_chemicalSystemFull, isAnalyteFunc);
 	} catch (std::bad_alloc &) {
 		m_lastErrorString = "Insufficient memory to prepare results";
-		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_INIT_ERR, const char*, const char*>("Cannot prepare Results data structures", "Insufficient memory");
+		ECHMET_TRACE(LEMNGTracing, EVAL_INIT_ERR, "Cannot prepare Results data structures", "Insufficient memory");
 
 		return RetCode::E_NO_MEMORY;
 	}
@@ -210,7 +210,7 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 	} catch (const Calculator::CalculationException &ex) {
 		releaseResults(results);
 		m_lastErrorString = std::string{"Unable to calculate BGE properties: "} + ex.what();
-		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_PROGRESS_ERR, const char*, const char*>("Unable to calculate BGE properties", ex.what());
+		ECHMET_TRACE(LEMNGTracing, EVAL_PROGRESS_ERR, "Unable to calculate BGE properties", ex.what());
 
 		return RetCode::E_CANNOT_SOLVE_BGE;
 	}
@@ -227,7 +227,7 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 	} catch (Calculator::CalculationException &ex) {
 		fillResultsBGE(m_chemicalSystemBGE, BGEProps, corrections, results);
 		m_lastErrorString = ex.what();
-		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_PROGRESS_ERR, const char*, const char*>("Cannot prepare model data", ex.what());
+		ECHMET_TRACE(LEMNGTracing, EVAL_PROGRESS_ERR, "Cannot prepare model data", ex.what());
 
 		return ex.errorCode();
 	}
@@ -244,14 +244,14 @@ RetCode ECHMET_CC CZESystemImpl::evaluate(const InAnalyticalConcentrationsMap *a
 	} catch (std::bad_alloc &) {
 		fillResultsBGE(m_chemicalSystemBGE, BGEProps, corrections, results);
 		fillResultsAnalytesDissociation(m_chemicalSystemFull, BGELikeProps, results);
-		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_PROGRESS_ERR, const char*, const char*>("Cannot evaluate linear model", "Insufficient memory");
+		ECHMET_TRACE(LEMNGTracing, EVAL_PROGRESS_ERR, "Cannot evaluate linear model", "Insufficient memory");
 
 		return RetCode::E_NO_MEMORY;
 	} catch (Calculator::CalculationException &ex) {
 		fillResultsBGE(m_chemicalSystemBGE, BGEProps, corrections, results);
 		fillResultsAnalytesDissociation(m_chemicalSystemFull, BGELikeProps, results);
 		m_lastErrorString = ex.what();
-		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::EVAL_PROGRESS_ERR, const char*, const char*>("Cannot evaluate linear model", ex.what());
+		ECHMET_TRACE(LEMNGTracing, EVAL_PROGRESS_ERR, "Cannot evaluate linear model", ex.what());
 
 		return ex.errorCode();
 	}
@@ -396,7 +396,7 @@ RetCode ECHMET_CC makeCZESystem(SysComp::InConstituentVec *BGE, SysComp::InConst
 	} catch (std::bad_alloc &) {
 		return RetCode::E_NO_MEMORY;
 	} catch (SysCompException &ex) {
-		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::MAKE_CZE_SYSTEM_ERR, const char*>(ex.what());
+		ECHMET_TRACE(LEMNGTracing, MAKE_CZE_SYSTEM_ERR, ex.what());
 
 		return coreLibsErrorToNativeError(ex.errorCode());
 	}

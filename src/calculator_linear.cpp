@@ -151,7 +151,7 @@ std::vector<std::tuple<std::vector<double>, bool, bool>> calculateEigenzoneCompo
 				if (std::abs(c) <= 1.0e-13)
 					return 1.0e-13;
 				else if (c < 0.0) {
-					_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_LIN_ZONE_TAINTED, const int &, const std::string &, const double &>(zoneCtr, name, c);
+					ECHMET_TRACE(LEMNGTracing, CALC_LIN_ZONE_TAINTED, zoneCtr, std::cref(name), c);
 
 					tainted = true;
 					return 1.0e-13;
@@ -183,19 +183,19 @@ LinearResults calculateLinear(const CalculatorSystemPack &systemPack, const Delt
 	EMMatrix M2{};
 	EMMatrix MFin{};
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_LIN_PROGRESS, const char *>("Starting");
+	ECHMET_TRACE(LEMNGTracing, CALC_LIN_PROGRESS, "Starting");
 
 	try {
 		M1 = makeMatrixM1(systemPack);
 		M2 = makeMatrixM2(systemPack, deltaPacks);
 		MFin = M1 * M2;
 
-		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_LIN_MFIN, const EMMatrix &>(MFin);
+		ECHMET_TRACE(LEMNGTracing, CALC_LIN_MFIN, std::cref(MFin));
 	} catch (std::bad_alloc &) {
 		throw CalculationException{"Insufficient memory to calculate mobility matrix", RetCode::E_NO_MEMORY};
 	}
 
-	_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_LIN_PROGRESS, const char *>("Solving eigenzones' compositions");
+	ECHMET_TRACE(LEMNGTracing, CALC_LIN_PROGRESS, "Solving eigenzones' compositions");
 
 	if (MFin.rows() < 1)
 		return LinearResults{{}, QLQRPack{EMMatrixC{0,0}, EMMatrixC{0,0}}, std::move(M1), std::move(M2), true};
@@ -208,7 +208,7 @@ LinearResults calculateLinear(const CalculatorSystemPack &systemPack, const Delt
 	try {
 		EMSolverC ces{MFin};
 		EMVectorC eigenmobs = ces.eigenvalues();
-		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_EIGENMOBS, const EMVectorC &>(eigenmobs);
+		ECHMET_TRACE(LEMNGTracing, CALC_EIGENMOBS, std::cref(eigenmobs));
 		if (isComplex(eigenmobs))
 			throw CalculationException{"Detected complex eigenmobilities", RetCode::E_COMPLEX_EIGENMOBILITIES};
 
@@ -247,7 +247,7 @@ LinearResults calculateLinear(const CalculatorSystemPack &systemPack, const Delt
 			}
 		}
 
-		_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_LIN_PROGRESS, const char *>("Done");
+		ECHMET_TRACE(LEMNGTracing, CALC_LIN_PROGRESS, "Done");
 
 		return LinearResults{std::move(eigenzones), std::move(QLQR), std::move(M1), std::move(M2), allZonesValid};
 	} catch (std::bad_alloc &) {
@@ -282,7 +282,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_LIN_MFIN, const ECHMET::LEMNG::Calcu
 ECHMET_END_MAKE_LOGGER
 
 ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_LIN_ZONE_TAINTED, "Eigenzone tainted")
-ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_LIN_ZONE_TAINTED, const int &zoneNum, const std::string &offendingConstituent, const double &calculatedConc)
+ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_LIN_ZONE_TAINTED, const int zoneNum, const std::string &offendingConstituent, const double calculatedConc)
 {
 	std::ostringstream ss{};
 
