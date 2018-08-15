@@ -326,7 +326,7 @@ EMMatrix makeDiffusionMatrix(const CalculatorSystemPack &systemPackUncharged, co
 
 				return (mobMinusOne + mobPlusOne) / 2.0;
 			} else
-				return 1.0; /* Arbitrarily chosen mobility for constituents that really have no charge */
+				return 20.0; /* Arbitrarily chosen mobility for constituents that really have no charge */
 		}(iF);
 
 		diffusionCoefficients.emplace_back(calcDiffCoeff(mobility, iF->totalCharge));
