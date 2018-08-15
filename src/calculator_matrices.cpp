@@ -173,13 +173,11 @@ EMMatrix makeMatrixD1(const CalculatorSystemPack &systemPack, const ERVector &di
 		for (size_t col = 0; col < COLS - 2; col++) {
 			const CalculatorIonicForm *iF = ifVec.at(col);
 			const auto &ctuentList = iF->containedConstituents;
-			const int32_t charge = iF->charge;
 			const double diffCoeff = diffusionCoefficients.at(col);
 			const int d = M1KroeneckerDelta(row, ctuentList);
 
 			_ECHMET_TRACE<LEMNGTracing, LEMNGTracing::CALC_MATRIX_D1_ROW_BLOCK, const std::string&, const int &, const size_t&, const double &>(iF->name, d, col, diffCoeff);
 
-			//DOne(row, col) = (d * cxsgn(charge) + uIcIFSum * std::abs(charge)) * diffCoeff;
 			DOne(row, col) = (d + uIcIFSum * diffCoeff) * diffCoeff;
 		}
 
