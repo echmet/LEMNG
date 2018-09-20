@@ -70,6 +70,10 @@ EigenzoneDispersionVec calculateEigenzoneDispersion(const QLQRPack &QLQR, const 
 		 */
 		double dLdW = 0.0;
 
+		/* Hruška V, Riesová M, Gaš B, ELECTROPHORESIS 2012, Volume: 33, Pages: 923-930 (DOI: 10.1002/elps.201100554)
+		 * Equation 22 states that values from QR matrix shall be taken from positions i,k whereas they shall
+		 * be taken from positions k,i
+		 */
 		for (size_t k = 0; k < NCO; k++)
 			dLdW += QR(k, idx).real() * LMRs.at(k)(idx, idx).real();
 
