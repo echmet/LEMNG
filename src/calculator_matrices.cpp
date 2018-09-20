@@ -178,7 +178,7 @@ EMMatrix makeMatrixD1(const CalculatorSystemPack &systemPack, const ERVector &di
 
 			ECHMET_TRACE(LEMNGTracing, CALC_MATRIX_D1_ROW_BLOCK, std::cref(iF->name), d, col, diffCoeff);
 
-			DOne(row, col) = (d + uIcIFSum * diffCoeff) * diffCoeff;
+			DOne(row, col) = (d - uIcIFSum * diffCoeff) * diffCoeff;
 		}
 
 		/* H3O+ and OH- are in the last two columns */
