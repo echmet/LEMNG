@@ -4,6 +4,7 @@
 #include "calculator_nonlinear.h"
 #include "helpers.h"
 #include "results_maker.h"
+#include "lemng_config.h"
 #include <new>
 
 #define USE_ECHMET_CONTAINERS
@@ -15,6 +16,7 @@
 
 #define _STRINGIFY(input) #input
 #define ERROR_CODE_CASE(erCase) case RetCode::erCase: return _STRINGIFY(erCase)
+#define MK_VERSION_STRING(vmaj, vmin, vpatch) _STRINGIFY(vmaj) "." _STRINGIFY(vmin) "." _STRINGIFY(vpatch)
 
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 
@@ -437,6 +439,11 @@ void ECHMET_CC toggleTracepoint(const int32_t TPID, const bool state) noexcept
 		TRACER_INSTANCE<LEMNGTracing>().enableTracepoint(TPID);
 	else
 		TRACER_INSTANCE<LEMNGTracing>().disableTracepoint(TPID);
+}
+
+const char * ECHMET_CC versionString() noexcept
+{
+	return MK_VERSION_STRING(LEMNG_VERSION_MAJOR, LEMNG_VERSION_MINOR, LEMNG_VERSION_PATCH);
 }
 
 FixedString * ECHMET_CC trace(const bool dontClear) noexcept

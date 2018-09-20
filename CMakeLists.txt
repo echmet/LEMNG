@@ -14,6 +14,10 @@ add_definitions("-D_USE_MATH_DEFINES -DECHMET_DLL_BUILD")
 
 set(LEMNG_THREADING_LIBS)
 
+set(LEMNG_VERSION_MAJOR 0)
+set(LEMNG_VERSION_MINOR 6)
+set(LEMNG_VERSION_PATCH 0)
+
 if (WIN32)
     if (MINGW)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-function")
@@ -81,15 +85,18 @@ set(libIonProps_SRCS
 include_directories(${INCLUDE_DIRECTORIES}
                     SYSTEM "${EIGEN_INCLUDE_DIR}"
                     SYSTEM "${ECHMET_CORE_LIBS_DIR}/include/ECHMET/CoreLibs"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/include")
+                    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+                    "${CMAKE_CURRENT_BINARY_DIR}")
 
 link_directories("${ECHMET_CORE_LIBS_DIR}/lib")
+
+CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/src/lemng_config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/lemng_config.h")
 
 add_library(LEMNG SHARED ${libIonProps_SRCS})
 
 set_target_properties(LEMNG
-                      PROPERTIES VERSION 0.5
-                                 SOVERSION 0.5
+                      PROPERTIES VERSION ${LEMNG_VERSION_MAJOR}.${LEMNG_VERSION_MINOR}
+                                 SOVERSION ${LEMNG_VERSION_MAJOR}.${LEMNG_VERSION_MINOR}
                                  LINK_FLAGS ${DEFAULT_SYMVER_LINK}
                       PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/lemng.h")
 target_link_libraries(LEMNG
