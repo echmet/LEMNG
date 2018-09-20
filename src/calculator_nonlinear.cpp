@@ -45,7 +45,8 @@ EigenzoneDispersionVec calculateEigenzoneDispersion(const QLQRPack &QLQR, const 
 
 	/* Transformation to w domain.
 	 * Hruška V, Riesová M, Gaš B, ELECTROPHORESIS 2012, Volume: 33, Pages: 923-930 (DOI: 10.1002/elps.201100554)
-	 * incorrectly states that the concentration deltas vector shall be multiplied by QR instead. */
+	 * states equation 18 in reverse order c = QR * w, we use QL to get w from concentration deltas.
+	 */
 	const EMMatrixC wVec = QL * concentrationDeltas;
 
 	/* Diffusive parameters */
