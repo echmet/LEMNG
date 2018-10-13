@@ -34,6 +34,10 @@ The LEMNG project is distributed under the terms of **The GNU General Public Lic
 
 As permitted by section 7. *Additional Terms* of The GNU GPLv3 license, the authors require that any derivative work based on LEMNG clearly refers to the origin of the software and its authors. Such reference must include the address of this source code repository (https://github.com/echmet/LEMNG) and names of all authors and their affiliation stated in section [Authors](#Authors) of this README file.
 
+Referenceable releases
+---
+- LEMNG 0.6.0 [![DOI](https://zenodo.org/badge/113085202.svg)](https://zenodo.org/badge/latestdoi/113085202)
+
 <a name="Authors"></a>
 Authors
 ---
