@@ -42,6 +42,45 @@ public:
 	{}
 };
 
+class InvalidComposition : public std::runtime_error {
+public:
+	enum Type {
+		MISMATCHING_PARAMETERS,
+		MISSING_IN_SAMPLE
+	};
+
+	InvalidComposition(const Type t) :
+		std::runtime_error{"Input composition is invalid"},
+		type(t)
+	{}
+
+	const Type type;
+};
+
+static
+void validateCompositions(const SysComp::InConstituentVec *BGEVec, const SysComp::InConstituentVec *sampleVec)
+{
+	const size_t sizeSam = sampleVec->size();
+
+	for (size_t idx = 0; idx < BGEVec->size(); idx++) {
+		const auto *cBGE = &BGEVec->at(idx);
+
+		size_t jdx;
+		for (jdx = 0; jdx < sizeSam; jdx++) {
+			const auto *cSam = &sampleVec->at(jdx);
+
+			if (*cSam->name == *cBGE->name) {
+				if (!SysComp::compareInConstituents(*cBGE, *cSam))
+					throw InvalidComposition{InvalidComposition::Type::MISMATCHING_PARAMETERS};
+				break;
+			}
+		}
+
+		if (jdx == sizeSam)
+			throw InvalidComposition{InvalidComposition::Type::MISSING_IN_SAMPLE};
+	}
+}
+
 CZESystemImpl::CZESystemImpl() :
 	m_chemicalSystemBGE{std::unique_ptr<SysComp::ChemicalSystem, decltype(&chemicalSystemDeleter)>{new SysComp::ChemicalSystem, &chemicalSystemDeleter}},
 	m_chemicalSystemFull{std::unique_ptr<SysComp::ChemicalSystem, decltype(&chemicalSystemDeleter)>{new SysComp::ChemicalSystem, &chemicalSystemDeleter}},
@@ -291,6 +330,8 @@ CZESystemImpl * CZESystemImpl::make(const SysComp::InConstituentVec *inCtuentVec
 	}
 
 	try {
+		validateCompositions(inCtuentVecBGE, inCtuentVecSample);
+
 		IsAnalyteMap iaMap = makeIsAnalyteMap(inCtuentVecBGE, inCtuentVecSample);
 
 		return new CZESystemImpl(chemSystemBGE, calcPropsBGE, chemSystemFull, calcPropsFull, std::move(iaMap));
@@ -386,6 +427,8 @@ const char * ECHMET_CC LEMNGerrorToString(const RetCode tRet) noexcept
 		ERROR_CODE_CASE(E_INTERNAL_ERROR);
 		ERROR_CODE_CASE(E_COMPLEX_EIGENMOBILITIES);
 		ERROR_CODE_CASE(E_PARTIAL_EIGENZONES);
+		ERROR_CODE_CASE(E_INVALID_COMPOSITION_PARAMS);
+		ERROR_CODE_CASE(E_INVALID_COMPOSITION_MISSING);
 	default:
 		return "Unknown error code";
 	}
@@ -397,6 +440,13 @@ RetCode ECHMET_CC makeCZESystem(SysComp::InConstituentVec *BGE, SysComp::InConst
 		czeSystem = CZESystemImpl::make(BGE, sample);
 	} catch (std::bad_alloc &) {
 		return RetCode::E_NO_MEMORY;
+	} catch (InvalidComposition &ex) {
+		switch (ex.type) {
+		case InvalidComposition::Type::MISMATCHING_PARAMETERS:
+			return RetCode::E_INVALID_COMPOSITION_PARAMS;
+		case InvalidComposition::Type::MISSING_IN_SAMPLE:
+			return RetCode::E_INVALID_COMPOSITION_MISSING;
+		}
 	} catch (SysCompException &ex) {
 		ECHMET_TRACE(LEMNGTracing, MAKE_CZE_SYSTEM_ERR, ex.what());
 

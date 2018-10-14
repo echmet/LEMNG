@@ -37,7 +37,9 @@ ECHMET_ST_ENUM(RetCode) {
 						     see Hruška, V; Jaroš, M; Gaš, B, ELECTROPHORESIS 2006 Volume: 27  Issue: 3  Pages: 513-518  Special Issue: SI (DOI: 10.1002/elps.200500731) */
 	E_CONCENTRATION_TOO_LOW = 0x15,		/*!< Concentration of a constituent is too low to ensure that
 						     the numerical sovler will be able to solve the system */
-	E_PARTIAL_EIGENZONES = 0x16		/*!< Some eigenzones in the system could not have been fully resolved */
+	E_PARTIAL_EIGENZONES = 0x16,		/*!< Some eigenzones in the system could not have been fully resolved */
+	E_INVALID_COMPOSITION_PARAMS = 0x17,	/*!< Parameters of the same constituent in BGE and sample composition differ */
+	E_INVALID_COMPOSITION_MISSING = 0x18	/*!< BGE composition contains a constituent that is not present in sample */
 	ENUM_FORCE_INT32_SIZE(LEMNGRetCode)
 };
 
@@ -277,6 +279,8 @@ ECHMET_API const char * ECHMET_CC LEMNGerrorToString(const RetCode tRet) ECHMET_
  *
  * @retval RetCode::OK Success.
  * @retval RetCode::E_NO_MEMORY
+ * @retval RetCode::E_INVALID_COMPOSITION_PARAMS
+ * @retval RetCode::E_INVALID_COMPOSITION_MISSING
  * @retval Anything that can be returned by <tt>SysComp::makeComposition()</tt> mapped
  *         to LEMNG return codes.
  */
