@@ -56,7 +56,7 @@ EigenzoneDispersionVec calculateEigenzoneDispersion(const QLQRPack &QLQR, const 
 
 	for (size_t idx = 0; idx < NCO; idx++) {
 		/* Get diffusive parameter of the eigenzone */
-		const double a2t = [&NCO, &LDiffR](int idx) {
+		const double a2t = [&LDiffR](int idx) {
 			const double v = LDiffR(idx, idx).real();
 
 			if (v <= 0)

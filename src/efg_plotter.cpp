@@ -329,7 +329,7 @@ void makePlot(const std::vector<EigenzonePlotParams> &ezPlotParams, const double
 
 	const int points = plotToTime * POINTS_PER_SEC;
 
-	const auto worker = [bslSignal, effectiveLength, zoneLength, vEOF, &stlEfg](const EigenzonePlotParams &params, const double amplitude, const int from, const int to) noexcept {
+	const auto worker = [effectiveLength, zoneLength, vEOF, &stlEfg](const EigenzonePlotParams &params, const double amplitude, const int from, const int to) noexcept {
 		if (from > to) return;
 
 		for (int _idx = from; _idx < to; _idx++) {
