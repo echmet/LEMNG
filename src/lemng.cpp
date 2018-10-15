@@ -58,6 +58,66 @@ public:
 };
 
 static
+bool findMatchingLigandForm(const SysComp::InLigandForm &ligBGE, const SysComp::InComplexForm &cfSam)
+{
+	/* Go through all ligand groups and look for the same ligand
+	 * with the same charge.
+	 * It does not matter if the ligand groups in BGE and sample
+	 * constituent are not in the same order. One specific ligand form
+	 * must have the same complexation parameters regardless of the
+	 * groups it belongs to. Allowing this would go against the laws
+	 * of thermodynamics.
+	 */
+
+	for (size_t idx = 0; idx < cfSam.ligandGroups->size(); idx++) {
+		const auto &lgg = cfSam.ligandGroups->at(idx);
+
+		for (size_t jdx = 0; jdx < lgg.ligands->size(); jdx++) {
+			if (SysComp::compareInLigandForms(ligBGE, lgg.ligands->at(jdx)))
+				return true;
+		}
+	}
+
+	return false;
+}
+
+static
+void validateComplexForms(const SysComp::InCFVec *samVec, const SysComp::InCFVec *BGEVec)
+{
+	for (size_t idx = 0; idx < BGEVec->size(); idx++) {
+		const auto &cfBGE = BGEVec->at(idx);
+
+		/* Look for a complexForm with the same nucleus charge in
+		 * sample. Fail if there is not one. */
+		size_t jdx;
+		for (jdx = 0; jdx < samVec->size(); jdx++) {
+			const auto &cfSam = BGEVec->at(jdx);
+
+			if (cfBGE.nucleusCharge != cfSam.nucleusCharge)
+				continue;
+
+			 /* Go through all ligand groups in BGE constituent and
+			  * all ligands in them. */
+			for (size_t kdx = 0; kdx < cfBGE.ligandGroups->size(); kdx++) {
+				const auto &lggBGE = cfBGE.ligandGroups->at(kdx);
+
+				for (size_t ldx = 0; ldx < lggBGE.ligands->size(); ldx++) {
+					const auto &lig = lggBGE.ligands->at(ldx);
+
+					if (!findMatchingLigandForm(lig, cfSam))
+						throw InvalidComposition{InvalidComposition::Type::MISMATCHING_PARAMETERS};
+				}
+			}
+
+			break;
+		}
+
+		if (jdx == samVec->size())
+			throw InvalidComposition{InvalidComposition::Type::MISMATCHING_PARAMETERS};
+	}
+}
+
+static
 void validateCompositions(const SysComp::InConstituentVec *BGEVec, const SysComp::InConstituentVec *sampleVec)
 {
 	const size_t sizeSam = sampleVec->size();
@@ -70,8 +130,12 @@ void validateCompositions(const SysComp::InConstituentVec *BGEVec, const SysComp
 			const auto *cSam = &sampleVec->at(jdx);
 
 			if (*cSam->name == *cBGE->name) {
-				if (!SysComp::compareInConstituents(*cBGE, *cSam))
-					throw InvalidComposition{InvalidComposition::Type::MISMATCHING_PARAMETERS};
+				if (cBGE->ctype == SysComp::ConstituentType::NUCLEUS && cBGE->complexForms->size() > 0)
+					validateComplexForms(cSam->complexForms, cBGE->complexForms);
+				else {
+					if (!SysComp::compareInConstituents(*cBGE, *cSam, true))
+						throw InvalidComposition{InvalidComposition::Type::MISMATCHING_PARAMETERS};
+				}
 				break;
 			}
 		}
