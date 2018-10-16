@@ -58,6 +58,23 @@ public:
 };
 
 static
+void complexesOnlyWithAnalytes(const SysComp::InCFVec *cfVec, const IsAnalyteMap &iaMap)
+{
+	for (size_t idx = 0; idx < cfVec->size(); idx++) {
+		const auto &cf = cfVec->at(idx);
+
+		for (size_t jdx = 0; jdx < cf.ligandGroups->size(); jdx++) {
+			const auto &lgg = cf.ligandGroups->at(jdx);
+
+			for (size_t kdx = 0; kdx < lgg.ligands->size(); kdx++) {
+				if (!iaMap.at(lgg.ligands->at(kdx).ligandName->c_str()))
+					throw InvalidComposition{InvalidComposition::Type::MISMATCHING_PARAMETERS};
+			}
+		}
+	}
+}
+
+static
 bool findMatchingLigandForm(const SysComp::InLigandForm &ligBGE, const SysComp::InComplexForm &cfSam)
 {
 	/* Go through all ligand groups and look for the same ligand
@@ -118,22 +135,28 @@ void validateComplexForms(const SysComp::InCFVec *samVec, const SysComp::InCFVec
 }
 
 static
-void validateCompositions(const SysComp::InConstituentVec *BGEVec, const SysComp::InConstituentVec *sampleVec)
+void validateCompositions(const SysComp::InConstituentVec *BGEVec, const SysComp::InConstituentVec *sampleVec, const IsAnalyteMap &iaMap)
 {
 	const size_t sizeSam = sampleVec->size();
 
 	for (size_t idx = 0; idx < BGEVec->size(); idx++) {
-		const auto *cBGE = &BGEVec->at(idx);
+		const auto &cBGE = BGEVec->at(idx);
 
 		size_t jdx;
 		for (jdx = 0; jdx < sizeSam; jdx++) {
-			const auto *cSam = &sampleVec->at(jdx);
+			const auto &cSam = sampleVec->at(jdx);
 
-			if (*cSam->name == *cBGE->name) {
-				if (cBGE->ctype == SysComp::ConstituentType::NUCLEUS && cBGE->complexForms->size() > 0)
-					validateComplexForms(cSam->complexForms, cBGE->complexForms);
+			if (*cSam.name == *cBGE.name) {
+				if (cBGE.ctype == SysComp::ConstituentType::NUCLEUS && cBGE.complexForms->size() > 0)
+					validateComplexForms(cSam.complexForms, cBGE.complexForms);
 				else {
-					if (!SysComp::compareInConstituents(*cBGE, *cSam, true))
+					/* Sample component may have some complexations defined.
+					 * This is okay iff these complexations are with analytes only. */
+					if (cBGE.ctype == SysComp::ConstituentType::NUCLEUS) {
+						assert(cSam.complexForms != nullptr);
+						complexesOnlyWithAnalytes(cSam.complexForms, iaMap);
+					}
+					if (!SysComp::compareInConstituents(cBGE, cSam, false))
 						throw InvalidComposition{InvalidComposition::Type::MISMATCHING_PARAMETERS};
 				}
 				break;
@@ -394,9 +417,9 @@ CZESystemImpl * CZESystemImpl::make(const SysComp::InConstituentVec *inCtuentVec
 	}
 
 	try {
-		validateCompositions(inCtuentVecBGE, inCtuentVecSample);
-
 		IsAnalyteMap iaMap = makeIsAnalyteMap(inCtuentVecBGE, inCtuentVecSample);
+
+		validateCompositions(inCtuentVecBGE, inCtuentVecSample, iaMap);
 
 		return new CZESystemImpl(chemSystemBGE, calcPropsBGE, chemSystemFull, calcPropsFull, std::move(iaMap));
 	} catch (std::bad_alloc &up) {
