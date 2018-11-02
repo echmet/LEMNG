@@ -106,6 +106,21 @@ target_link_libraries(LEMNG
                       PRIVATE IonProps
                       PRIVATE ${LEMNG_THREADING_LIBS})
 
+# Make this optional
+if (1)
+    enable_testing()
+
+
+    add_executable(NaCl_empty_exe src/barsarkagang/nacl_empty.cpp)
+    target_link_libraries(NaCl_empty_exe PRIVATE LEMNG
+                                         PRIVATE ECHMETShared
+                                         PRIVATE SysComp)
+
+    add_test(NaCl_empty NaCl_empty_exe)
+endif()
+
+
+
 if (WIN32)
     install(TARGETS LEMNG
             RUNTIME DESTINATION lib
