@@ -72,8 +72,8 @@ static void print_all_constituents(const constituent_t *allCts, const size_t len
 		       ctuent->chargeLow, ctuent->chargeHigh);
 		printf("concentration in BGE = %f\n", ctuent->concentrationBGE);
 		printf("concentration in Sample = %f\n", ctuent->concentrationSample);
-		printf("pKa = ");
 		printf("viscosity coefficient = %f\n", ctuent->viscosityCoefficient);
+		printf("pKa = ");
 		print_double_array(ctuent->pKas, ctuent->chargeHigh - ctuent->chargeLow, "", "%lf");
 		printf("mobilities = ");
 		print_double_array(ctuent->mobilities, ctuent->chargeHigh - ctuent->chargeLow + 1, "", "%lg");
@@ -112,6 +112,8 @@ static void print_all_constituents(const constituent_t *allCts, const size_t len
 				}
 			}
 		}
+
+		printf("\n");
 	}
 }
 
