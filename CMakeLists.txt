@@ -110,13 +110,18 @@ target_link_libraries(LEMNG
 if (1)
     enable_testing()
 
-
     add_executable(NaCl_empty_exe src/barsarkagang/nacl_empty.cpp)
     target_link_libraries(NaCl_empty_exe PRIVATE LEMNG
                                          PRIVATE ECHMETShared
                                          PRIVATE SysComp)
 
+    add_executable(FormLi_NaK_exe src/barsarkagang/formli_nak.cpp)
+    target_link_libraries(FormLi_NaK_exe PRIVATE LEMNG
+                                         PRIVATE ECHMETShared
+                                         PRIVATE SysComp)
+
     add_test(NaCl_empty NaCl_empty_exe)
+    add_test(FormLi_NaK FormLi_NaK_exe)
 endif()
 
 
