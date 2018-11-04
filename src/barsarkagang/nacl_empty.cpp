@@ -36,17 +36,13 @@ int main(int, char **)
 	CMapping cSample = { { "Sodium", 8.0 },
 			     { "Chloride", 7.0 } };
 
-	auto r = calculate({ sodium, chloride }, { sodium, chloride },
+	auto r = calculate({ chloride, sodium }, { chloride, sodium },
 			   cBGE, cSample);
 
-	failIfFalse(r.isBGEValid);
+	checkBGE(r, 10.9914366, 0.138106636, 0.00998047516, 2.30249736);
 
-	checkSolProps(r.BGEProperties, 10.9914366, 0.138106636, 0.00998047516);
-	failIfMismatch(r.BGEProperties.bufferCapacity, 2.30249736);
-
-	checkEigenzone(r.eigenzones, 1.8079625298577537e-7, 1.111370655142905e-7, 10.891527376537205);
-
-
+	checkEigenzone(r.eigenzones, 1.8079625298577537e-7, 1.111370655142905e-7, 10.891527376537205, 0.10981822032);
+	checkEigenzone(r.eigenzones, -179.83608821, 8.0629168727, 11.073709041, 0.14119055221);
 
 	return EXIT_SUCCESS;
 }

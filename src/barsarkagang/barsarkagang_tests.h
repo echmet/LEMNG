@@ -64,14 +64,16 @@ void failIfError(const LEMNG::RetCode tRet)
 }
 
 static inline
-void checkEigenzone(const LEMNG::REigenzoneVec *ezs, const double u, const double uEMD, const double pH)
+void checkEigenzone(const LEMNG::REigenzoneVec *ezs, const double u, const double uEMD,
+		    const double pH, const double conductivity)
 {
 	for (size_t idx = 0; idx < ezs->size(); idx++) {
 		auto &ez = ezs->at(idx);
 
-		if (numberMatches(ez.mobility, u, 0.1)) {
+		if (numberMatches(ez.mobility, u)) {
 			failIfMismatch(ez.uEMD, uEMD);
 			failIfMismatch(ez.solutionProperties.pH, pH);
+			failIfMismatch(ez.solutionProperties.conductivity, conductivity);
 
 			return;
 		}
@@ -88,6 +90,15 @@ void checkSolProps(const LEMNG::RSolutionProperties &props, const double pH, con
 	failIfMismatch(props.pH, pH);
 	failIfMismatch(props.conductivity, cond);
 	failIfMismatch(props.ionicStrength, ionicStrength);
+}
+
+static inline
+void checkBGE(const LEMNG::Results &r, const double pH, const double cond, const double ionicStrength, const double bufCap)
+{
+	failIfFalse(r.isBGEValid);
+
+	checkSolProps(r.BGEProperties, pH, cond, ionicStrength);
+	failIfMismatch(r.BGEProperties.bufferCapacity, bufCap);
 }
 
 static inline
