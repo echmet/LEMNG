@@ -19,6 +19,9 @@ static const double TOLERANCE{1.0e-8};
 static inline
 bool numberMatches(const double got, const double expected, const double tol = TOLERANCE)
 {
+	if (expected == 0)
+		return got == 0;
+
 	const double TMAX = 1.0 + 0.5 * tol;
 	const double TMIN = 1.0 - 0.5 * tol;
 	const double norm_got = got / expected;
