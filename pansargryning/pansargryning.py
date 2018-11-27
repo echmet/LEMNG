@@ -384,10 +384,14 @@ def get_expected_results(genpath, infile, ecl_path, lemng_path, is_corr):
                                                                     lemng_path_abs)
 
     params = [genpath_abs, infile_abs, resfile]
-    if is_corr > 0:
-        params.extend(['1', '1', '1'])
-    else:
-        params.extend(['0', '0', '0'])
+
+    def extend_switch(p, b):
+        p.extend([str(int(b))])
+        return p
+
+    params = extend_switch(params, is_corr & 1)
+    params = extend_switch(params, is_corr & 2)
+    params = extend_switch(params, is_corr & 4)
 
     try:
         ret = subprocess.run(params)
@@ -422,19 +426,24 @@ def make_argparser():
     parser.add_argument('--LEMNG_path', help='Path to LEMNG library binary', type=str)
     parser.add_argument('--debhue', help='Enable Debye-Hückel correction', action='store_true')
     parser.add_argument('--onsfuo', help='Enable Onsager-Fuoss correction', action='store_true')
+    parser.add_argument('--viscos', help='Enable viscosity correction', action='store_true')
 
     parser.set_defaults(debhue=False)
     parser.set_defaults(onsfuo=False)
+    parser.set_defaults(viscos=False)
 
     return parser
 
 
-def main(outfile, infile, genpath, ecl_path, lemng_path, debhue, onsfuo):
+def main(outfile, infile, genpath, ecl_path, lemng_path, debhue, onsfuo,
+         viscos):
     is_corr = 0
     if debhue:
         is_corr += 1
     if onsfuo:
         is_corr += 2
+    if viscos:
+        is_corr += 4
 
     expected = get_expected_results(genpath, infile, ecl_path, lemng_path,
                                     is_corr)
@@ -504,4 +513,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     main(args.output, args.input, args.generator_path, args.ECL_path,
-         args.LEMNG_path, args.debhue, args.onsfuo)
+         args.LEMNG_path, args.debhue, args.onsfuo, args.viscos)
