@@ -1,12 +1,12 @@
 #! /usr/bin/env python3
 
+import argparse
 import enum
 import json
 import os
 import subprocess
 import sys
 
-import binascii
 
 def _list_to_str(array, formatter, last_formatter=None):
     s = ''
@@ -413,8 +413,28 @@ def get_expected_results(genpath, infile, ecl_path, lemng_path, is_corr):
     return data
 
 
-def main(infile, genpath, ecl_path, lemng_path, is_corr):
-    is_corr = int(is_corr)
+def make_argparser():
+    parser = argparse.ArgumentParser(description='LEMNG Unit tests generator')
+    parser.add_argument('--input', help='Input JSON file', type=str)
+    parser.add_argument('--output', help='Output C++ file', type=str)
+    parser.add_argument('--generator_path', help='Path to reference results generator', type=str)
+    parser.add_argument('--ECL_path', help='Path to ECHMETCoreLibs libraries binaries', type=str)
+    parser.add_argument('--LEMNG_path', help='Path to LEMNG library binary', type=str)
+    parser.add_argument('--debhue', help='Enable Debye-Hückel correction', action='store_true')
+    parser.add_argument('--onsfuo', help='Enable Onsager-Fuoss correction', action='store_true')
+
+    parser.set_defaults(debhue=False)
+    parser.set_defaults(onsfuo=False)
+
+    return parser
+
+
+def main(outfile, infile, genpath, ecl_path, lemng_path, debhue, onsfuo):
+    is_corr = 0
+    if debhue:
+        is_corr += 1
+    if onsfuo:
+        is_corr += 2
 
     expected = get_expected_results(genpath, infile, ecl_path, lemng_path,
                                     is_corr)
@@ -451,6 +471,37 @@ def main(infile, genpath, ecl_path, lemng_path, is_corr):
 
     print(prog)
 
+    try:
+        ofh = open(outfile, 'w')
+        ofh.write(str(prog))
+    except IOError as ex:
+        print('Cannot write output: {}'. str(ex))
+
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
+    parser = make_argparser()
+    args = parser.parse_args()
+
+    args_ok = True
+
+    def print_error(s):
+        global args_ok
+        print('Invalid parameters: {}'.format(s))
+        args_ok = False
+
+    if args.input is None:
+        print_error('No input file specified')
+    if args.output is None:
+        print_error('No output file specified')
+    if args.generator_path is None:
+        print_error('No path to generator executable')
+    if args.ECL_path is None:
+        print_error('No path to ECHMETCoreLibs binaries')
+    if args.LEMNG_path is None:
+        print_error('No path to LEMNG binaries')
+
+    if not args_ok:
+        sys.exit(1)
+
+    main(args.output, args.input, args.generator_path, args.ECL_path,
+         args.LEMNG_path, args.debhue, args.onsfuo)
