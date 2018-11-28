@@ -11,7 +11,7 @@ import sys
 def _list_to_str(array, formatter, last_formatter=None):
     s = ''
 
-    if len(array) > 0:
+    if array:
         for idx in range(0, len(array) - 1):
             s += formatter(array[idx])
         if last_formatter is None:
@@ -23,7 +23,7 @@ def _list_to_str(array, formatter, last_formatter=None):
 
 
 def _list_walk(l, handler, handler_last=None):
-    if len(l) > 0:
+    if l:
         for idx in range(0, len(l) - 1):
             handler(l[idx])
         if handler_last is None:
@@ -31,6 +31,14 @@ def _list_walk(l, handler, handler_last=None):
         else:
             handler_last(l[-1])
 
+def _list_to_initer_list(l):
+    def fmtr(arg):
+        return '{}, '.format(arg)
+
+    def last_fmtr(arg):
+        return '{}'.format(arg)
+
+    return '{ ' + _list_to_str(l, fmtr, last_fmtr) + ' }'
 
 class CType(enum.Enum):
     NUCLEUS = 1,
@@ -112,30 +120,45 @@ class CFunction:
 
 
 class CBlock:
-    def __init__(self, lines):
-        self._lines = lines
+    _SPACER = '   '
 
-    def add_line(self, line):
-        self._lines.append(line)
+    @staticmethod
+    def make(items):
+        block = CBlock()
+        for i in items:
+            block.add_line(i)
+        return block
+
+    def __init__(self):
+        self._elems = []
+
+# TODO: Rename this to something sane!!!
+    def add_line(self, elem):
+        self._elems.append(elem)
 
     @staticmethod
     def _mk_tabs(indent):
-        tabs = ''
+        spcs = ''
         for _ in range(0, indent):
-            tabs += '\t'
+            spcs += CBlock._SPACER
 
-        return tabs
+        return spcs
 
     def __str__(self, indent=0):
-        tabs = self._mk_tabs(indent)
+        spcs = self._mk_tabs(indent)
+
+        def strify(obj):
+            if isinstance(obj, CBlock):
+                return obj.__str__(indent+1)
+            return '{}{}'.format(spcs, obj)
 
         def fmtr(item):
-            return '{}{}\n'.format(tabs, item)
+            return strify(item) + '\n'
 
         def fmtr_last(item):
-            return '{}{}'.format(tabs, item)
+            return strify(item)
 
-        return _list_to_str(self._lines, fmtr, fmtr_last)
+        return _list_to_str(self._elems, fmtr, fmtr_last)
 
 
 class StructInitializer(CBlock):
@@ -190,27 +213,65 @@ def gen_fixedString(s):
 
 
 def gen_realvec(items):
-    s = 'mkRealVec({ { '
-
-    def fmtr(arg):
-        return '{}, '.format(arg)
-
-    def last_fmtr(arg):
-        return '{}'.format(arg)
-
-    s += _list_to_str(items, fmtr, last_fmtr)
-
-    s += ' } })'
+    s = 'mkRealVec({ '
+    s += _list_to_initer_list(items)
+    s += ' })'
 
     return s
 
 
-def gen_complexes(cpxs):
+def gen_complexes(cpxs, name):
     if cpxs is None:
         return 'nullptr'
 
-    if len(cpxs) == 0:
+    if not cpxs:
         return 'noComplexes()'
+
+    genfunc = CFunction('InCFVec', 'gen_complexforms_' + cname_from_name(name), [])
+    outerblock = CBlock()
+    outerblock.add_line('{')
+
+    for incf in cpxs:
+        ocfblock = CBlock.make(['/* InCFVec */', '{'])
+
+        cfblock = CBlock()
+        cfblock.add_line('{},'.format(incf['nucleusCharge']))
+
+        cfblock.add_line('/* InLGVec */')
+        for inlg in incf['ligandGroups']:
+            cfblock.add_line('{')
+
+            lgblock = CBlock()
+
+            lgblock.add_line('/* InLigandForm */')
+            for inlf in inlg['ligands']:
+                lgblock.add_line('{')
+
+                lfblock = CBlock()
+                lfblock.add_line('\"{}\",'.format(inlf['name']))
+                lfblock.add_line('{},'.format(inlf['charge']))
+                lfblock.add_line('{},'.format(inlf['maxCount']))
+                lfblock.add_line('{},'.format(_list_to_initer_list(inlf['pBs'])))
+                lfblock.add_line('{}'.format(_list_to_initer_list(inlf['mobilities'])))
+
+                lgblock.add_line(lfblock)
+                lgblock.add_line('}')
+
+            cfblock.add_line(lgblock)
+            cfblock.add_line('},')
+
+        ocfblock.add_line(cfblock)
+        ocfblock.add_line('},')
+
+        outerblock.add_line(ocfblock)
+
+    outerblock.add_line('}')
+
+    genfunc.add_block(outerblock)
+
+    print(genfunc)
+
+    return 'XXX'
 
 
 def gen_constituent(name, ctype, chargeLow, chargeHigh, pKas, mobilities, viscosity,
@@ -223,14 +284,14 @@ def gen_constituent(name, ctype, chargeLow, chargeHigh, pKas, mobilities, viscos
     ctuent.add_item(chargeHigh)
     ctuent.add_item(gen_realvec(pKas))
     ctuent.add_item(gen_realvec(mobilities))
-    ctuent.add_item(gen_complexes(complexations))
+    ctuent.add_item(complexations)
     ctuent.add_item(viscosity)
 
     return ctuent
 
 
 def gen_complexMap(name, m):
-    block = CBlock(['CMapping {} = {{'.format(name)])
+    block = CBlock.make(['CMapping {} = {{'.format(name)])
 
     e = enumerate(m)
 
@@ -247,7 +308,7 @@ def gen_complexMap(name, m):
 
 
 def gen_calculate(BGElist, sampleList):
-    block = CBlock(['const auto r = calculate('])
+    block = CBlock.make(['const auto r = calculate('])
 
     def mk_vec(l):
         block.add_line('\t{')
@@ -271,18 +332,13 @@ def gen_calculate(BGElist, sampleList):
 
 
 def gen_check_BGE(expected):
-    return CBlock(['checkBGE(r, {}, {}, {}, {});'.format(
+    return CBlock.make(['checkBGE(r, {}, {}, {}, {});'.format(
         expected[0], expected[1], expected[2], expected[3])])
 
 
 def gen_check_eigenzone(expected):
-    return CBlock(['checkEigenzone(r.eigenzone, {}, {}, {}, {});'.format(
+    return CBlock.make(['checkEigenzone(r.eigenzone, {}, {}, {}, {});'.format(
         expected[0], expected[1], expected[2], expected[3])])
-
-
-def process_complexes(root):
-    return []
-
 
 def process_input(root):
     ctuents = root['constituents']
@@ -296,7 +352,7 @@ def process_input(root):
     for c in ctuents:
         def mk_cpx():
             if 'complexForms' in c:
-                return process_complexes(c['complexForms'])
+                return gen_complexes(c['complexForms'], c['name'])
             return None
 
         def mk_ctype():
@@ -466,10 +522,10 @@ def main(outfile, infile, genpath, ecl_path, lemng_path, debhue, onsfuo,
 
     cmain.add_block(gen_check_BGE(expected.pop(0)))
 
-    while len(expected) > 0:
+    while expected:
         cmain.add_block(gen_check_eigenzone(expected.pop(0)))
 
-    cmain.add_block(CBlock(['return EXIT_SUCCESS;']))
+    cmain.add_block(CBlock.make(['return EXIT_SUCCESS;']))
 
     prog = CProgram()
     prog.add_include('<cstdlib>')
