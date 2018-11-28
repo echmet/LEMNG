@@ -3,7 +3,9 @@
 
 #include <cstdlib>
 #include <initializer_list>
+#include <iostream>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include <lemng.h>
@@ -13,6 +15,17 @@ namespace Barsarkagang {
 
 using CMapping = std::vector<std::pair<std::string, double>>;
 using InConstituentList = std::initializer_list<SysComp::InConstituent>;
+using ComplexDef = std::vector<std::tuple<int32_t,
+					  std::vector<std::vector<std::tuple<std::string,
+									     int32_t,
+									     uint32_t,
+									     std::vector<double>,
+									     std::vector<double>
+									    >
+								 >
+					  >
+			      >>;
+
 
 static const double TOLERANCE{1.0e-8};
 
@@ -116,7 +129,8 @@ SysComp::InConstituentVec * mkInConstVec(std::initializer_list<SysComp::InConsti
 }
 
 static inline
-LEMNG::Results calculate(const InConstituentList &bge, const InConstituentList &sample, const CMapping &bgeMaps, const CMapping &sampleMaps)
+LEMNG::Results calculate(const InConstituentList &bge, const InConstituentList &sample, const CMapping &bgeMaps, const CMapping &sampleMaps,
+			 const bool debhue, const bool onsfuo, const bool viscos)
 {
 	LEMNG::CZESystem *czeSys;
 
@@ -135,6 +149,12 @@ LEMNG::Results calculate(const InConstituentList &bge, const InConstituentList &
 		acSampleMap->item(item.first.c_str()) = item.second;
 
 	auto corrections = defaultNonidealityCorrections();
+	if (debhue)
+		nonidealityCorrectionSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL);
+	if (onsfuo)
+		nonidealityCorrectionSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS);
+	if (viscos)
+		nonidealityCorrectionSet(corrections, NonidealityCorrectionsItems::CORR_VISCOSITY);
 
 	LEMNG::Results results;
 	failIfError(czeSys->evaluate(acBGEMap, acSampleMap, corrections, results));
@@ -151,6 +171,49 @@ RealVec * mkRealVec(std::initializer_list<double> l)
 		v->push_back(i);
 
 	return v;
+}
+
+static inline
+RealVec * mkRealVec(const std::vector<double> &dv)
+{
+	auto v = createRealVec(0);
+
+	for (auto &&i : dv)
+		v->push_back(i);
+
+	return v;
+}
+
+static inline
+SysComp::InCFVec * buildComplexes(const ComplexDef &cDef)
+{
+	auto inCfVec = SysComp::createInCFVec(cDef.size());
+
+	for (const auto &cf : cDef) {
+		auto inLgVec = SysComp::createInLGVec(std::get<1>(cf).size());
+
+		for (const auto &lg : std::get<1>(cf)) {
+			auto inLfVec = SysComp::createInLFVec(lg.size());
+
+			for (const auto &lf : lg) {
+				SysComp::InLigandForm inLf;
+
+				inLf.ligandName = createFixedString(std::get<0>(lf).c_str());
+				inLf.charge = std::get<1>(lf);
+				inLf.maxCount = std::get<2>(lf);
+				inLf.pBs = mkRealVec(std::get<3>(lf));
+				inLf.mobilities = mkRealVec(std::get<4>(lf));
+
+				inLfVec->push_back(inLf);
+			}
+
+			inLgVec->push_back(SysComp::InLigandGroup{inLfVec});
+		}
+
+		inCfVec->push_back(SysComp::InComplexForm{std::get<0>(cf), inLgVec});
+	}
+
+	return inCfVec;
 }
 
 static inline

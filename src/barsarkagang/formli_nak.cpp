@@ -64,7 +64,7 @@ int main(int, char **)
 
 	auto r = calculate({ formic_acid, lithium },
 			   { formic_acid, lithium, potassium, sodium },
-			   cBGE, cSample);
+			   cBGE, cSample, false, false, false);
 
 	checkBGE(r, 3.7620167177, 0.14694657546, 0.015172974976, 17.665381469);
 

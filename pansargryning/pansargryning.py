@@ -8,6 +8,8 @@ import subprocess
 import sys
 
 
+INDENT_SPACER = '\t'
+
 def _list_to_str(array, formatter, last_formatter=None):
     s = ''
 
@@ -31,6 +33,7 @@ def _list_walk(l, handler, handler_last=None):
         else:
             handler_last(l[-1])
 
+
 def _list_to_initer_list(l):
     def fmtr(arg):
         return '{}, '.format(arg)
@@ -39,6 +42,7 @@ def _list_to_initer_list(l):
         return '{}'.format(arg)
 
     return '{ ' + _list_to_str(l, fmtr, last_fmtr) + ' }'
+
 
 class CType(enum.Enum):
     NUCLEUS = 1,
@@ -108,8 +112,9 @@ class CFunction:
 
         s = '{} {}({})\n{{\n'.format(self._rtype, self._name, mk_args())
 
-        for block in self._code_blocks:
-            s += '{}\n\n'.format(block)
+        last = len(self._code_blocks) - 1
+        for i, block in enumerate(self._code_blocks):
+            s += '{}\n{}'.format(block, '' if i == last else '\n')
 
         s += '}'
 
@@ -120,32 +125,29 @@ class CFunction:
 
 
 class CBlock:
-    _SPACER = '   '
-
     @staticmethod
     def make(items):
         block = CBlock()
         for i in items:
-            block.add_line(i)
+            block.add_item(i)
         return block
 
     def __init__(self):
         self._elems = []
 
-# TODO: Rename this to something sane!!!
-    def add_line(self, elem):
+    def add_item(self, elem):
         self._elems.append(elem)
 
     @staticmethod
-    def _mk_tabs(indent):
+    def _mk_spcs(indent):
         spcs = ''
         for _ in range(0, indent):
-            spcs += CBlock._SPACER
+            spcs += INDENT_SPACER
 
         return spcs
 
     def __str__(self, indent=0):
-        spcs = self._mk_tabs(indent)
+        spcs = self._mk_spcs(indent)
 
         def strify(obj):
             if isinstance(obj, CBlock):
@@ -168,19 +170,19 @@ class StructInitializer(CBlock):
         self._items = []
 
     def __str__(self, indent=0):
-        tabs = self._mk_tabs(indent)
+        spcs = self._mk_spcs(indent)
 
-        s = '{}{} {}{{\n'.format(tabs, self._stype, self._name)
+        s = '{}{} {}{{\n'.format(spcs, self._stype, self._name)
 
         def fmtr(code):
-            return '\t{}{},\n'.format(tabs, code)
+            return '{}{}{},\n'.format(INDENT_SPACER, spcs, code)
 
         def last_fmtr(code):
-            return '\t{}{}\n'.format(tabs, code)
+            return '{}{}{}\n'.format(INDENT_SPACER, spcs, code)
 
         s += _list_to_str(self._items, fmtr, last_fmtr)
 
-        s += '{}}};'.format(tabs)
+        s += '{}}};'.format(spcs)
 
         return s
 
@@ -189,7 +191,7 @@ class StructInitializer(CBlock):
 
 
 def cname_from_name(name):
-    return name.lower().replace(' ', '_')
+    return name.lower().replace(' ', '_').replace('-', '__')
 
 
 def gen_header():
@@ -213,65 +215,74 @@ def gen_fixedString(s):
 
 
 def gen_realvec(items):
-    s = 'mkRealVec({ '
+    s = 'mkRealVec( '
     s += _list_to_initer_list(items)
-    s += ' })'
+    s += ' )'
 
     return s
 
 
 def gen_complexes(cpxs, name):
-    if cpxs is None:
-        return 'nullptr'
-
     if not cpxs:
-        return 'noComplexes()'
+        return None
 
-    genfunc = CFunction('InCFVec', 'gen_complexforms_' + cname_from_name(name), [])
-    outerblock = CBlock()
-    outerblock.add_line('{')
+    genfunc_name = 'gen_complexforms_' + cname_from_name(name)
+    genfunc = CFunction('SysComp::InCFVec *', genfunc_name, [])
+    outerblock = CBlock().make(['const ComplexDef cDef = {'])
 
-    for incf in cpxs:
+    incf_last = len(cpxs) - 1
+    for i, incf in enumerate(cpxs):
         ocfblock = CBlock.make(['/* InCFVec */', '{'])
 
         cfblock = CBlock()
-        cfblock.add_line('{},'.format(incf['nucleusCharge']))
+        cfblock.add_item('{},'.format(incf['nucleusCharge']))
 
-        cfblock.add_line('/* InLGVec */')
-        for inlg in incf['ligandGroups']:
-            cfblock.add_line('{')
+        cfblock.add_item('/* InLGVec */')
+        cfblock.add_item('{')
 
+        inlg_last = len(incf['ligandGroups']) - 1
+        for j, inlg in enumerate(incf['ligandGroups']):
             lgblock = CBlock()
 
-            lgblock.add_line('/* InLigandForm */')
-            for inlf in inlg['ligands']:
-                lgblock.add_line('{')
+            lgblock.add_item('/* InLigandForm */')
+            lgblock.add_item('{')
+
+            inlf_last = len(inlg) - 1
+            for k, inlf in enumerate(inlg['ligands']):
 
                 lfblock = CBlock()
-                lfblock.add_line('\"{}\",'.format(inlf['name']))
-                lfblock.add_line('{},'.format(inlf['charge']))
-                lfblock.add_line('{},'.format(inlf['maxCount']))
-                lfblock.add_line('{},'.format(_list_to_initer_list(inlf['pBs'])))
-                lfblock.add_line('{}'.format(_list_to_initer_list(inlf['mobilities'])))
 
-                lgblock.add_line(lfblock)
-                lgblock.add_line('}')
+                lfblock.add_item('{')
+                lfblock.add_item('\"{}\",'.format(inlf['name']))
+                lfblock.add_item('{},'.format(inlf['charge']))
+                lfblock.add_item('{},'.format(inlf['maxCount']))
+                lfblock.add_item('{},'.format(_list_to_initer_list(inlf['pBs'])))
+                lfblock.add_item('{}'.format(_list_to_initer_list(inlf['mobilities'])))
+                lfblock.add_item('}')
 
-            cfblock.add_line(lgblock)
-            cfblock.add_line('},')
+                lgblock.add_item(lfblock)
+                if k != inlf_last:
+                    lgblock.add_item('},')
 
-        ocfblock.add_line(cfblock)
-        ocfblock.add_line('},')
+            lgblock.add_item('}')
+            cfblock.add_item(lgblock)
 
-        outerblock.add_line(ocfblock)
+            if j != inlg_last:
+                cfblock.add_item('},')
 
-    outerblock.add_line('}')
+        cfblock.add_item('}')
+
+        ocfblock.add_item(cfblock)
+        ocfblock.add_item('}}{}'.format('' if i == incf_last else ','))
+
+        outerblock.add_item(ocfblock)
+
+    outerblock.add_item('};')
 
     genfunc.add_block(outerblock)
+    genfunc.add_block(CBlock.make(['return buildComplexes(cDef);']))
 
-    print(genfunc)
-
-    return 'XXX'
+    return (genfunc_name, genfunc)
 
 
 def gen_constituent(name, ctype, chargeLow, chargeHigh, pKas, mobilities, viscosity,
@@ -290,7 +301,7 @@ def gen_constituent(name, ctype, chargeLow, chargeHigh, pKas, mobilities, viscos
     return ctuent
 
 
-def gen_complexMap(name, m):
+def gen_concMap(name, m):
     block = CBlock.make(['CMapping {} = {{'.format(name)])
 
     e = enumerate(m)
@@ -298,35 +309,41 @@ def gen_complexMap(name, m):
     for idx, k in e:
         v = m[k]
         if idx == len(m) - 1:
-            block.add_line('\t{{ \"{}\", {} }}'.format(k, v))
+            block.add_item('{}{{ \"{}\", {} }}'.format(INDENT_SPACER, k, v))
         else:
-            block.add_line('\t{{ \"{}\", {} }},'.format(k, v))
+            block.add_item('{}{{ \"{}\", {} }},'.format(INDENT_SPACER, k, v))
 
-    block.add_line('};')
+    block.add_item('};')
 
     return block
 
 
-def gen_calculate(BGElist, sampleList):
+def gen_calculate(BGElist, sampleList, is_corr):
     block = CBlock.make(['const auto r = calculate('])
 
     def mk_vec(l):
-        block.add_line('\t{')
+        block.add_item(INDENT_SPACER + '{')
 
         def hndl(item):
-            block.add_line('\t\t{},'.format(cname_from_name(item)))
+            block.add_item(INDENT_SPACER + INDENT_SPACER + '{},'.format(cname_from_name(item)))
 
         def hndl_last(item):
-            block.add_line('\t\t{}'.format(cname_from_name(item)))
+            block.add_item(INDENT_SPACER + INDENT_SPACER + '{}'.format(cname_from_name(item)))
 
         _list_walk(l, hndl, hndl_last)
 
-        block.add_line('\t},')
+        block.add_item(INDENT_SPACER + '},')
 
     mk_vec(BGElist)
     mk_vec(sampleList)
 
-    block.add_line('\tcBGE, cSample);')
+    block.add_item(INDENT_SPACER + 'cBGE, cSample,')
+
+    def corr_set(n):
+        return 'true' if is_corr & n else 'false'
+
+    block.add_item(INDENT_SPACER + '{}, {}, {});'.format(corr_set(1),
+                   corr_set(2), corr_set(4)))
 
     return block
 
@@ -337,8 +354,9 @@ def gen_check_BGE(expected):
 
 
 def gen_check_eigenzone(expected):
-    return CBlock.make(['checkEigenzone(r.eigenzone, {}, {}, {}, {});'.format(
+    return CBlock.make(['checkEigenzone(r.eigenzones, {}, {}, {}, {});'.format(
         expected[0], expected[1], expected[2], expected[3])])
+
 
 def process_input(root):
     ctuents = root['constituents']
@@ -348,12 +366,21 @@ def process_input(root):
     concsSample = dict()
     BGElist = []
     sampleList = []
+    complex_generators = dict()
 
     for c in ctuents:
+        name = c['name']
+
+        if 'complexForms' in c:
+            complex_generators[name] = gen_complexes(c['complexForms'], name)
+
         def mk_cpx():
-            if 'complexForms' in c:
-                return gen_complexes(c['complexForms'], c['name'])
-            return None
+            if name in complex_generators:
+                cg = complex_generators[name]
+                if cg is None:
+                    return 'noComplexes()'
+                return complex_generators[name][0] + '()'
+            return 'nullptr'
 
         def mk_ctype():
             if c['type'] == 'N':
@@ -378,7 +405,8 @@ def process_input(root):
         if c['role'] == 'B':
             BGElist.append(c['name'])
 
-    return (c_ctuents, concsBGE, concsSample, BGElist, sampleList)
+    return (c_ctuents, concsBGE, concsSample, BGElist, sampleList,
+            complex_generators)
 
 
 def results_file(infile):
@@ -507,7 +535,8 @@ def main(outfile, infile, genpath, ecl_path, lemng_path, debhue, onsfuo,
     fh = open(infile, 'r')
     sysdef = json.load(fh)
 
-    c_list, concsBGE, concsSample, BGElist, sampleList = process_input(sysdef)
+    (c_list, concsBGE, concsSample, BGElist,
+     sampleList, complex_generators) = process_input(sysdef)
 
     cmain = CFunction('int', 'main', [CFunctionArg('int', ''),
                                       CFunctionArg('char **', '')])
@@ -515,10 +544,10 @@ def main(outfile, infile, genpath, ecl_path, lemng_path, debhue, onsfuo,
     for c in c_list:
         cmain.add_block(c)
 
-    cmain.add_block(gen_complexMap('cBGE', concsBGE))
-    cmain.add_block(gen_complexMap('cSample', concsSample))
+    cmain.add_block(gen_concMap('cBGE', concsBGE))
+    cmain.add_block(gen_concMap('cSample', concsSample))
 
-    cmain.add_block(gen_calculate(BGElist, sampleList))
+    cmain.add_block(gen_calculate(BGElist, sampleList, is_corr))
 
     cmain.add_block(gen_check_BGE(expected.pop(0)))
 
@@ -532,6 +561,11 @@ def main(outfile, infile, genpath, ecl_path, lemng_path, debhue, onsfuo,
     prog.add_include('\"barsarkagang_tests.h\"')
     prog.add_prelude('using namespace ECHMET;')
     prog.add_prelude('using namespace ECHMET::Barsarkagang;')
+
+    for _, gf in complex_generators.items():
+        if gf is not None:
+            prog.add_function(gf[1])
+
     prog.add_function(cmain)
 
     print(prog)
