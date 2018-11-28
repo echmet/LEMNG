@@ -10,6 +10,7 @@ import sys
 
 INDENT_SPACER = '\t'
 
+
 def _list_to_str(array, formatter, last_formatter=None):
     s = ''
 
@@ -285,8 +286,8 @@ def gen_complexes(cpxs, name):
     return (genfunc_name, genfunc)
 
 
-def gen_constituent(name, ctype, chargeLow, chargeHigh, pKas, mobilities, viscosity,
-                    complexations):
+def gen_constituent(name, ctype, chargeLow, chargeHigh, pKas, mobilities,
+                    viscosity, complexations):
     ctuent = StructInitializer('SysComp::InConstituent', cname_from_name(name))
 
     ctuent.add_item(gen_ctype(ctype))
@@ -399,11 +400,11 @@ def process_input(root):
                               mk_cpx())
         c_ctuents.append(cct)
 
-        concsBGE[c['name']] = c['concentrationBGE']
         concsSample[c['name']] = c['concentrationSample']
         sampleList.append(c['name'])
         if c['role'] == 'B':
             BGElist.append(c['name'])
+            concsBGE[c['name']] = c['concentrationBGE']
 
     return (c_ctuents, concsBGE, concsSample, BGElist, sampleList,
             complex_generators)
@@ -519,6 +520,33 @@ def make_argparser():
     return parser
 
 
+def print_cmake_line(outfile):
+    spcs = '    '
+
+    fidx = outfile.rfind('/') + 1
+    tidx = outfile.rfind('.')
+
+    if tidx <= fidx:
+        tidx = len(outfile)
+
+    tag = outfile[fidx:tidx]
+    basename = outfile[fidx:]
+
+    print('*** CMake recipe ***\n')
+
+    print(spcs + 'add_executable({}_exe src/tests/{})'.format(tag, basename))
+
+    indent = ''
+    for _ in range(0, len('target_link_libraries({}_exe '.format(tag))):
+        indent += ' '
+
+    print(spcs + 'target_link_libraries({}_exe PRIVATE LEMNG'.format(tag))
+    print(spcs + indent + 'PRIVATE ECHMETShared')
+    print(spcs + indent + 'PRIVATE SysComp)')
+
+    print(spcs + 'add_test({0} {0}_exe)'.format(tag))
+
+
 def main(outfile, infile, genpath, ecl_path, lemng_path, debhue, onsfuo,
          viscos):
     is_corr = 0
@@ -568,13 +596,14 @@ def main(outfile, infile, genpath, ecl_path, lemng_path, debhue, onsfuo,
 
     prog.add_function(cmain)
 
-    print(prog)
-
     try:
         ofh = open(outfile, 'w')
         ofh.write(str(prog))
     except IOError as ex:
-        print('Cannot write output: {}'. str(ex))
+        print('Cannot write output: {}'.format(ex))
+        return
+
+    print_cmake_line(outfile)
 
 
 if __name__ == "__main__":
