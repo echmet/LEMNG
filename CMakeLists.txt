@@ -194,6 +194,17 @@ if (BUILD_TESTS)
                                                    PRIVATE SysComp)
     add_test(trtrbcd_snap_sibu_is trtrbcd_snap_sibu_is_exe)
 
+    add_executable(phosphorical_nois_exe src/tests/phosphorical_nois.cpp)
+    target_link_libraries(phosphorical_nois_exe PRIVATE LEMNG
+                                                PRIVATE ECHMETShared
+                                                PRIVATE SysComp)
+    add_test(phosphorical_nois phosphorical_nois_exe)
+
+    add_executable(phosphorical_is_exe src/tests/phosphorical_is.cpp)
+    target_link_libraries(phosphorical_is_exe PRIVATE LEMNG
+                                              PRIVATE ECHMETShared
+                                              PRIVATE SysComp)
+    add_test(phosphorical_is phosphorical_is_exe)
 
 endif()
 
