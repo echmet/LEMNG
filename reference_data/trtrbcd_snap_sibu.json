@@ -1,0 +1,156 @@
+{
+	"constituents": [
+		{
+			"type": "N",
+			"role": "B",
+			"name": "Tricine-ANI",
+			"chargeLow": -1,
+			"chargeHigh": 0,
+			"concentrationBGE": 20.0,
+			"concentrationSample": 15.0,
+			"viscosityCoefficient": 0.0,
+			"pKas": [ 8.15 ],
+			"mobilities": [ 30.0, 0.0 ],
+			"complexForms": [
+				{
+					"nucleusCharge": -1,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [
+					]
+				}
+			]
+		},
+		{
+			"type": "N",
+			"role": "B",
+			"name": "TRIS",
+			"chargeLow": 0,
+			"chargeHigh": 1,
+			"concentrationBGE": 20.0,
+			"concentrationSample": 15.0,
+			"viscosityCoefficient": 0.0,
+			"pKas": [ 8.076 ],
+			"mobilities": [ 0.0, 29.5 ],
+			"complexForms": [
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": 1,
+					"ligandGroups": [ 
+					]
+				}
+			]
+		},
+		{
+			"type": "L",
+			"role": "B",
+			"name": "b-CD",
+			"chargeLow": 0,
+			"chargeHigh": 0,
+			"concentrationBGE": 15.0,
+			"concentrationSample": 13.0,
+			"viscosityCoefficient": 0.0,
+			"pKas": [ ],
+			"mobilities": [ 0.0 ]
+		},
+		{
+			"type": "N",
+			"role": "A",
+			"name": "S-NAP",
+			"chargeLow": -1,
+			"chargeHigh": 0,
+			"concentrationBGE": 1e-13,
+			"concentrationSample": 0.12,
+			"viscosityCoefficient": 0.0,
+			"pKas": [ 4.33 ],
+			"mobilities": [ 21.0, 0.0 ],
+			"complexForms": [
+				{
+					"nucleusCharge": -1,
+					"ligandGroups": [
+						{
+							"ligands": [
+								{
+									"name": "b-CD",
+									"charge": 0,
+									"maxCount": 1,
+									"pBs": [ -2.704150516839799 ],
+									"mobilities": [ 9.12 ]
+								}
+							]
+						}
+					]
+				},
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [
+						{
+							"ligands": [
+								{
+									"name": "b-CD",
+									"charge": 0,
+									"maxCount": 1,
+									"pBs": [ -3.436162647040756 ],
+									"mobilities": [ 0.0 ]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"type": "N",
+			"role": "A",
+			"name": "S-IBU",
+			"chargeLow": -1,
+			"chargeHigh": 0,
+			"concentrationBGE": 1e-13,
+			"concentrationSample": 0.12,
+			"viscosityCoefficient": 0.0,
+			"pKas": [ 4.45 ],
+			"mobilities": [ 19.6, 0.0 ],
+			"complexForms": [
+				{
+					"nucleusCharge": -1,
+					"ligandGroups": [
+						{
+							"ligands": [
+								{
+									"name": "b-CD",
+									"charge": 0,
+									"maxCount": 1,
+									"pBs": [ -3.818225893613955 ],
+									"mobilities": [ 9.48 ]
+								}
+							]
+						}
+					]
+				},
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [
+						{
+							"ligands": [
+								{
+									"name": "b-CD",
+									"charge": 0,
+									"maxCount": 1,
+									"pBs": [ -4.264345507050092 ],
+									"mobilities": [ 0.0 ]
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

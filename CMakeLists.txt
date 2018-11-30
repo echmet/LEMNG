@@ -5,6 +5,7 @@ project(LEMNG LANGUAGES CXX)
 option(SENSITIVE_NUMDERS "Use more precise input concentrations to calculate numerical derivatives at the expense of speed" OFF)
 option(PARALLEL_NUM_OPS "Enable parallel numeric operations" ON)
 option(DISABLE_TRACING "Disable tracing" OFF)
+option(BUILD_TESTS "Build unit tests" ON)
 
 if (WIN32)
     option(ECHMET_FORCE_WINXP "Define target Windows version to Windows XP")
@@ -105,6 +106,109 @@ target_link_libraries(LEMNG
                       PRIVATE CAES
                       PRIVATE IonProps
                       PRIVATE ${LEMNG_THREADING_LIBS})
+
+if (BUILD_TESTS)
+    enable_testing()
+
+    add_executable(benzoiclibcd_empty_nois_exe src/tests/benzoiclibcd_empty_nois.cpp)
+    target_link_libraries(benzoiclibcd_empty_nois_exe PRIVATE LEMNG
+                                                      PRIVATE ECHMETShared
+                                                      PRIVATE SysComp)
+    add_test(benzoiclibcd_empty_nois benzoiclibcd_empty_nois_exe)
+
+    add_executable(benzoiclibcd_empty_is_exe src/tests/benzoiclibcd_empty_is.cpp)
+    target_link_libraries(benzoiclibcd_empty_is_exe PRIVATE LEMNG
+                                                    PRIVATE ECHMETShared
+                                                    PRIVATE SysComp)
+    add_test(benzoiclibcd_empty_is benzoiclibcd_empty_is_exe)
+
+    add_executable(formlibcddmbcd_rflu_nois_exe src/tests/formlibcddmbcd_rflu_nois.cpp)
+    target_link_libraries(formlibcddmbcd_rflu_nois_exe PRIVATE LEMNG
+                                                       PRIVATE ECHMETShared
+                                                       PRIVATE SysComp)
+    add_test(formlibcddmbcd_rflu_nois formlibcddmbcd_rflu_nois_exe)
+
+    add_executable(formlibcddmbcd_rflu_is_exe src/tests/formlibcddmbcd_rflu_is.cpp)
+    target_link_libraries(formlibcddmbcd_rflu_is_exe PRIVATE LEMNG
+                                                     PRIVATE ECHMETShared
+                                                     PRIVATE SysComp)
+    add_test(formlibcddmbcd_rflu_is formlibcddmbcd_rflu_is_exe)
+
+    add_executable(formlibcd_rflu_nois_exe src/tests/formlibcd_rflu_nois.cpp)
+    target_link_libraries(formlibcd_rflu_nois_exe PRIVATE LEMNG
+                                                  PRIVATE ECHMETShared
+                                                  PRIVATE SysComp)
+    add_test(formlibcd_rflu_nois formlibcd_rflu_nois_exe)
+
+    add_executable(formlibcd_rflu_is_exe src/tests/formlibcd_rflu_is.cpp)
+    target_link_libraries(formlibcd_rflu_is_exe PRIVATE LEMNG
+                                                PRIVATE ECHMETShared
+                                                PRIVATE SysComp)
+    add_test(formlibcd_rflu_is formlibcd_rflu_is_exe)
+
+    add_executable(formna_k_nois_exe src/tests/formna_k_nois.cpp)
+    target_link_libraries(formna_k_nois_exe PRIVATE LEMNG
+                                            PRIVATE ECHMETShared
+                                            PRIVATE SysComp)
+    add_test(formna_k_nois formna_k_nois_exe)
+
+    add_executable(formna_k_is_exe src/tests/formna_k_is.cpp)
+    target_link_libraries(formna_k_is_exe PRIVATE LEMNG
+                                          PRIVATE ECHMETShared
+                                          PRIVATE SysComp)
+    add_test(formna_k_is formna_k_is_exe)
+
+    add_executable(nacl_empty_nois_exe src/tests/nacl_empty_nois.cpp)
+    target_link_libraries(nacl_empty_nois_exe PRIVATE LEMNG
+                                              PRIVATE ECHMETShared
+                                              PRIVATE SysComp)
+    add_test(nacl_empty_nois nacl_empty_nois_exe)
+
+    add_executable(nacl_empty_is_exe src/tests/nacl_empty_is.cpp)
+    target_link_libraries(nacl_empty_is_exe PRIVATE LEMNG
+                                            PRIVATE ECHMETShared
+                                            PRIVATE SysComp)
+    add_test(nacl_empty_is nacl_empty_is_exe)
+
+    add_executable(oscillating_nois_exe src/tests/oscillating_nois.cpp)
+    target_link_libraries(oscillating_nois_exe PRIVATE LEMNG
+                                               PRIVATE ECHMETShared
+                                               PRIVATE SysComp)
+    add_test(oscillating_nois oscillating_nois_exe)
+
+    add_executable(oscillating_is_exe src/tests/oscillating_is.cpp)
+    target_link_libraries(oscillating_is_exe PRIVATE LEMNG
+                                             PRIVATE ECHMETShared
+                                             PRIVATE SysComp)
+    add_test(oscillating_is oscillating_is_exe)
+
+    add_executable(trtrbcd_snap_sibu_nois_exe src/tests/trtrbcd_snap_sibu_nois.cpp)
+    target_link_libraries(trtrbcd_snap_sibu_nois_exe PRIVATE LEMNG
+                                                     PRIVATE ECHMETShared
+                                                     PRIVATE SysComp)
+    add_test(trtrbcd_snap_sibu_nois trtrbcd_snap_sibu_nois_exe)
+
+    add_executable(trtrbcd_snap_sibu_is_exe src/tests/trtrbcd_snap_sibu_is.cpp)
+    target_link_libraries(trtrbcd_snap_sibu_is_exe PRIVATE LEMNG
+                                                   PRIVATE ECHMETShared
+                                                   PRIVATE SysComp)
+    add_test(trtrbcd_snap_sibu_is trtrbcd_snap_sibu_is_exe)
+
+    add_executable(phosphorical_nois_exe src/tests/phosphorical_nois.cpp)
+    target_link_libraries(phosphorical_nois_exe PRIVATE LEMNG
+                                                PRIVATE ECHMETShared
+                                                PRIVATE SysComp)
+    add_test(phosphorical_nois phosphorical_nois_exe)
+
+    add_executable(phosphorical_is_exe src/tests/phosphorical_is.cpp)
+    target_link_libraries(phosphorical_is_exe PRIVATE LEMNG
+                                              PRIVATE ECHMETShared
+                                              PRIVATE SysComp)
+    add_test(phosphorical_is phosphorical_is_exe)
+
+endif()
+
+
 
 if (WIN32)
     install(TARGETS LEMNG

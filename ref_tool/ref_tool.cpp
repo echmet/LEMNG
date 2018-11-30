@@ -40,11 +40,13 @@ void printComposition(ECHMET::LEMNG::RConstituentMap *composition) {
 	std::cout << "\n";
 }
 
-void printProperties(const ECHMET::LEMNG::RSolutionProperties &properties)
+void printProperties(const ECHMET::LEMNG::RSolutionProperties &properties, const bool printBufCap = false)
 {
-	std::cout << "pH = " << properties.pH << std::endl;
-	std::cout << "conductivity = " << properties.conductivity << std::endl;
-	std::cout << "ionic strength = " << properties.ionicStrength << std::endl;
+	printf("pH: %.11g\n", properties.pH);
+	printf("conductivity: %.11g\n", properties.conductivity);
+	printf("ionic strength: %.11g\n", properties.ionicStrength);
+	if (printBufCap)
+		printf("buffer capacity: %.11g\n", properties.bufferCapacity);
 
 	printComposition(properties.composition);
 }
@@ -59,7 +61,8 @@ const char * ezType(const ECHMET::LEMNG::EigenzoneType ezType)
 void printResults(const ECHMET::LEMNG::Results &results, const double drivingVoltage, const double totalLength, const double effectiveLength, const double uEOF, const std::map<std::string, double> &aMap)
 {
 	std::cout << "*** BGE PROPERTIES ***\n";
-	printProperties(results.BGEProperties);
+	printProperties(results.BGEProperties, true);
+
 
 	for (size_t idx = 0; idx < results.eigenzones->size(); idx++) {
 		const ECHMET::LEMNG::REigenzone &ez = results.eigenzones->at(idx);
@@ -67,9 +70,9 @@ void printResults(const ECHMET::LEMNG::Results &results, const double drivingVol
 		std::cout << "*** EIGENZONE " << idx << " "
 			<< ezType(ez.ztype)
 			<< (ez.tainted ? " (TAINTED)" : "") << " ***\n";
-		std::cout << "mobility: " << ez.mobility << "\n";
+		printf("mobility: %.11g\n", ez.mobility);
 		std::cout << "a2t: " << ez.a2t << "\n";
-		std::cout << "uEMD: " << ez.uEMD << "\n";
+		printf("uEMD: %.11g\n", ez.uEMD);
 
 		printProperties(ez.solutionProperties);
 	}
