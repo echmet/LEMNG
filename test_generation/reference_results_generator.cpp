@@ -88,7 +88,7 @@ int launch(int argc, char **argv)
 
 	ltRet = ECHMET::LEMNG::makeCZESystem(inputDesc.BGEComposition, inputDesc.SampleComposition, czeSystem);
 	if (ltRet != ECHMET::LEMNG::OK) {
-		std::cerr << "Cannot create CZESystem" << std::endl;
+		std::cerr << "Cannot create CZESystem: " << ECHMET::LEMNG::LEMNGerrorToString(ltRet) << std::endl;
 		ECHMET::SysComp::releaseInputData(inputDesc.BGEComposition);
 		ECHMET::SysComp::releaseInputData(inputDesc.SampleComposition);
 

@@ -233,7 +233,7 @@ def gen_complexes(cpxs, name):
 
     incf_last = len(cpxs) - 1
     for i, incf in enumerate(cpxs):
-        ocfblock = CBlock.make(['/* InCFVec */', '{'])
+        ocfblock = CBlock.make(['{ /* InComplexForm c-tor begin */'])
 
         cfblock = CBlock()
         cfblock.add_item('{},'.format(incf['nucleusCharge']))
@@ -243,38 +243,52 @@ def gen_complexes(cpxs, name):
 
         inlg_last = len(incf['ligandGroups']) - 1
         for j, inlg in enumerate(incf['ligandGroups']):
+            incfblock = CBlock()
+
+            incfblock.add_item('{ /* InLigandGroup c-tor begin */')
+
             lgblock = CBlock()
 
-            lgblock.add_item('/* InLigandForm */')
+            lgblock.add_item('/* InLFVec */')
             lgblock.add_item('{')
 
-            inlf_last = len(inlg) - 1
+            inlf_last = len(inlg['ligands']) - 1
             for k, inlf in enumerate(inlg['ligands']):
-
                 lfblock = CBlock()
 
-                lfblock.add_item('{')
-                lfblock.add_item('\"{}\",'.format(inlf['name']))
-                lfblock.add_item('{},'.format(inlf['charge']))
-                lfblock.add_item('{},'.format(inlf['maxCount']))
-                lfblock.add_item('{},'.format(_list_to_initer_list(inlf['pBs'])))
-                lfblock.add_item('{}'.format(_list_to_initer_list(inlf['mobilities'])))
-                lfblock.add_item('}')
+                lfblock.add_item('{ /* InLigandForm c-tor begin */')
+
+                inlfblock = CBlock()
+
+                inlfblock.add_item('\"{}\",'.format(inlf['name']))
+                inlfblock.add_item('{},'.format(inlf['charge']))
+                inlfblock.add_item('{},'.format(inlf['maxCount']))
+                inlfblock.add_item('{},'.format(_list_to_initer_list(inlf['pBs'])))
+                inlfblock.add_item('{}'.format(_list_to_initer_list(inlf['mobilities'])))
+
+                lfblock.add_item(inlfblock)
+
+                if k != inlf_last:
+                    lfblock.add_item('}, /* InLigandForm c-tor end */')
+                else:
+                    lfblock.add_item('} /* InLigandForm c-tor end */')
 
                 lgblock.add_item(lfblock)
-                if k != inlf_last:
-                    lgblock.add_item('},')
 
             lgblock.add_item('}')
-            cfblock.add_item(lgblock)
+            incfblock.add_item(lgblock)
 
             if j != inlg_last:
-                cfblock.add_item('},')
+                incfblock.add_item('}, /* InLigandGroup c-tor end */')
+            else:
+                incfblock.add_item('} /* InLigandGroup c-tor end */')
+
+            cfblock.add_item(incfblock)
 
         cfblock.add_item('}')
 
         ocfblock.add_item(cfblock)
-        ocfblock.add_item('}}{}'.format('' if i == incf_last else ','))
+        ocfblock.add_item('}}{} /* InComplexForm c-tor end */'.format('' if i == incf_last else ','))
 
         outerblock.add_item(ocfblock)
 
