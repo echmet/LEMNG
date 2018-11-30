@@ -431,7 +431,7 @@ def results_file(infile):
     return infile[los+1:lod] + '_results.txt'
 
 
-def get_expected_results(genpath, infile, ecl_path, lemng_path, is_corr):
+def get_expected_results(genpath, infile, ecl_path, lemng_path, is_corr, silent):
     genpath_abs = os.path.abspath(genpath)
     infile_abs = os.path.abspath(infile)
     ecl_path_abs = os.path.abspath(ecl_path)
@@ -492,8 +492,10 @@ def get_expected_results(genpath, infile, ecl_path, lemng_path, is_corr):
     params = extend_switch(params, is_corr & 2)
     params = extend_switch(params, is_corr & 4)
 
+    fhout = open(os.devnull, 'w') if silent else None
+
     try:
-        ret = subprocess.run(params)
+        ret = subprocess.run(params, stdout=fhout, stderr=fhout)
         if ret.returncode != 0:
             raise Exception('Failed to calculate reference data')
     except Exception as ex:
@@ -526,10 +528,12 @@ def make_argparser():
     parser.add_argument('--debhue', help='Enable Debye-Hückel correction', action='store_true')
     parser.add_argument('--onsfuo', help='Enable Onsager-Fuoss correction', action='store_true')
     parser.add_argument('--viscos', help='Enable viscosity correction', action='store_true')
+    parser.add_argument('--silent', help='Do not display any output from reference generator', action='store_true')
 
     parser.set_defaults(debhue=False)
     parser.set_defaults(onsfuo=False)
     parser.set_defaults(viscos=False)
+    parser.set_defaults(silent=False)
 
     return parser
 
@@ -546,8 +550,6 @@ def print_cmake_line(outfile):
     tag = outfile[fidx:tidx]
     basename = outfile[fidx:]
 
-    print('*** CMake recipe ***\n')
-
     print(spcs + 'add_executable({}_exe src/tests/{})'.format(tag, basename))
 
     indent = ''
@@ -558,11 +560,11 @@ def print_cmake_line(outfile):
     print(spcs + indent + 'PRIVATE ECHMETShared')
     print(spcs + indent + 'PRIVATE SysComp)')
 
-    print(spcs + 'add_test({0} {0}_exe)'.format(tag))
+    print(spcs + 'add_test({0} {0}_exe)\n'.format(tag))
 
 
 def main(outfile, infile, genpath, ecl_path, lemng_path, debhue, onsfuo,
-         viscos):
+         viscos, silent):
     is_corr = 0
     if debhue:
         is_corr += 1
@@ -572,7 +574,7 @@ def main(outfile, infile, genpath, ecl_path, lemng_path, debhue, onsfuo,
         is_corr += 4
 
     expected = get_expected_results(genpath, infile, ecl_path, lemng_path,
-                                    is_corr)
+                                    is_corr, silent)
 
     fh = open(infile, 'r')
     sysdef = json.load(fh)
@@ -646,4 +648,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     main(args.output, args.input, args.generator_path, args.ECL_path,
-         args.LEMNG_path, args.debhue, args.onsfuo, args.viscos)
+         args.LEMNG_path, args.debhue, args.onsfuo, args.viscos, args.silent)

@@ -9,40 +9,42 @@ using namespace ECHMET::Barsarkagang;
 SysComp::InCFVec * gen_complexforms_benzoic_acid()
 {
 	const ComplexDef cDef = {
-		/* InCFVec */
-		{
+		{ /* InComplexForm c-tor begin */
 			-1,
 			/* InLGVec */
 			{
-				/* InLigandForm */
-				{
+				{ /* InLigandGroup c-tor begin */
+					/* InLFVec */
 					{
-					"b-CD",
-					0,
-					1,
-					{ -1.348304863048161 },
-					{ 9.9 }
+						{ /* InLigandForm c-tor begin */
+							"b-CD",
+							0,
+							1,
+							{ -1.348304863048161 },
+							{ 9.9 }
+						} /* InLigandForm c-tor end */
 					}
-				}
+				} /* InLigandGroup c-tor end */
 			}
-		},
-		/* InCFVec */
-		{
+		}, /* InComplexForm c-tor end */
+		{ /* InComplexForm c-tor begin */
 			0,
 			/* InLGVec */
 			{
-				/* InLigandForm */
-				{
+				{ /* InLigandGroup c-tor begin */
+					/* InLFVec */
 					{
-					"b-CD",
-					0,
-					1,
-					{ -2.518513939877887 },
-					{ 0 }
+						{ /* InLigandForm c-tor begin */
+							"b-CD",
+							0,
+							1,
+							{ -2.518513939877887 },
+							{ 0 }
+						} /* InLigandForm c-tor end */
 					}
-				}
+				} /* InLigandGroup c-tor end */
 			}
-		}
+		} /* InComplexForm c-tor end */
 	};
 
 	return buildComplexes(cDef);
@@ -51,20 +53,18 @@ SysComp::InCFVec * gen_complexforms_benzoic_acid()
 SysComp::InCFVec * gen_complexforms_li()
 {
 	const ComplexDef cDef = {
-		/* InCFVec */
-		{
+		{ /* InComplexForm c-tor begin */
 			0,
 			/* InLGVec */
 			{
 			}
-		},
-		/* InCFVec */
-		{
+		}, /* InComplexForm c-tor end */
+		{ /* InComplexForm c-tor begin */
 			1,
 			/* InLGVec */
 			{
 			}
-		}
+		} /* InComplexForm c-tor end */
 	};
 
 	return buildComplexes(cDef);

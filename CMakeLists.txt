@@ -110,17 +110,41 @@ target_link_libraries(LEMNG
 if (1)
     enable_testing()
 
-    add_executable(nacl_empty_nois_exe src/tests/nacl_empty_nois.cpp)
-    target_link_libraries(nacl_empty_nois_exe PRIVATE LEMNG
-                                              PRIVATE ECHMETShared
-                                              PRIVATE SysComp)
-    add_test(nacl_empty_nois nacl_empty_nois_exe)
+    add_executable(benzoiclibcd_empty_nois_exe src/tests/benzoiclibcd_empty_nois.cpp)
+    target_link_libraries(benzoiclibcd_empty_nois_exe PRIVATE LEMNG
+                                                      PRIVATE ECHMETShared
+                                                      PRIVATE SysComp)
+    add_test(benzoiclibcd_empty_nois benzoiclibcd_empty_nois_exe)
 
-    add_executable(nacl_empty_is_exe src/tests/nacl_empty_is.cpp)
-    target_link_libraries(nacl_empty_is_exe PRIVATE LEMNG
-                                            PRIVATE ECHMETShared
-                                            PRIVATE SysComp)
-    add_test(nacl_empty_is nacl_empty_is_exe)
+    add_executable(benzoiclibcd_empty_is_exe src/tests/benzoiclibcd_empty_is.cpp)
+    target_link_libraries(benzoiclibcd_empty_is_exe PRIVATE LEMNG
+                                                    PRIVATE ECHMETShared
+                                                    PRIVATE SysComp)
+    add_test(benzoiclibcd_empty_is benzoiclibcd_empty_is_exe)
+
+    add_executable(formlibcddmbcd_rflu_nois_exe src/tests/formlibcddmbcd_rflu_nois.cpp)
+    target_link_libraries(formlibcddmbcd_rflu_nois_exe PRIVATE LEMNG
+                                                       PRIVATE ECHMETShared
+                                                       PRIVATE SysComp)
+    add_test(formlibcddmbcd_rflu_nois formlibcddmbcd_rflu_nois_exe)
+
+    add_executable(formlibcddmbcd_rflu_is_exe src/tests/formlibcddmbcd_rflu_is.cpp)
+    target_link_libraries(formlibcddmbcd_rflu_is_exe PRIVATE LEMNG
+                                                     PRIVATE ECHMETShared
+                                                     PRIVATE SysComp)
+    add_test(formlibcddmbcd_rflu_is formlibcddmbcd_rflu_is_exe)
+
+    add_executable(formlibcd_rflu_nois_exe src/tests/formlibcd_rflu_nois.cpp)
+    target_link_libraries(formlibcd_rflu_nois_exe PRIVATE LEMNG
+                                                  PRIVATE ECHMETShared
+                                                  PRIVATE SysComp)
+    add_test(formlibcd_rflu_nois formlibcd_rflu_nois_exe)
+
+    add_executable(formlibcd_rflu_is_exe src/tests/formlibcd_rflu_is.cpp)
+    target_link_libraries(formlibcd_rflu_is_exe PRIVATE LEMNG
+                                                PRIVATE ECHMETShared
+                                                PRIVATE SysComp)
+    add_test(formlibcd_rflu_is formlibcd_rflu_is_exe)
 
     add_executable(formna_k_nois_exe src/tests/formna_k_nois.cpp)
     target_link_libraries(formna_k_nois_exe PRIVATE LEMNG
@@ -134,30 +158,29 @@ if (1)
                                           PRIVATE SysComp)
     add_test(formna_k_is formna_k_is_exe)
 
-    add_executable(benzoiclibcd_empty_nois_exe src/tests/benzoiclibcd_empty_nois.cpp)
-    target_link_libraries(benzoiclibcd_empty_nois_exe PRIVATE LEMNG
-                                                      PRIVATE ECHMETShared
-                                                      PRIVATE SysComp)
-    add_test(benzoiclibcd_empty_nois benzoiclibcd_empty_nois_exe)
+    add_executable(nacl_empty_nois_exe src/tests/nacl_empty_nois.cpp)
+    target_link_libraries(nacl_empty_nois_exe PRIVATE LEMNG
+                                              PRIVATE ECHMETShared
+                                              PRIVATE SysComp)
+    add_test(nacl_empty_nois nacl_empty_nois_exe)
 
-    add_executable(benzoiclibcd_empty_is_exe src/tests/benzoiclibcd_empty_is.cpp)
-    target_link_libraries(benzoiclibcd_empty_is_exe PRIVATE LEMNG
-                                                    PRIVATE ECHMETShared
-                                                    PRIVATE SysComp)
-    add_test(benzoiclibcd_empty_is benzoiclibcd_empty_is_exe)
+    add_executable(nacl_empty_is_exe src/tests/nacl_empty_is.cpp)
+    target_link_libraries(nacl_empty_is_exe PRIVATE LEMNG
+                                            PRIVATE ECHMETShared
+                                            PRIVATE SysComp)
+    add_test(nacl_empty_is nacl_empty_is_exe)
 
-    add_executable(formlibcd_rflu.cpp_nois_exe src/tests/formlibcd_rflu.cpp_nois.cpp)
-    target_link_libraries(formlibcd_rflu.cpp_nois_exe PRIVATE LEMNG
-                                                      PRIVATE ECHMETShared
-                                                      PRIVATE SysComp)
-    add_test(formlibcd_rflu.cpp_nois formlibcd_rflu.cpp_nois_exe)
+    add_executable(trtrbcd_snap_sibu_nois_exe src/tests/trtrbcd_snap_sibu_nois.cpp)
+    target_link_libraries(trtrbcd_snap_sibu_nois_exe PRIVATE LEMNG
+                                                     PRIVATE ECHMETShared
+                                                     PRIVATE SysComp)
+    add_test(trtrbcd_snap_sibu_nois trtrbcd_snap_sibu_nois_exe)
 
-    add_executable(formlibcd_rflu.cpp_is_exe src/tests/formlibcd_rflu.cpp_is.cpp)
-    target_link_libraries(formlibcd_rflu.cpp_is_exe PRIVATE LEMNG
-                                                    PRIVATE ECHMETShared
-                                                    PRIVATE SysComp)
-    add_test(formlibcd_rflu.cpp_is formlibcd_rflu.cpp_is_exe)
-
+    add_executable(trtrbcd_snap_sibu_is_exe src/tests/trtrbcd_snap_sibu_is.cpp)
+    target_link_libraries(trtrbcd_snap_sibu_is_exe PRIVATE LEMNG
+                                                   PRIVATE ECHMETShared
+                                                   PRIVATE SysComp)
+    add_test(trtrbcd_snap_sibu_is trtrbcd_snap_sibu_is_exe)
 
 endif()
 

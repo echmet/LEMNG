@@ -6,7 +6,7 @@ clang -c ../ref_tool/jsonloader/constituents_json_ldr.c \
 clang++ -std=c++98 -Wall -Wextra -pedantic -g -O0 \
 	reference_results_generator.cpp ../ref_tool/json_input_processor.cpp ../ref_tool/jsonloader/inputreader.cpp \
 	constituents_json_ldr.o ${LIBJANSSON_BIN} \
-	-o pgn_resgen \
+	-o ref_res_gen \
 	-I${LEMNG_INCLUDE} \
 	-I${ECL_INCLUDE} \
 	-I../ref_tool \

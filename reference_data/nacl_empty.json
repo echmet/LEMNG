@@ -1,0 +1,30 @@
+{
+	"constituents": [
+		{
+			"type": "N",
+			"role": "B",
+			"name": "Chloride",
+			"chargeLow": -1,
+			"chargeHigh": 0,
+			"concentrationBGE": 9.0,
+			"concentrationSample": 7.0,
+			"viscosityCoefficient": 0.0,
+			"pKas": [ -2.0 ],
+			"mobilities": [ 79.1, 0.0 ],
+			"complexForms": [ ]
+		},
+		{
+			"type": "N",
+			"role": "B",
+			"name": "Sodium",
+			"chargeLow": 0,
+			"chargeHigh": 1,
+			"concentrationBGE": 10.0,
+			"concentrationSample": 8.0,
+			"viscosityCoefficient": 0.0,
+			"pKas": [ 13.7 ],
+			"mobilities": [ 0.0, 51.9 ],
+			"complexForms": [ ]
+		}
+	]
+}

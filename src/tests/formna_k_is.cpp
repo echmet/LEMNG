@@ -9,20 +9,18 @@ using namespace ECHMET::Barsarkagang;
 SysComp::InCFVec * gen_complexforms_formic_acid()
 {
 	const ComplexDef cDef = {
-		/* InCFVec */
-		{
+		{ /* InComplexForm c-tor begin */
 			-1,
 			/* InLGVec */
 			{
 			}
-		},
-		/* InCFVec */
-		{
+		}, /* InComplexForm c-tor end */
+		{ /* InComplexForm c-tor begin */
 			0,
 			/* InLGVec */
 			{
 			}
-		}
+		} /* InComplexForm c-tor end */
 	};
 
 	return buildComplexes(cDef);
@@ -31,20 +29,18 @@ SysComp::InCFVec * gen_complexforms_formic_acid()
 SysComp::InCFVec * gen_complexforms_na()
 {
 	const ComplexDef cDef = {
-		/* InCFVec */
-		{
+		{ /* InComplexForm c-tor begin */
 			0,
 			/* InLGVec */
 			{
 			}
-		},
-		/* InCFVec */
-		{
+		}, /* InComplexForm c-tor end */
+		{ /* InComplexForm c-tor begin */
 			1,
 			/* InLGVec */
 			{
 			}
-		}
+		} /* InComplexForm c-tor end */
 	};
 
 	return buildComplexes(cDef);
@@ -53,20 +49,18 @@ SysComp::InCFVec * gen_complexforms_na()
 SysComp::InCFVec * gen_complexforms_k()
 {
 	const ComplexDef cDef = {
-		/* InCFVec */
-		{
+		{ /* InComplexForm c-tor begin */
 			0,
 			/* InLGVec */
 			{
 			}
-		},
-		/* InCFVec */
-		{
+		}, /* InComplexForm c-tor end */
+		{ /* InComplexForm c-tor begin */
 			1,
 			/* InLGVec */
 			{
 			}
-		}
+		} /* InComplexForm c-tor end */
 	};
 
 	return buildComplexes(cDef);

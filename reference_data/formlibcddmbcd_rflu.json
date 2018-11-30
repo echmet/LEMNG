@@ -1,0 +1,144 @@
+{
+	"constituents": [
+		{
+			"type": "N",
+			"role": "B",
+			"name": "Formic acid",
+			"chargeLow": -1,
+			"chargeHigh": 0,
+			"concentrationBGE": 10.0,
+			"concentrationSample": 5.0,
+			"viscosityCoefficient": 0.0,
+			"pKas": [ 3.752 ],
+			"mobilities": [ 56.6, 0.0 ],
+			"complexForms": [
+				{
+					"nucleusCharge": -1,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [
+					]
+				}
+			]
+		},
+		{
+			"type": "N",
+			"role": "B",
+			"name": "Li",
+			"chargeLow": 0,
+			"chargeHigh": 1,
+			"concentrationBGE": 5.0,
+			"concentrationSample": 2.5,
+			"viscosityCoefficient": 0.0,
+			"pKas": [ 13.8 ],
+			"mobilities": [ 0.0, 40.1 ],
+			"complexForms": [
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": 1,
+					"ligandGroups": [ 
+					]
+				}
+			]
+		},
+		{
+			"type": "L",
+			"role": "B",
+			"name": "b-CD",
+			"chargeLow": 0,
+			"chargeHigh": 0,
+			"concentrationBGE": 5.0,
+			"concentrationSample": 5.0,
+			"viscosityCoefficient": 0.0,
+			"pKas": [ ],
+			"mobilities": [ 0.0 ]
+		},
+		{
+			"type": "L",
+			"role": "B",
+			"name": "DM-b-CD",
+			"chargeLow": 0,
+			"chargeHigh": 0,
+			"concentrationBGE": 5.0,
+			"concentrationSample": 5.0,
+			"viscosityCoefficient": 0.0,
+			"pKas": [ ],
+			"mobilities": [ 0.0 ]
+		},
+		{
+			"type": "N",
+			"role": "A",
+			"name": "R-FLU",
+			"chargeLow": -1,
+			"chargeHigh": 0,
+			"concentrationBGE": 1e-13,
+			"concentrationSample": 0.1,
+			"viscosityCoefficient": 0.0,
+			"pKas": [ 4.19 ],
+			"mobilities": [ 20.4, 0.0 ],
+			"complexForms": [
+				{
+					"nucleusCharge": -1,
+					"ligandGroups": [
+						{
+							"ligands": [
+								{
+									"name": "b-CD",
+									"charge": 0,
+									"maxCount": 1,
+									"pBs": [ -3.699837725867246 ],
+									"mobilities": [ 9.24 ]
+								}
+							]
+						},
+						{
+							"ligands": [
+								{
+									"name": "DM-b-CD",
+									"charge": 0,
+									"maxCount": 1,
+									"pBs": [ -3.847572659142112 ],
+									"mobilities": [ 7.47 ]
+								}
+							]
+						}
+					]
+				},
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [
+						{
+							"ligands": [
+								{
+									"name": "b-CD",
+									"charge": 0,
+									"maxCount": 1,
+									"pBs": [ -3.980003371583746 ],
+									"mobilities": [ 0.0 ]
+								}
+							]
+						},
+						{
+							"ligands": [
+								{
+									"name": "DM-b-CD",
+									"charge": 0,
+									"maxCount": 1,
+									"pBs": [ -4.0 ],
+									"mobilities": [ 0.0 ]
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}
