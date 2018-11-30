@@ -219,7 +219,7 @@ int main(int , char ** )
 			s__ibu
 		},
 		cBGE, cSample,
-		false, false, false);
+		false, false, false, false);
 
 	checkBGE(r, 8.1129439047, 0.054990721321, 0.0095749315893, 22.987123433);
 

@@ -123,7 +123,7 @@ int main(int , char ** )
 			k
 		},
 		cBGE, cSample,
-		true, true, false);
+		true, true, false, false);
 
 	checkBGE(r, 3.6842351542, 0.087109803668, 0.008226777682, 10.298050561);
 

@@ -50,7 +50,7 @@ int main(int , char ** )
 			sodium
 		},
 		cBGE, cSample,
-		false, false, false);
+		false, false, false, false);
 
 	checkBGE(r, 10.991436593, 0.13810663565, 0.0099804751555, 2.3024973608);
 

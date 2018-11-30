@@ -129,7 +129,7 @@ int main(int , char ** )
 			b__cd
 		},
 		cBGE, cSample,
-		false, false, false);
+		false, false, false, false);
 
 	checkBGE(r, 3.9706700188, 0.074457266563, 0.010106986745, 12.614407061);
 

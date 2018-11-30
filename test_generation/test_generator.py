@@ -6,9 +6,16 @@ import json
 import os
 import subprocess
 import sys
+from enum import Enum
 
 
 INDENT_SPACER = '\t'
+
+
+class RefDataResult(Enum):
+    Normal = 1,
+    Fail = 2,
+    Oscillating = 3
 
 
 def _list_to_str(array, formatter, last_formatter=None):
@@ -333,7 +340,7 @@ def gen_concMap(name, m):
     return block
 
 
-def gen_calculate(BGElist, sampleList, is_corr):
+def gen_calculate(BGElist, sampleList, is_corr, should_oscillate):
     block = CBlock.make(['const auto r = calculate('])
 
     def mk_vec(l):
@@ -357,8 +364,9 @@ def gen_calculate(BGElist, sampleList, is_corr):
     def corr_set(n):
         return 'true' if is_corr & n else 'false'
 
-    block.add_item(INDENT_SPACER + '{}, {}, {});'.format(corr_set(1),
-                   corr_set(2), corr_set(4)))
+    block.add_item(INDENT_SPACER + '{0}, {1}, {2}, {3});'.format(
+                   corr_set(1), corr_set(2), corr_set(4),
+                   'true' if should_oscillate else 'false'))
 
     return block
 
@@ -496,7 +504,9 @@ def get_expected_results(genpath, infile, ecl_path, lemng_path, is_corr, silent)
 
     try:
         ret = subprocess.run(params, stdout=fhout, stderr=fhout)
-        if ret.returncode != 0:
+        if ret.returncode == 0x66:
+            return (RefDataResult.Oscillating, [])
+        elif ret.returncode != 0:
             raise Exception('Failed to calculate reference data')
     except Exception as ex:
         raise ex
@@ -515,7 +525,7 @@ def get_expected_results(genpath, infile, ecl_path, lemng_path, is_corr, silent)
     for ez in read_eigenzones(lines):
         data.append(ez)
 
-    return data
+    return (RefDataResult.Normal, data)
 
 
 def make_argparser():
@@ -573,14 +583,20 @@ def main(outfile, infile, genpath, ecl_path, lemng_path, debhue, onsfuo,
     if viscos:
         is_corr += 4
 
-    expected = get_expected_results(genpath, infile, ecl_path, lemng_path,
-                                    is_corr, silent)
+    refres, expected = get_expected_results(genpath, infile, ecl_path,
+                                            lemng_path, is_corr, silent)
 
     fh = open(infile, 'r')
     sysdef = json.load(fh)
 
     (c_list, concsBGE, concsSample, BGElist,
      sampleList, complex_generators) = process_input(sysdef)
+
+    prog = CProgram()
+    prog.add_include('<cstdlib>')
+    prog.add_include('\"barsarkagang_tests.h\"')
+    prog.add_prelude('using namespace ECHMET;')
+    prog.add_prelude('using namespace ECHMET::Barsarkagang;')
 
     cmain = CFunction('int', 'main', [CFunctionArg('int', ''),
                                       CFunctionArg('char **', '')])
@@ -591,20 +607,18 @@ def main(outfile, infile, genpath, ecl_path, lemng_path, debhue, onsfuo,
     cmain.add_block(gen_concMap('cBGE', concsBGE))
     cmain.add_block(gen_concMap('cSample', concsSample))
 
-    cmain.add_block(gen_calculate(BGElist, sampleList, is_corr))
+    if refres == RefDataResult.Oscillating:
+        cmain.add_block(gen_calculate(BGElist, sampleList, is_corr, True))
+        cmain.add_block(CBlock.make(['(void)r;']))
+    else:
+        cmain.add_block(gen_calculate(BGElist, sampleList, is_corr, False))
 
-    cmain.add_block(gen_check_BGE(expected.pop(0)))
+        cmain.add_block(gen_check_BGE(expected.pop(0)))
 
-    while expected:
-        cmain.add_block(gen_check_eigenzone(expected.pop(0)))
+        while expected:
+            cmain.add_block(gen_check_eigenzone(expected.pop(0)))
 
     cmain.add_block(CBlock.make(['return EXIT_SUCCESS;']))
-
-    prog = CProgram()
-    prog.add_include('<cstdlib>')
-    prog.add_include('\"barsarkagang_tests.h\"')
-    prog.add_prelude('using namespace ECHMET;')
-    prog.add_prelude('using namespace ECHMET::Barsarkagang;')
 
     for _, gf in complex_generators.items():
         if gf is not None:

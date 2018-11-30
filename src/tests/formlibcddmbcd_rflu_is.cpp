@@ -201,7 +201,7 @@ int main(int , char ** )
 			r__flu
 		},
 		cBGE, cSample,
-		true, true, false);
+		true, true, false, false);
 
 	checkBGE(r, 3.7525300653, 0.051399578407, 0.0051905732156, 6.1869113609);
 

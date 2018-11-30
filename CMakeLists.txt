@@ -170,6 +170,18 @@ if (BUILD_TESTS)
                                             PRIVATE SysComp)
     add_test(nacl_empty_is nacl_empty_is_exe)
 
+    add_executable(oscillating_nois_exe src/tests/oscillating_nois.cpp)
+    target_link_libraries(oscillating_nois_exe PRIVATE LEMNG
+                                               PRIVATE ECHMETShared
+                                               PRIVATE SysComp)
+    add_test(oscillating_nois oscillating_nois_exe)
+
+    add_executable(oscillating_is_exe src/tests/oscillating_is.cpp)
+    target_link_libraries(oscillating_is_exe PRIVATE LEMNG
+                                             PRIVATE ECHMETShared
+                                             PRIVATE SysComp)
+    add_test(oscillating_is oscillating_is_exe)
+
     add_executable(trtrbcd_snap_sibu_nois_exe src/tests/trtrbcd_snap_sibu_nois.cpp)
     target_link_libraries(trtrbcd_snap_sibu_nois_exe PRIVATE LEMNG
                                                      PRIVATE ECHMETShared
@@ -181,6 +193,7 @@ if (BUILD_TESTS)
                                                    PRIVATE ECHMETShared
                                                    PRIVATE SysComp)
     add_test(trtrbcd_snap_sibu_is trtrbcd_snap_sibu_is_exe)
+
 
 endif()
 

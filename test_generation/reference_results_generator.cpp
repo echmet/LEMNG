@@ -117,7 +117,10 @@ int launch(int argc, char **argv)
 	ECHMET::LEMNG::Results results;
 	ECHMET::LEMNG::RetCode tRet = czeSystem->evaluate(acBGEMap, acFullMap, corrections, results);
 
-	if (tRet != ECHMET::LEMNG::OK)
+	if (tRet == ECHMET::LEMNG::E_COMPLEX_EIGENMOBILITIES) {
+		std::cout << "Complex eigenmobilities detected.\n";
+		return 0x66;
+	} else if (tRet != ECHMET::LEMNG::OK)
 		std::cout << "Failed to solve the system: " << czeSystem->lastErrorString() << "\n";
 	else
 		printResults(results, outputFile);

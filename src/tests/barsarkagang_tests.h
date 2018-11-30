@@ -130,7 +130,8 @@ SysComp::InConstituentVec * mkInConstVec(std::initializer_list<SysComp::InConsti
 
 static inline
 LEMNG::Results calculate(const InConstituentList &bge, const InConstituentList &sample, const CMapping &bgeMaps, const CMapping &sampleMaps,
-			 const bool debhue, const bool onsfuo, const bool viscos)
+			 const bool debhue, const bool onsfuo, const bool viscos,
+			 const bool shouldOscillate)
 {
 	LEMNG::CZESystem *czeSys;
 
@@ -157,7 +158,14 @@ LEMNG::Results calculate(const InConstituentList &bge, const InConstituentList &
 		nonidealityCorrectionSet(corrections, NonidealityCorrectionsItems::CORR_VISCOSITY);
 
 	LEMNG::Results results;
-	failIfError(czeSys->evaluate(acBGEMap, acSampleMap, corrections, results));
+	auto tRet = czeSys->evaluate(acBGEMap, acSampleMap, corrections, results);
+	if (shouldOscillate) {
+		if (tRet != LEMNG::RetCode::E_COMPLEX_EIGENMOBILITIES) {
+			std::cerr << "System does not have complex eigenmobilities";
+			std::exit(EXIT_FAILURE);
+		}
+	} else
+		failIfError(tRet);
 
 	return results;
 }
