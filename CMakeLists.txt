@@ -5,6 +5,7 @@ project(LEMNG LANGUAGES CXX)
 option(SENSITIVE_NUMDERS "Use more precise input concentrations to calculate numerical derivatives at the expense of speed" OFF)
 option(PARALLEL_NUM_OPS "Enable parallel numeric operations" ON)
 option(DISABLE_TRACING "Disable tracing" OFF)
+option(BUILD_TESTS "Build unit tests" ON)
 
 if (WIN32)
     option(ECHMET_FORCE_WINXP "Define target Windows version to Windows XP")
@@ -106,8 +107,7 @@ target_link_libraries(LEMNG
                       PRIVATE IonProps
                       PRIVATE ${LEMNG_THREADING_LIBS})
 
-# Make this optional
-if (1)
+if (BUILD_TESTS)
     enable_testing()
 
     add_executable(benzoiclibcd_empty_nois_exe src/tests/benzoiclibcd_empty_nois.cpp)
