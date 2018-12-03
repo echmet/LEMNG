@@ -377,8 +377,8 @@ def gen_check_BGE(expected):
 
 
 def gen_check_eigenzone(expected):
-    return CBlock.make(['checkEigenzone(r.eigenzones, {}, {}, {}, {});'.format(
-        expected[0], expected[1], expected[2], expected[3])])
+    return CBlock.make(['checkEigenzone(r.eigenzones, {}, {}, {}, {}, {});'.format(
+        expected[0], expected[1], expected[2], expected[3], expected[4])])
 
 
 def process_input(root):
@@ -466,13 +466,13 @@ def get_expected_results(genpath, infile, ecl_path, lemng_path, is_corr, silent)
     def read_eigenzones(lines):
         """ Read eigenzone properties. Each eigenzone is supposed to be separated by an empty line.
             Order of items in an eigenzone block is as follows:
-            1) mobility 2) uEMD 3) pH 4) Conductivity
+            1) mobility 2) uEMD 3) a2t 4) pH 5) Conductivity
         """
 
         data = []
         while len(lines) > 0:
             ez = []
-            for _ in range(0, 4):
+            for _ in range(0, 5):
                 line = lines.pop(0)
                 ez.append(float(line))
             line = lines.pop(0)

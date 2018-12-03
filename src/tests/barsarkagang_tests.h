@@ -80,7 +80,8 @@ void failIfError(const LEMNG::RetCode tRet)
 }
 
 static inline
-void checkEigenzone(const LEMNG::REigenzoneVec *ezs, const double u, const double uEMD,
+void checkEigenzone(const LEMNG::REigenzoneVec *ezs, const double u,
+		    const double uEMD, const double a2t,
 		    const double pH, const double conductivity)
 {
 	for (size_t idx = 0; idx < ezs->size(); idx++) {
@@ -88,6 +89,7 @@ void checkEigenzone(const LEMNG::REigenzoneVec *ezs, const double u, const doubl
 
 		if (numberMatches(ez.mobility, u)) {
 			failIfMismatch(ez.uEMD, uEMD);
+			failIfMismatch(ez.a2t, a2t);
 			failIfMismatch(ez.solutionProperties.pH, pH);
 			failIfMismatch(ez.solutionProperties.conductivity, conductivity);
 

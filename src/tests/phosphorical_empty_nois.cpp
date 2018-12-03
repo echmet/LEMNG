@@ -114,13 +114,13 @@ int main(int , char ** )
 			al
 		},
 		cBGE, cSample,
-		true, true, false, false);
+		false, false, false, false);
 
-	checkBGE(r, 2.9887541279, 0.22812330017, 0.061116910773, 10.790315473);
+	checkBGE(r, 3.0261380593, 0.31738941404, 0.06054709832, 10.972386383);
 
-	checkEigenzone(r.eigenzones, -0.0064462518946, -0.0065109265141, 3.0695578841, 0.19782992674);
+	checkEigenzone(r.eigenzones, 0.0088429041208, 0.0027173902486, 0.81583614629, 3.1025402684, 0.27055462645);
 
-	checkEigenzone(r.eigenzones, 75.226960638, -3.720884903, 2.8166063213, 0.24076472939);
+	checkEigenzone(r.eigenzones, 69.03696619, 3.6031523874, 1.102010988, 2.8522966522, 0.32016146344);
 
 	return EXIT_SUCCESS;
 }

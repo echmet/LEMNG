@@ -24,6 +24,7 @@ void printResults(const ECHMET::LEMNG::Results &results, const char *outputFile)
 
 		fprintf(fh, "%.11g\n", ez.mobility);
 		fprintf(fh, "%.11g\n", ez.uEMD);
+		fprintf(fh, "%.11g\n", ez.a2t);
 		fprintf(fh, "%.11g\n", ez.solutionProperties.pH);
 		fprintf(fh, "%.11g\n", ez.solutionProperties.conductivity);
 		fprintf(fh, "\n");
