@@ -83,7 +83,7 @@ void buildSystemPackVectors(CalculatorConstituentVec &ccVec, CalculatorIonicForm
 			 * in a given ionic form. This is necessary to have a reasonably efficient
 			 * function to calculate Kroenecker delta in makeMatrixM1().
 			 */
-			std::vector<size_t> containedConstituentsList = [&allConstituents, &isAnalyte, &iFisAnalyte](const SysComp::IonicForm *iF) {
+			auto multiplicities = [&allConstituents, &isAnalyte, &iFisAnalyte](const SysComp::IonicForm *iF) {
 				auto findLigandIdx = [&allConstituents](const SysComp::Constituent *c) {
 					for (size_t idx = 0; idx < allConstituents.size(); idx++) {
 						const SysComp::Constituent *otherC = allConstituents.at(idx);
@@ -96,21 +96,21 @@ void buildSystemPackVectors(CalculatorConstituentVec &ccVec, CalculatorIonicForm
 				};
 
 				const SysComp::IonicForm *ancestor = iF;
-				std::vector<size_t> idxList{};
+				MultiplicityVec muls{};
 
 				while (ancestor->ligand != nullptr) {
 					const size_t idx = findLigandIdx(ancestor->ligand);
 					if (isAnalyte(ancestor->ligand->name->c_str()))
 						iFisAnalyte = true;
 
-					idxList.emplace_back(idx);
+					muls.emplace_back(idx, ancestor->ligandCount);
 					ancestor = ancestor->ancestor;
 				};
 
-				return idxList;
+				return muls;
 			}(iF);
 
-			containedConstituentsList.emplace_back(idx); /* Ionic form always contains at least the nucleus. */
+			multiplicities.emplace_back(idx, 1); /* Ionic form always contains at least the nucleus. */
 
 
 			/* This is a slightly less obvious part, focus now!
@@ -135,7 +135,7 @@ void buildSystemPackVectors(CalculatorConstituentVec &ccVec, CalculatorIonicForm
 									iF,
 									iF->ionicConcentrationIndex,
 									ifVec.size(), /* This ionic form will be placed at this index in the global ifVec. */
-									std::move(containedConstituentsList), treatAsAnalyte};
+									std::move(multiplicities), treatAsAnalyte};
 					ifVec.emplace_back(locIF);
 				} catch (std::bad_alloc &) {
 					for (auto &&item : locIfVec)

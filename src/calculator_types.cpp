@@ -5,34 +5,17 @@ namespace ECHMET {
 namespace LEMNG {
 namespace Calculator {
 
-CalculatorIonicForm::CalculatorIonicForm(const std::string &name, const int32_t charge,
+CalculatorIonicForm::CalculatorIonicForm(std::string name, const int32_t charge,
 	const SysComp::IonicForm *internalIonicForm,
 	const size_t internalIonicFormConcentrationIdx,
 	const size_t globalIonicFormConcentrationIdx,
-	const std::vector<size_t> &containedConstituents, const bool isAnalyte) :
-	name{ name },
+	MultiplicityVec multiplicities, const bool isAnalyte) noexcept :
+	name(std::move(name)),
 	charge{ charge },
 	internalIonicForm{ internalIonicForm },
 	internalIonicFormConcentrationIdx{ internalIonicFormConcentrationIdx },
 	globalIonicFormConcentrationIdx{ globalIonicFormConcentrationIdx },
-	containedConstituents(containedConstituents),
-	isAnalyte{ isAnalyte },
-	concentration{ -1 },
-	mobility{ -1 }
-{
-}
-
-CalculatorIonicForm::CalculatorIonicForm(std::string &&name, const int32_t charge,
-	const SysComp::IonicForm *internalIonicForm,
-	const size_t internalIonicFormConcentrationIdx,
-	const size_t globalIonicFormConcentrationIdx,
-	std::vector<size_t> &&containedConstituents, const bool isAnalyte) noexcept :
-	name{ name },
-	charge{ charge },
-	internalIonicForm{ internalIonicForm },
-	internalIonicFormConcentrationIdx{ internalIonicFormConcentrationIdx },
-	globalIonicFormConcentrationIdx{ globalIonicFormConcentrationIdx },
-	containedConstituents(containedConstituents),
+	multiplicities(std::move(multiplicities)),
 	isAnalyte{ isAnalyte },
 	concentration{ -1 },
 	mobility{ -1 }
@@ -46,7 +29,7 @@ CalculatorIonicForm & CalculatorIonicForm::operator=(const CalculatorIonicForm &
 	internalIonicForm = other.internalIonicForm;
 	const_cast<size_t&>(internalIonicFormConcentrationIdx) = other.internalIonicFormConcentrationIdx;
 	const_cast<size_t&>(globalIonicFormConcentrationIdx) = other.globalIonicFormConcentrationIdx;
-	const_cast<std::vector<size_t>&>(containedConstituents) = other.containedConstituents;
+	const_cast<MultiplicityVec&>(multiplicities) = other.multiplicities;
 	const_cast<bool&>(isAnalyte) = other.isAnalyte;
 	mobility = other.mobility;
 	concentration = other.concentration;
@@ -61,7 +44,7 @@ CalculatorIonicForm & CalculatorIonicForm::operator=(CalculatorIonicForm &&other
 	internalIonicForm = other.internalIonicForm;
 	const_cast<size_t&>(internalIonicFormConcentrationIdx) = other.internalIonicFormConcentrationIdx;
 	const_cast<size_t&>(globalIonicFormConcentrationIdx) = other.globalIonicFormConcentrationIdx;
-	const_cast<std::vector<size_t>&>(containedConstituents) = std::move(other.containedConstituents);
+	const_cast<MultiplicityVec&>(multiplicities) = std::move(other.multiplicities);
 	const_cast<bool&>(isAnalyte) = other.isAnalyte;
 	mobility = other.mobility;
 	concentration = other.concentration;

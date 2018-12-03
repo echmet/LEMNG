@@ -26,29 +26,25 @@ typedef Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic>  EMM
 typedef Eigen::Matrix<std::complex<double>, 1, Eigen::Dynamic>  EMVectorC;
 
 typedef std::vector<const SysComp::Constituent *> InternalConstituentVec;
+typedef std::vector<std::pair<size_t, int32_t>> MultiplicityVec;
 
 /*!
  * Ionic form representation used internally by the \p Calculator
  */
 class CalculatorIonicForm {
 public:
-	CalculatorIonicForm(const std::string &name, const int32_t charge,
+	CalculatorIonicForm(std::string name, const int32_t charge,
 			    const SysComp::IonicForm *internalIonicForm,
 			    const size_t internalIonicFormConcentrationIdx,
 			    const size_t globalIonicFormConcentrationIdx,
-			    const std::vector<size_t> &containedConstituents, const bool isAnaylte);
-	CalculatorIonicForm(std::string &&name, const int32_t charge,
-			    const SysComp::IonicForm *internalIonicForm,
-			    const size_t internalIonicFormConcentrationIdx,
-			    const size_t globalIonicFormConcentrationIdx,
-			    std::vector<size_t> &&containedConstituents, const bool isAnalyte) noexcept;
+			    MultiplicityVec containedConstituents, const bool isAnaylte) noexcept;
 
 	const std::string name;					/*!< Name of the ionic form, useful only for debugging purposes */
 	const int32_t charge;					/*!< Total electric charge of the ionic form */
 	const SysComp::IonicForm *internalIonicForm;		/*!< Pointer to the underlying \p SysComp::IonicForm */
 	const size_t internalIonicFormConcentrationIdx;		/*!< Corresponding index in vector of ionic concentrations used by CoreLibs */
 	const size_t globalIonicFormConcentrationIdx;		/*!< Corresponding index in vector of ionic concentrations used by Calculator */
-	const std::vector<size_t> containedConstituents;
+	const MultiplicityVec multiplicities;
 	const bool isAnalyte;					/*!< Ionic form is a form of an analyte */
 
 	double concentration;					/*!< Concentration of the ionic form. This cannot be set by the c-tor because the
