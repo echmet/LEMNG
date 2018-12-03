@@ -1,0 +1,163 @@
+#include <cstdlib>
+#include "barsarkagang_tests.h"
+
+
+using namespace ECHMET;
+using namespace ECHMET::Barsarkagang;
+
+
+SysComp::InCFVec * gen_complexforms_formic_acid()
+{
+	const ComplexDef cDef = {
+		{ /* InComplexForm c-tor begin */
+			-1,
+			/* InLGVec */
+			{
+			}
+		}, /* InComplexForm c-tor end */
+		{ /* InComplexForm c-tor begin */
+			0,
+			/* InLGVec */
+			{
+			}
+		} /* InComplexForm c-tor end */
+	};
+
+	return buildComplexes(cDef);
+}
+
+SysComp::InCFVec * gen_complexforms_li()
+{
+	const ComplexDef cDef = {
+		{ /* InComplexForm c-tor begin */
+			0,
+			/* InLGVec */
+			{
+			}
+		}, /* InComplexForm c-tor end */
+		{ /* InComplexForm c-tor begin */
+			1,
+			/* InLGVec */
+			{
+			}
+		} /* InComplexForm c-tor end */
+	};
+
+	return buildComplexes(cDef);
+}
+
+SysComp::InCFVec * gen_complexforms_x()
+{
+	const ComplexDef cDef = {
+		{ /* InComplexForm c-tor begin */
+			-1,
+			/* InLGVec */
+			{
+				{ /* InLigandGroup c-tor begin */
+					/* InLFVec */
+					{
+						{ /* InLigandForm c-tor begin */
+							"S",
+							0,
+							2,
+							{ -3.778151250383644, -3.477121254719662 },
+							{ 10.0, 5.0 }
+						} /* InLigandForm c-tor end */
+					}
+				} /* InLigandGroup c-tor end */
+			}
+		} /* InComplexForm c-tor end */
+	};
+
+	return buildComplexes(cDef);
+}
+
+int main(int , char ** )
+{
+	SysComp::InConstituent formic_acid{
+		SysComp::ConstituentType::NUCLEUS,
+		createFixedString("Formic acid"),
+		-1,
+		0,
+		mkRealVec( { 3.752 } ),
+		mkRealVec( { 56.6, 0.0 } ),
+		gen_complexforms_formic_acid(),
+		0.0
+	};
+
+	SysComp::InConstituent li{
+		SysComp::ConstituentType::NUCLEUS,
+		createFixedString("Li"),
+		0,
+		1,
+		mkRealVec( { 13.8 } ),
+		mkRealVec( { 0.0, 40.1 } ),
+		gen_complexforms_li(),
+		0.0
+	};
+
+	SysComp::InConstituent x{
+		SysComp::ConstituentType::NUCLEUS,
+		createFixedString("X"),
+		-1,
+		-1,
+		mkRealVec( {  } ),
+		mkRealVec( { 20.0 } ),
+		gen_complexforms_x(),
+		0.0
+	};
+
+	SysComp::InConstituent s{
+		SysComp::ConstituentType::LIGAND,
+		createFixedString("S"),
+		0,
+		0,
+		mkRealVec( {  } ),
+		mkRealVec( { 0.0 } ),
+		nullptr,
+		0.0
+	};
+
+	CMapping cBGE = {
+		{ "Formic acid", 10.0 },
+		{ "Li", 5.0 },
+		{ "X", 2.0 },
+		{ "S", 10.0 }
+	};
+
+	CMapping cSample = {
+		{ "Formic acid", 5.0 },
+		{ "Li", 2.5 },
+		{ "X", 1e-12 },
+		{ "S", 1e-12 }
+	};
+
+	const auto r = calculate(
+		{
+			formic_acid,
+			li,
+			x,
+			s
+		},
+		{
+			formic_acid,
+			li,
+			x,
+			s
+		},
+		cBGE, cSample,
+		false, false, false, false);
+
+	checkBGE(r, 3.4544554959, 0.050948456835, 0.0053511919113, 5.9391385953);
+
+	checkEigenzone(r.eigenzones, -0.012266406307, -0.070470520389, 0.48236767173, 3.4132556215, 0.059908842149);
+
+	checkEigenzone(r.eigenzones, 1.7080460748, 1.7339668762, 0.79204805176, 11.151567718, 0.034717917465);
+
+	checkEigenzone(r.eigenzones, -11.033657891, 3.237403445, 0.72045431556, 3.4646248412, 0.058084284904);
+
+	checkEigenzone(r.eigenzones, 33.42827756, 4.2339445116, 1.1643726698, 3.3831603771, 0.050576459137);
+
+	return EXIT_SUCCESS;
+}
+

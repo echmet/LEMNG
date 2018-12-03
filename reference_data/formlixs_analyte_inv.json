@@ -1,0 +1,94 @@
+{
+	"constituents": [
+		{
+			"type": "N",
+			"role": "B",
+			"name": "Formic acid",
+			"chargeLow": -1,
+			"chargeHigh": 0,
+			"concentrationBGE": 10.0,
+			"concentrationSample": 5.0,
+			"viscosityCoefficient": 0.0,
+			"pKas": [ 3.752 ],
+			"mobilities": [ 56.6, 0.0 ],
+			"complexForms": [
+				{
+					"nucleusCharge": -1,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [
+					]
+				}
+			]
+		},
+		{
+			"type": "N",
+			"role": "B",
+			"name": "Li",
+			"chargeLow": 0,
+			"chargeHigh": 1,
+			"concentrationBGE": 5.0,
+			"concentrationSample": 2.5,
+			"viscosityCoefficient": 0.0,
+			"pKas": [ 13.8 ],
+			"mobilities": [ 0.0, 40.1 ],
+			"complexForms": [
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [
+					]
+				},
+				{
+					"nucleusCharge": 1,
+					"ligandGroups": [ 
+					]
+				}
+			]
+		},
+		{
+			"type": "L",
+			"role": "A",
+			"name": "X",
+			"chargeLow": -1,
+			"chargeHigh": -1,
+			"concentrationBGE": 1e-12,
+			"concentrationSample": 0.2,
+			"viscosityCoefficient": 0.0,
+			"pKas": [ ],
+			"mobilities": [ 20.0 ]
+		},
+		{
+			"type": "N",
+			"role": "B",
+			"name": "S",
+			"chargeLow": 0,
+			"chargeHigh": 0,
+			"concentrationBGE": 10.0,
+			"concentrationSample": 10.0,
+			"viscosityCoefficient": 0.0,
+			"pKas": [ ],
+			"mobilities": [ 0.0 ],
+			"complexForms": [
+				{
+					"nucleusCharge": 0,
+					"ligandGroups": [
+						{
+							"ligands": [
+								{
+									"name": "X",
+									"charge": -1,
+									"maxCount": 2,
+									"pBs": [ -3.778151250383644, -3.477121254719662 ],
+									"mobilities": [ 10.0, 5.0 ]
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

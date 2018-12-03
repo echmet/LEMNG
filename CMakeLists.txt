@@ -206,6 +206,42 @@ if (BUILD_TESTS)
                                                     PRIVATE SysComp)
     add_test(phosphorical_empty_is phosphorical_empty_is_exe)
 
+    add_executable(formlixs_analyte_nois_exe src/tests/formlixs_analyte_nois.cpp)
+    target_link_libraries(formlixs_analyte_nois_exe PRIVATE LEMNG
+                                                    PRIVATE ECHMETShared
+                                                    PRIVATE SysComp)
+    add_test(formlixs_analyte_nois formlixs_analyte_nois_exe)
+
+    add_executable(formlixs_analyte_is_exe src/tests/formlixs_analyte_is.cpp)
+    target_link_libraries(formlixs_analyte_is_exe PRIVATE LEMNG
+                                                  PRIVATE ECHMETShared
+                                                  PRIVATE SysComp)
+    add_test(formlixs_analyte_is formlixs_analyte_is_exe)
+
+    add_executable(formlixs_analyte_inv_nois_exe src/tests/formlixs_analyte_inv_nois.cpp)
+    target_link_libraries(formlixs_analyte_inv_nois_exe PRIVATE LEMNG
+                                                        PRIVATE ECHMETShared
+                                                        PRIVATE SysComp)
+    add_test(formlixs_analyte_inv_nois formlixs_analyte_inv_nois_exe)
+
+    add_executable(formlixs_analyte_inv_is_exe src/tests/formlixs_analyte_inv_is.cpp)
+    target_link_libraries(formlixs_analyte_inv_is_exe PRIVATE LEMNG
+                                                      PRIVATE ECHMETShared
+                                                      PRIVATE SysComp)
+    add_test(formlixs_analyte_inv_is formlixs_analyte_inv_is_exe)
+
+    add_executable(formlixs_analyte_sys_nois_exe src/tests/formlixs_analyte_sys_nois.cpp)
+    target_link_libraries(formlixs_analyte_sys_nois_exe PRIVATE LEMNG
+                                                        PRIVATE ECHMETShared
+                                                        PRIVATE SysComp)
+    add_test(formlixs_analyte_sys_nois formlixs_analyte_sys_nois_exe)
+
+    add_executable(formlixs_analyte_sys_is_exe src/tests/formlixs_analyte_sys_is.cpp)
+    target_link_libraries(formlixs_analyte_sys_is_exe PRIVATE LEMNG
+                                                      PRIVATE ECHMETShared
+                                                      PRIVATE SysComp)
+    add_test(formlixs_analyte_sys_is formlixs_analyte_sys_is_exe) 
+
 endif()
 
 
