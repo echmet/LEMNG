@@ -262,14 +262,14 @@ LinearResults calculateLinear(const CalculatorSystemPack &systemPack, const Delt
 
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 
-ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_LIN_PROGRESS, "Linear calculations progress reports")
+ECHMET_MAKE_TRACEPOINT_NOINLINE(LEMNGTracing, CALC_LIN_PROGRESS, "Linear calculations progress reports")
 ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_LIN_PROGRESS, const char *stage)
 {
 	return std::string{"Linear calculations stage: "} + std::string{stage};
 }
 ECHMET_END_MAKE_LOGGER
 
-ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_LIN_MFIN, "Linear mobility matrix")
+ECHMET_MAKE_TRACEPOINT_NOINLINE(LEMNGTracing, CALC_LIN_MFIN, "Linear mobility matrix")
 ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_LIN_MFIN, const ECHMET::LEMNG::Calculator::EMMatrix &MFin)
 {
 	std::ostringstream ss{};
@@ -281,7 +281,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_LIN_MFIN, const ECHMET::LEMNG::Calcu
 }
 ECHMET_END_MAKE_LOGGER
 
-ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_LIN_ZONE_TAINTED, "Eigenzone tainted")
+ECHMET_MAKE_TRACEPOINT_NOINLINE(LEMNGTracing, CALC_LIN_ZONE_TAINTED, "Eigenzone tainted")
 ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_LIN_ZONE_TAINTED, const int zoneNum, const std::string &offendingConstituent, const double calculatedConc)
 {
 	std::ostringstream ss{};
@@ -292,7 +292,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_LIN_ZONE_TAINTED, const int zoneNum,
 }
 ECHMET_END_MAKE_LOGGER
 
-ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_EIGENMOBS, "Eigenmobilities")
+ECHMET_MAKE_TRACEPOINT_NOINLINE(LEMNGTracing, CALC_EIGENMOBS, "Eigenmobilities")
 ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_EIGENMOBS, const LEMNG::Calculator::EMVectorC &mobilities)
 {
 	std::ostringstream ss{};

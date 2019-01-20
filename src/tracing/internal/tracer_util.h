@@ -16,7 +16,6 @@ namespace ECHMET {
  * @return Tracepoint object
  */
 template <typename TracerClass, TracerClass TPID>
-inline
 Tracepoint<TracerClass> TRACEPOINT_INFO();
 
 /*!
@@ -131,6 +130,19 @@ class TracepointLogger;
 #define ECHMET_MAKE_TRACEPOINT(TracerClass, TPID, description) \
 	template <> \
 	inline \
+	Tracepoint<TracerClass> TRACEPOINT_INFO<TracerClass, TracerClass::TPID>() { return Tracepoint<TracerClass>{TracerClass::TPID, description}; }
+
+/*!
+ * \def ECHMET_MAKE_TRACEPOINT_NOINLINE(TracerClass, TPID, description)
+ * Defines functions necessary to query information about tracepoints for the given \TracerClass
+ * Use this one to define tracepoints in auxiliary compilation units to prevent linking issues.
+ *
+ * @param TracerClass Tracer class
+ * @param TPID ID of the tracepoint
+ * @param description Human-readable description of the tracepoint
+ */
+#define ECHMET_MAKE_TRACEPOINT_NOINLINE(TracerClass, TPID, description) \
+	template <> \
 	Tracepoint<TracerClass> TRACEPOINT_INFO<TracerClass, TracerClass::TPID>() { return Tracepoint<TracerClass>{TracerClass::TPID, description}; }
 
 /*!

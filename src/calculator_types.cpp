@@ -302,7 +302,7 @@ SolutionProperties & SolutionProperties::operator=(SolutionProperties &&other) n
 
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 
-ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_OBJECT_CONSTRUCTION, "Calculator object construction/assignment")
+ECHMET_MAKE_TRACEPOINT_NOINLINE(LEMNGTracing, CALC_OBJECT_CONSTRUCTION, "Calculator object construction/assignment")
 ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_OBJECT_CONSTRUCTION, const char *msg)
 {
 	return std::string{msg};

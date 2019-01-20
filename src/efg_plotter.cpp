@@ -478,7 +478,7 @@ RetCode ECHMET_CC plotElectrophoregram(EFGPairVec *&electrophoregram,
 
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 
-ECHMET_MAKE_TRACEPOINT(LEMNGTracing, EFGPLOT_INPUT_PARAMS, "Input parameters for EFG plotter")
+ECHMET_MAKE_TRACEPOINT_NOINLINE(LEMNGTracing, EFGPLOT_INPUT_PARAMS, "Input parameters for EFG plotter")
 ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, EFGPLOT_INPUT_PARAMS, const double voltage, const double totalLength, const double effectiveLength,
 							     const double EOFMobility, const double injectionZoneLength,
 							     const ECHMET::LEMNG::EFGResponseType respType, const char *constituentName,
@@ -523,7 +523,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, EFGPLOT_INPUT_PARAMS, const double voltag
 }
 ECHMET_END_MAKE_LOGGER
 
-ECHMET_MAKE_TRACEPOINT(LEMNGTracing, EFGPLOT_ZONE_ENVELOPE, "Eigenzone envelopes")
+ECHMET_MAKE_TRACEPOINT_NOINLINE(LEMNGTracing, EFGPLOT_ZONE_ENVELOPE, "Eigenzone envelopes")
 ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, EFGPLOT_ZONE_ENVELOPE, const double mobility, const double beginsAt, const double endsAt,
 							      const double HVLRMax, const double tMax)
 {

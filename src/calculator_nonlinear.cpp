@@ -389,14 +389,14 @@ EigenzoneDispersionVec calculateNonlinear(const CalculatorSystemPack &systemPack
 
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 
-ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_NONLIN_PROGRESS, "Nonlinear calculations progress reports")
+ECHMET_MAKE_TRACEPOINT_NOINLINE(LEMNGTracing, CALC_NONLIN_PROGRESS, "Nonlinear calculations progress reports")
 ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_PROGRESS, const char *stage)
 {
 	return std::string{"Nonlinear calculations stage: "} + std::string{stage};
 }
 ECHMET_END_MAKE_LOGGER
 
-ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_NONLIN_NEIGHBOUR_FORMS_LOOKUP, "Neighbour ionic forms lookup for Nernst-Einstein")
+ECHMET_MAKE_TRACEPOINT_NOINLINE(LEMNGTracing, CALC_NONLIN_NEIGHBOUR_FORMS_LOOKUP, "Neighbour ionic forms lookup for Nernst-Einstein")
 ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_NEIGHBOUR_FORMS_LOOKUP, const char *iF, const char *target)
 {
 	std::ostringstream ss{};
@@ -407,7 +407,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_NEIGHBOUR_FORMS_LOOKUP, const
 }
 ECHMET_END_MAKE_LOGGER
 
-ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_NONLIN_NERNST_EINST_INPUT, "Mobility and total charge of ionic form used in Nermst-Einstein equation")
+ECHMET_MAKE_TRACEPOINT_NOINLINE(LEMNGTracing, CALC_NONLIN_NERNST_EINST_INPUT, "Mobility and total charge of ionic form used in Nermst-Einstein equation")
 ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_NERNST_EINST_INPUT, const double mobility, const int32_t totalCharge)
 {
 	std::ostringstream ss{};
@@ -418,7 +418,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_NERNST_EINST_INPUT, const dou
 }
 ECHMET_END_MAKE_LOGGER
 
-ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_NONLIN_DIFFUSION_COEFFS, "Diffusion coefficients")
+ECHMET_MAKE_TRACEPOINT_NOINLINE(LEMNGTracing, CALC_NONLIN_DIFFUSION_COEFFS, "Diffusion coefficients")
 ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_DIFFUSION_COEFFS, const ECHMET::LEMNG::Calculator::CalculatorSystemPack &systemPackUncharged, const ECHMET::LEMNG::Calculator::ERVector &diffCoeffs)
 {
 	std::ostringstream ss{};
@@ -431,7 +431,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_DIFFUSION_COEFFS, const ECHME
 }
 ECHMET_END_MAKE_LOGGER
 
-ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_NONLIN_DIFF_MATRIX, "Diffusion matrix")
+ECHMET_MAKE_TRACEPOINT_NOINLINE(LEMNGTracing, CALC_NONLIN_DIFF_MATRIX, "Diffusion matrix")
 ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_DIFF_MATRIX, const ECHMET::LEMNG::Calculator::EMMatrix &diffMatrix)
 {
 	std::ostringstream ss{};
@@ -443,7 +443,7 @@ ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_DIFF_MATRIX, const ECHMET::LE
 }
 ECHMET_END_MAKE_LOGGER
 
-ECHMET_MAKE_TRACEPOINT(LEMNGTracing, CALC_NONLIN_DIFF_PARAMS_MATRIX, "Diffusive parameters matrix")
+ECHMET_MAKE_TRACEPOINT_NOINLINE(LEMNGTracing, CALC_NONLIN_DIFF_PARAMS_MATRIX, "Diffusive parameters matrix")
 ECHMET_BEGIN_MAKE_LOGGER(LEMNGTracing, CALC_NONLIN_DIFF_PARAMS_MATRIX, const ECHMET::LEMNG::Calculator::EMMatrixC &dpMatrix)
 {
 	std::ostringstream ss{};

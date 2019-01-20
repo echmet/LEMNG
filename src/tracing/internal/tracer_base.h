@@ -119,7 +119,6 @@ private:
 };
 
 template <typename TracepointIDs>
-inline
 Tracer<TracepointIDs> & TRACER_INSTANCE();
 
 #ifndef ECHMET_TRACER_DISABLE_TRACING
