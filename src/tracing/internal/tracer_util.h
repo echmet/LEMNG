@@ -16,6 +16,7 @@ namespace ECHMET {
  * @return Tracepoint object
  */
 template <typename TracerClass, TracerClass TPID>
+inline
 Tracepoint<TracerClass> TRACEPOINT_INFO();
 
 /*!
@@ -129,6 +130,7 @@ class TracepointLogger;
  */
 #define ECHMET_MAKE_TRACEPOINT(TracerClass, TPID, description) \
 	template <> \
+	inline \
 	Tracepoint<TracerClass> TRACEPOINT_INFO<TracerClass, TracerClass::TPID>() { return Tracepoint<TracerClass>{TracerClass::TPID, description}; }
 
 /*!
