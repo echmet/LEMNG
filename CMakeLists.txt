@@ -84,12 +84,20 @@ set(libIonProps_SRCS
     src/results_maker.cpp)
 
 include_directories(${INCLUDE_DIRECTORIES}
-                    SYSTEM "${EIGEN_INCLUDE_DIR}"
-                    SYSTEM "${ECHMET_CORE_LIBS_DIR}/include/ECHMET/CoreLibs"
                     "${CMAKE_CURRENT_SOURCE_DIR}/include"
                     "${CMAKE_CURRENT_BINARY_DIR}")
 
-link_directories("${ECHMET_CORE_LIBS_DIR}/lib")
+if (NOT "${EIGEN_INCLUDE_DIR}" STREQUAL "")
+    include_directories(${INCLUDE_DIRECTORIES}
+                        SYSTEM "${EIGEN_INCLUDE_DIR}")
+endif ()
+
+if (NOT "${ECHMET_CORE_LIBS_DIR}" STREQUAL "")
+    include_directories(${INCLUDE_DIRECTORIES}
+                        SYSTEM "${ECHMET_CORE_LIBS_DIR}/include/ECHMET/CoreLibs")
+    link_directories(${LINK_DIRECTORIES}
+                     "${ECHMET_CORE_LIBS_DIR}/lib")
+endif ()
 
 CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/src/lemng_config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/lemng_config.h")
 
