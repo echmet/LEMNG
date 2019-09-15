@@ -121,6 +121,8 @@ int main(int , char ** )
 		0.0
 	};
 
+	/* This one was added manually - automated filtering
+	 * of ligand analytes would be too much of a hassle */
 	SysComp::InConstituent s_BGE{
 		SysComp::ConstituentType::NUCLEUS,
 		createFixedString("S"),
@@ -175,11 +177,11 @@ int main(int , char ** )
 
 	checkEigenzone(r.eigenzones, -1.6124697662e-15, -1.0844943009e-16, 0.51385140826, 3.7525300653, 0.051399578407);
 
-	checkEigenzone(r.eigenzones, -4.3961668972e-07, -5.111538854e-07, 1.2680782754, 4.0503829413, 0.033254934947);
+	checkEigenzone(r.eigenzones, -4.3684723305e-07, -5.0886101286e-07, 1.2680782754, 4.050382941, 0.033254934945);
 
-	checkEigenzone(r.eigenzones, -10.128331975, -0.74266661964, 0.26022288244, 3.7512294009, 0.048914937445);
+	checkEigenzone(r.eigenzones, -10.128331975, -0.74266661947, 0.26022288244, 3.7512294009, 0.048914937445);
 
-	checkEigenzone(r.eigenzones, 21.20679506, 5.5081075455, 1.091388496, 3.6042029175, 0.048954771307);
+	checkEigenzone(r.eigenzones, 21.206795057, 5.5081075415, 1.091388496, 3.6042029176, 0.048954771308);
 
 	return EXIT_SUCCESS;
 }

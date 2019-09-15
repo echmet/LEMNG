@@ -236,7 +236,7 @@ double calculateSolutionBufferCapacity(const SysComp::ChemicalSystem *chemSystem
 }
 
 SolutionProperties calculateSolutionProperties(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections,
-					       const bool calcBufferCapacity)
+					       const bool calcBufferCapacity, const bool useHighPrecision)
 {
 	auto sysCompToLEMNGVec = [](const auto &inVec) {
 		std::vector<double> outVec{};
@@ -247,8 +247,8 @@ SolutionProperties calculateSolutionProperties(const SysComp::ChemicalSystem *ch
 		return outVec;
 	};
 
-	ECHMET_TRACE(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_PROGRESS, "Solvingequilibrium");
-	solveChemicalSystem(chemSystem, concentrations, calcProps, corrections);
+	ECHMET_TRACE(LEMNGTracing, CALC_COMMON_CALC_SOLPROPS_PROGRESS, "Solving equilibrium");
+	solveChemicalSystem(chemSystem, concentrations, calcProps, corrections, useHighPrecision);
 
 	auto analyticalConcentrations = sysCompToLEMNGVec(concentrations);
 	auto ionicConcentrations = sysCompToLEMNGVec(calcProps->ionicConcentrations);
@@ -268,9 +268,10 @@ SolutionProperties calculateSolutionProperties(const SysComp::ChemicalSystem *ch
 				  std::move(effectiveMobilities)};
 }
 
-SolutionProperties calculateSolutionProperties(const ChemicalSystemPtr &chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const NonidealityCorrections corrections, const bool calcBufferCapacity)
+SolutionProperties calculateSolutionProperties(const ChemicalSystemPtr &chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const NonidealityCorrections corrections, const bool calcBufferCapacity,
+					       const bool useHighPrecision)
 {
-	return calculateSolutionProperties(chemSystem.get(), concentrations, calcProps.get(), corrections, calcBufferCapacity);
+	return calculateSolutionProperties(chemSystem.get(), concentrations, calcProps.get(), corrections, calcBufferCapacity, useHighPrecision);
 }
 
 template <>
@@ -582,7 +583,7 @@ void prepareModelData(CalculatorSystemPack &systemPack, CalculatorSystemPack &sy
 	 *
 	 * Solve the almost-like-BGE system to get ionic concentrations and corrected ionic mobilities.
 	 */
-	BGELikeProps = calculateSolutionProperties(systemPack.chemSystemRaw, analConcsBGELike, systemPack.calcPropsRaw, corrections, false);
+	BGELikeProps = calculateSolutionProperties(systemPack.chemSystemRaw, analConcsBGELike, systemPack.calcPropsRaw, corrections, false, true);
 
 	/* Step 2 - Bind the now known properties of the present ionic forms to the SystemPack.
 	 */
@@ -593,7 +594,8 @@ void prepareModelData(CalculatorSystemPack &systemPack, CalculatorSystemPack &sy
 	precalculateConcentrationDeltas(systemPack, systemPackUncharged, deltaPacks, deltaPacksUncharged, analConcsBGELike, corrections);
 }
 
-void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections)
+void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections,
+			 const bool useHighPrecision)
 {
 	using EnumOps::operator|;
 
@@ -602,12 +604,18 @@ void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVe
 	CAES::Solver *solver;
 	CAES::Solver::Options opts = CAES::Solver::defaultOptions() | CAES::Solver::Options::DISABLE_THREAD_SAFETY;
 
-	tRet = CAES::createSolverContext(solverCtx, *chemSystem);
+	if (useHighPrecision)
+		tRet = CAES::createSolverContextHighPrecision(solverCtx, *chemSystem);
+	else
+		tRet = CAES::createSolverContext(solverCtx, *chemSystem);
 	if (tRet != ::ECHMET::RetCode::OK) {
 		throw CalculationException{"Failed to create solver context: " + std::string{errorToString(tRet)}, coreLibsErrorToNativeError(tRet)};
 	}
 
-	solver = CAES::createSolver(solverCtx, opts, corrections);
+	if (useHighPrecision)
+		solver = CAES::createSolverHighPrecision(solverCtx, opts, corrections);
+	else
+		solver = CAES::createSolver(solverCtx, opts, corrections);
 	if (solver == nullptr) {
 		solverCtx->destroy();
 		throw CalculationException{"Failed to create solver", RetCode::E_NO_MEMORY};
@@ -639,9 +647,9 @@ void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVe
 	calcIonicProperties(chemSystem, concentrations, calcProps, corrections);
 }
 
-void solveChemicalSystem(const ChemicalSystemPtr chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const NonidealityCorrections corrections)
+void solveChemicalSystem(const ChemicalSystemPtr chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const NonidealityCorrections corrections, const bool useHighPrecision)
 {
-	return solveChemicalSystem(chemSystem.get(), concentrations, calcProps.get(), corrections);
+	return solveChemicalSystem(chemSystem.get(), concentrations, calcProps.get(), corrections, useHighPrecision);
 }
 
 std::vector<const SysComp::Constituent *> sysCompToLEMNGOrdering(const ChemicalSystemPtr &chemSystem)

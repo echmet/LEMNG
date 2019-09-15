@@ -16,19 +16,21 @@ constexpr T cxsgn(const T &v)
 
 class CalculationException : public std::exception {
 public:
-    explicit CalculationException(const std::string &message, const RetCode errorCode);
-    explicit CalculationException(std::string &&message, const RetCode errorCode) noexcept;
+	explicit CalculationException(const std::string &message, const RetCode errorCode);
+	explicit CalculationException(std::string &&message, const RetCode errorCode) noexcept;
 
-    const char * what() const noexcept;
-    RetCode errorCode() const noexcept;
+	const char * what() const noexcept;
+	RetCode errorCode() const noexcept;
 
 private:
-    const RetCode m_errorCode;
-    const std::string m_message;
+	const RetCode m_errorCode;
+	const std::string m_message;
 };
 
-SolutionProperties calculateSolutionProperties(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections, const bool calcBufferCapacity = false);
-SolutionProperties calculateSolutionProperties(const ChemicalSystemPtr &chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const NonidealityCorrections corrections, const bool calcBufferCapacity = false);
+SolutionProperties calculateSolutionProperties(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections, const bool calcBufferCapacity = false,
+					       const bool useHighPrecision = false);
+SolutionProperties calculateSolutionProperties(const ChemicalSystemPtr &chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const NonidealityCorrections corrections, const bool calcBufferCapacity = false,
+					       const bool useHighPrecision = false);
 
 template <typename T>
 bool isComplex(const T &I);
@@ -38,8 +40,8 @@ CalculatorSystemPack makeSystemPack(const ChemicalSystemPtr &chemSystem, const C
 				    const std::function<bool (const std::string &)> &isAnalyte,
 				    const bool includeUncharged);
 void prepareModelData(CalculatorSystemPack &systemPack, CalculatorSystemPack &systemPackUncharged, DeltaPackVec &deltaPacks, DeltaPackVec &deltaPacksUncharged, const RealVecPtr &analConcsBGELike, const RealVecPtr &analConcsSample, Calculator::SolutionProperties &BGELikeProps, const NonidealityCorrections corrections);
-void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections);
-void solveChemicalSystem(const ChemicalSystemPtr &chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const NonidealityCorrections corrections);
+void solveChemicalSystem(const SysComp::ChemicalSystem *chemSystem, const RealVecPtr &concentrations, SysComp::CalculatedProperties *calcProps, const NonidealityCorrections corrections, const bool useHighPrecision);
+void solveChemicalSystem(const ChemicalSystemPtr &chemSystem, const RealVecPtr &concentrations, CalculatedPropertiesPtr &calcProps, const NonidealityCorrections corrections, const bool useHighPrecision);
 std::vector<const SysComp::Constituent *> sysCompToLEMNGOrdering(const ChemicalSystemPtr &chemSystem);
 
 #ifdef ECHMET_LEMNG_SENSITIVE_NUMDERS	/*!< Use much finer delta and lower analytes concentrations to calculate numerical derivatives. This comes with some additional memory and performance overhead */
