@@ -240,6 +240,23 @@ void _ECHMET_TRACE_T5(Args ...) {} /* Do nothing */
 		} \
 	}
 
+/*!
+ * \def ECHMET_MAKE_TRACER(TracerClass)
+ * Defines an instance of the given \TracerClass
+ * Uninlined version to prevent linking issues
+ *
+ * @param TracerClass Tracer class
+ */
+#define ECHMET_MAKE_TRACER_NOINLINE(TracerClass) \
+	namespace ECHMET { \
+		template <> \
+		Tracer<::TracerClass> & TRACER_INSTANCE<::TracerClass>() \
+		{ \
+			static std::unique_ptr<Tracer<::TracerClass>> instance{new Tracer<::TracerClass>{}}; \
+			return *instance.get(); \
+		} \
+	}
+
 #ifndef ECHMET_TRACER_DISABLE_TRACING
 /*!
  * \def ECHMET_GET_TRACER_INSTANCE(TracerClass)
