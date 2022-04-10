@@ -11,7 +11,19 @@ if (WIN32)
     option(ECHMET_FORCE_WINXP "Define target Windows version to Windows XP")
 endif ()
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 add_definitions("-D_USE_MATH_DEFINES -DECHMET_DLL_BUILD")
+
+if (UNIX)
+    include(GNUInstallDirs)
+elseif (WIN32)
+    set(CMAKE_INSTALL_LIBDIR "lib")
+    set(CMAKE_INSTALL_INCLUDEDIR "include")
+    set(CMAKE_INSTALL_BINDIR "bin")
+endif ()
 
 set(LEMNG_THREADING_LIBS)
 
@@ -45,7 +57,7 @@ elseif (UNIX)
             message(FATAL_ERROR "GCC 4.9.2 or newer is required to build ECHMETCoreLibs")
         endif ()
 
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -g")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -g")
         add_definitions("-DECHMET_COMPILER_GCC_LIKE")
         set(DEFAULT_SYMVER_LINK "-Wl,--default-symver")
     elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
@@ -53,7 +65,7 @@ elseif (UNIX)
         message(FATAL_ERROR "Clang 3.4 or newer is required to build ECHMETCoreLibs")
 	endif ()
 
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++14 -Wall -Wextra -Wno-c++98-compat -Wno-unused-function -pedantic -fvisibility=hidden -g")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -Wall -Wextra -Wno-c++98-compat -Wno-unused-function -pedantic -fvisibility=hidden -g")
         add_definitions("-DECHMET_COMPILER_GCC_LIKE")
         set(DEFAULT_SYMVER_LINK "-Wl,--default-symver")
     else ()
@@ -96,7 +108,7 @@ if (NOT "${ECHMET_CORE_LIBS_DIR}" STREQUAL "")
     include_directories(${INCLUDE_DIRECTORIES}
                         SYSTEM "${ECHMET_CORE_LIBS_DIR}/include/ECHMET/CoreLibs")
     link_directories(${LINK_DIRECTORIES}
-                     "${ECHMET_CORE_LIBS_DIR}/lib")
+                     "${ECHMET_CORE_LIBS_DIR}/${CMAKE_INSTALL_LIBDIR}")
 endif ()
 
 CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/src/lemng_config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/lemng_config.h")
@@ -248,26 +260,11 @@ if (BUILD_TESTS)
     target_link_libraries(formlixs_analyte_sys_is_exe PRIVATE LEMNG
                                                       PRIVATE ECHMETShared
                                                       PRIVATE SysComp)
-    add_test(formlixs_analyte_sys_is formlixs_analyte_sys_is_exe) 
-
+    add_test(formlixs_analyte_sys_is formlixs_analyte_sys_is_exe)
 endif()
 
-
-
-if (WIN32)
-    install(TARGETS LEMNG
-            RUNTIME DESTINATION lib
-            PUBLIC_HEADER DESTINATION include/ECHMET/LEMNG)
-else ()
-    install(TARGETS LEMNG
-            LIBRARY DESTINATION lib
-            PUBLIC_HEADER DESTINATION include/ECHMET/LEMNG)
-endif ()
-if (WIN32)
-    if (MSVC)
-	    set(BUILD_CFG $<CONFIG>)
-        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${BUILD_CFG}/LEMNG.lib" DESTINATION lib)
-	else ()
-	    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/LEMNG.lib" DESTINATION lib)
-	endif ()
-endif ()
+install(TARGETS LEMNG
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ECHMET/LEMNG)
