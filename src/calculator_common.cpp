@@ -444,11 +444,10 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, Calculato
 	if (tRet != ::ECHMET::RetCode::OK)
 		throw CalculationException{std::string{"Cannot make derivator context: "} + std::string{errorToString(tRet)}, coreLibsErrorToNativeError(tRet)};
 
-	const size_t ND = derivatives->size();
-
 #if ECHMET_LEMNG_PARALLEL_NUM_OPS
 	typedef std::tuple<DeltaPack, DeltaPack> WorkerResult;
 
+	const size_t ND = derivatives->size();
 	auto worker = [&](const SysComp::Constituent *perturbedConstituent) -> WorkerResult {
 		EMVector deltas(systemPack.ionicForms.size());
 		EMVector deltasUncharged(systemPackUncharged.ionicForms.size());
@@ -518,7 +517,7 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, Calculato
 	for (size_t cIdx = 0; cIdx < NCO; cIdx++) {
 		const SysComp::Constituent *perturbedConstituent = systemPack.constituents.at(cIdx).internalConstituent;
 		ECHMETReal conductivityDerivative;
-		EMVector deltas(NIF);
+		EMVector deltas(systemPack.ionicForms.size());
 		EMVector deltasUncharged(systemPackUncharged.ionicForms.size());
 
 		tRet = CAES::calculateFirstConcentrationDerivatives_prepared(derivatives, conductivityDerivative,
@@ -533,8 +532,8 @@ void precalculateConcentrationDeltas(CalculatorSystemPack &systemPack, Calculato
 			throw CalculationException{"Cannot calculate concentration derivatives for M2", coreLibsErrorToNativeError(tRet)};
 		}
 
-		mapDerivatives(systemPack.ionicForms, _derivatives, deltas);
-		mapDerivatives(systemPackUncharged.ionicForms, _derivatives, deltasUncharged);
+		mapDerivatives(systemPack.ionicForms, derivatives, deltas);
+		mapDerivatives(systemPackUncharged.ionicForms, derivatives, deltasUncharged);
 
 		try {
 			deltaPacks.emplace_back(std::move(deltas), ECHMETRealToDouble(conductivityDerivative), perturbedConstituent);

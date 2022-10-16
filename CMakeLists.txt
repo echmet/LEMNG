@@ -72,7 +72,7 @@ elseif (UNIX)
 
         if (USE_ADDRESS_SANITIZER)
             add_compile_options(-fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined -fsanitize=leak -fstack-protector-strong)
-            add_link_options(-fsanitize=address -fsanitize=undefined -fsanitize=leak -fsanitize=thread)
+            add_link_options(-fsanitize=address -fsanitize=undefined -fsanitize=leak)
         endif ()
         if (USE_THREAD_SANITIZER)
             add_compile_options(-fno-omit-frame-pointer -fsanitize=thread -fstack-protector-strong)
