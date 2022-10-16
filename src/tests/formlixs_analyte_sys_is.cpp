@@ -132,7 +132,7 @@ int main(int , char ** )
 		{ "S", 1e-12 }
 	};
 
-	const auto r = calculate(
+	auto r = calculate(
 		{
 			formic_acid,
 			li,
@@ -157,6 +157,12 @@ int main(int , char ** )
 	checkEigenzone(r.eigenzones, -10.510789143, 2.9183155611, 0.68044613415, 3.4355298748, 0.056380660082);
 
 	checkEigenzone(r.eigenzones, 35.059371768, 3.2697570635, 1.0878447758, 3.3705858237, 0.049991341944);
+
+	LEMNG::releaseResults(r);
+	SysComp::releaseInConstituent(formic_acid);
+	SysComp::releaseInConstituent(li);
+	SysComp::releaseInConstituent(x);
+	SysComp::releaseInConstituent(s);
 
 	return EXIT_SUCCESS;
 }

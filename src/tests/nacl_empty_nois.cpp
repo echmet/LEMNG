@@ -40,7 +40,7 @@ int main(int , char ** )
 		{ "Sodium", 8.0 }
 	};
 
-	const auto r = calculate(
+	auto r = calculate(
 		{
 			chloride,
 			sodium
@@ -57,6 +57,10 @@ int main(int , char ** )
 	checkEigenzone(r.eigenzones, 1.808142924e-07, 1.1114445903e-07, 1.4684061008, 10.891527377, 0.10981822032);
 
 	checkEigenzone(r.eigenzones, -179.83608821, 8.0629168727, 1.4865248413, 11.073709041, 0.14119055221);
+
+	LEMNG::releaseResults(r);
+	SysComp::releaseInConstituent(chloride);
+	SysComp::releaseInConstituent(sodium);
 
 	return EXIT_SUCCESS;
 }

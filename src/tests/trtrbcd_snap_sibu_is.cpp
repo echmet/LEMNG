@@ -205,7 +205,7 @@ int main(int , char ** )
 		{ "S-IBU", 0.12 }
 	};
 
-	const auto r = calculate(
+	auto r = calculate(
 		{
 			tricine__ani,
 			tris,
@@ -232,6 +232,13 @@ int main(int , char ** )
 	checkEigenzone(r.eigenzones, -9.5459923245, -0.12490381773, 0.24539428176, 8.1103325802, 0.051082495614);
 
 	checkEigenzone(r.eigenzones, -10.139624181, -0.120653929, 0.26068749764, 8.1103344615, 0.051114301945);
+
+	LEMNG::releaseResults(r);
+	SysComp::releaseInConstituent(tricine__ani);
+	SysComp::releaseInConstituent(tris);
+	SysComp::releaseInConstituent(b__cd);
+	SysComp::releaseInConstituent(s__nap);
+	SysComp::releaseInConstituent(s__ibu);
 
 	return EXIT_SUCCESS;
 }

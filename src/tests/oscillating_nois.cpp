@@ -40,7 +40,7 @@ int main(int , char ** )
 		{ "Imidazole", 0.15 }
 	};
 
-	const auto r = calculate(
+	auto r = calculate(
 		{
 			sebacic_acid,
 			imidazole
@@ -52,7 +52,9 @@ int main(int , char ** )
 		cBGE, cSample,
 		false, false, false, true);
 
-	(void)r;
+	LEMNG::releaseResults(r);
+	SysComp::releaseInConstituent(sebacic_acid);
+	SysComp::releaseInConstituent(imidazole);
 
 	return EXIT_SUCCESS;
 }

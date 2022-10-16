@@ -149,7 +149,7 @@ int main(int , char ** )
 		{ "R-FLU", 0.1 }
 	};
 
-	const auto r = calculate(
+	auto r = calculate(
 		{
 			formic_acid,
 			li,
@@ -173,6 +173,12 @@ int main(int , char ** )
 	checkEigenzone(r.eigenzones, -1.9218729088, -0.15945839744, 0.24022475218, 3.762025126, 0.050124563128);
 
 	checkEigenzone(r.eigenzones, 21.206795057, 5.1960316583, 1.091388496, 3.6121052418, 0.049077189674);
+
+	LEMNG::releaseResults(r);
+	SysComp::releaseInConstituent(formic_acid);
+	SysComp::releaseInConstituent(li);
+	SysComp::releaseInConstituent(b__cd);
+	SysComp::releaseInConstituent(r__flu);
 
 	return EXIT_SUCCESS;
 }

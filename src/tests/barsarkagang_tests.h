@@ -136,8 +136,10 @@ LEMNG::Results calculate(const InConstituentList &bge, const InConstituentList &
 			 const bool shouldOscillate)
 {
 	LEMNG::CZESystem *czeSys;
+	auto icVecBGE = mkInConstVec(bge);
+	auto icVecSample = mkInConstVec(sample);
 
-	auto ret = LEMNG::makeCZESystem(mkInConstVec(bge), mkInConstVec(sample), czeSys);
+	auto ret = LEMNG::makeCZESystem(icVecBGE, icVecSample, czeSys);
 	failIfError(ret);
 
 	LEMNG::InAnalyticalConcentrationsMap *acBGEMap = nullptr;
@@ -168,6 +170,12 @@ LEMNG::Results calculate(const InConstituentList &bge, const InConstituentList &
 		}
 	} else
 		failIfError(tRet);
+
+	LEMNG::releaseCZESystem(czeSys);
+	acBGEMap->destroy();
+	acSampleMap->destroy();
+	icVecSample->destroy();
+	icVecBGE->destroy();
 
 	return results;
 }

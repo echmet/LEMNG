@@ -117,7 +117,7 @@ int main(int , char ** )
 		{ "b-CD", 10.0 }
 	};
 
-	const auto r = calculate(
+	auto r = calculate(
 		{
 			benzoic_acid,
 			li,
@@ -138,6 +138,12 @@ int main(int , char ** )
 	checkEigenzone(r.eigenzones, -0.60094175858, -0.09493375514, 0.59564769332, 3.9905125766, 0.069862350481);
 
 	checkEigenzone(r.eigenzones, 6.3722305581, 1.4133711214, 1.020208106, 3.9097796852, 0.069633985668);
+
+	LEMNG::releaseResults(r);
+	SysComp::releaseInConstituent(benzoic_acid);
+	SysComp::releaseInConstituent(li);
+	SysComp::releaseInConstituent(b__cd);
+
 
 	return EXIT_SUCCESS;
 }

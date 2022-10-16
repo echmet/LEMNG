@@ -104,7 +104,7 @@ int main(int , char ** )
 		{ "Al", 8.0 }
 	};
 
-	const auto r = calculate(
+	auto r = calculate(
 		{
 			phosphoric_acid,
 			al
@@ -121,6 +121,10 @@ int main(int , char ** )
 	checkEigenzone(r.eigenzones, 0.0088429041208, 0.0027173902486, 0.81583614629, 3.1025402684, 0.27055462645);
 
 	checkEigenzone(r.eigenzones, 69.03696619, 3.6031523874, 1.102010988, 2.8522966522, 0.32016146344);
+
+	LEMNG::releaseResults(r);
+	SysComp::releaseInConstituent(phosphoric_acid);
+	SysComp::releaseInConstituent(al);
 
 	return EXIT_SUCCESS;
 }
