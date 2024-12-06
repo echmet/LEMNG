@@ -1,0 +1,21 @@
+/*
+ * Copyright (C) Michal Malý, 2024
+ *
+ * This submodule of the LEMNG project is licensed under the GNU General Public License v3.0 (GPLv3).
+ * However, as the sole copyright holder, I grant a special exception for this "tracing" submodule
+ * to be used in the libLLKA project under the MIT License.
+ *
+ * The libLLKA project is developed and maintained by Jiří Černý of the Institute of Biotechnology of the Czech Academy of Sciences
+ * and its official repository is hosted at https://github.com/cernylab/libLLKA.
+ *
+ * All files contained in this subdirectory and any subsequent subdirectories
+ * are collectively referred to as the "tracing" submodule.
+ *
+ * This exception applies exclusively to the use of this submodule in the context of the libLLKA project.
+ * Redistribution or use of the "tracing" submodule in any other project or context remains subject
+ * to the terms of the GPLv3.
+ *
+ * This exception is valid only while the libLLKA project remains distributed under the MIT License
+ * and hosted at the specified repository. If the licensing terms or repository of the libLLKA project
+ * change, this exception is null and void.
+ */
