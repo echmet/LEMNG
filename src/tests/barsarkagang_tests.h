@@ -80,7 +80,8 @@ void failIfError(const LEMNG::RetCode tRet)
 }
 
 static inline
-void checkEigenzone(const LEMNG::REigenzoneVec *ezs, const double u,
+void checkEigenzone(int id,
+		    const LEMNG::REigenzoneVec *ezs, const double u,
 		    const double uEMD, const double a2t,
 		    const double pH, const double conductivity)
 {
@@ -97,7 +98,7 @@ void checkEigenzone(const LEMNG::REigenzoneVec *ezs, const double u,
 		}
 	}
 
-	std::cerr << "Eigenzone not found" << std::endl;
+	std::cerr << "Eigenzone " << id << " not found" << std::endl;
 
 	std::exit(EXIT_FAILURE);
 }

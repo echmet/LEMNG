@@ -376,9 +376,9 @@ def gen_check_BGE(expected):
         expected[0], expected[1], expected[2], expected[3])])
 
 
-def gen_check_eigenzone(expected):
-    return CBlock.make(['checkEigenzone(r.eigenzones, {}, {}, {}, {}, {});'.format(
-        expected[0], expected[1], expected[2], expected[3], expected[4])])
+def gen_check_eigenzone(ez_id, expected):
+    return CBlock.make(['checkEigenzone({}, r.eigenzones, {}, {}, {}, {}, {});'.format(
+        ez_id, expected[0], expected[1], expected[2], expected[3], expected[4])])
 
 
 def process_input(root):
@@ -615,8 +615,10 @@ def main(outfile, infile, genpath, ecl_path, lemng_path, debhue, onsfuo,
 
         cmain.add_block(gen_check_BGE(expected.pop(0)))
 
+        ez_id = 1
         while expected:
-            cmain.add_block(gen_check_eigenzone(expected.pop(0)))
+            cmain.add_block(gen_check_eigenzone(ez_id, expected.pop(0)))
+            ez_id += 1
 
     cmain.add_block(CBlock.make(['return EXIT_SUCCESS;']))
 
